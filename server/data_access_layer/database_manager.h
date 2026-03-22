@@ -20,6 +20,7 @@ private:
     void createTables() const;
     void createUsersTable() const;
     void createFilesTable() const;
+    void createTokensTable() const;
 };
 
 #endif // DATABASE_MANAGER_H

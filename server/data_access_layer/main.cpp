@@ -6,8 +6,7 @@
 #include "database_manager.h"
 #include "user_repository.h"
 #include "file_repository.h"
-#include "user.h"
-#include "file.h"
+#include "token_repository.h"
 
 void printFile(const File& f)
 {
@@ -76,6 +75,17 @@ int main(int argc, char *argv[])
     //fileRep.deleteFile(uid, { "Images", "Animals", "Cats", "black_cat.png" });
 
 
+    TokenRepository tokenRep(db);
+    tokenRep.addNewToken(Token(
+        "id1", "token1", uid, QDateTime::currentDateTime().addDays(1)));
+    tokenRep.addNewToken(Token(
+        "id2", "token2", uid, QDateTime::currentDateTime().addDays(1)));
+    tokenRep.addNewToken(Token(
+        "id3", "token3", uid, QDateTime::currentDateTime().addYears(-1)));
+    tokenRep.addNewToken(Token(
+        "id1", "token1", uid, QDateTime::currentDateTime().addDays(1)));
+
+    tokenRep.cleanExpiredTokens();
     return 0;
 
     //return a.exec();

@@ -28,6 +28,7 @@ void DatabaseManager::createTables() const
 {
     createUsersTable();
     createFilesTable();
+    createTokensTable();
 }
 
 void DatabaseManager::createUsersTable() const
@@ -61,6 +62,20 @@ void DatabaseManager::createFilesTable() const
 
     if (!ok)
         qCritical() << "[ERROR]: could not create table 'files'";
+}
+
+void DatabaseManager::createTokensTable() const
+{
+    QSqlQuery query(m_mainDB);
+    bool ok = query.exec("CREATE TABLE IF NOT EXISTS tokens("
+                         "id TEXT PRIMARY KEY,"
+                         "token_hash TEXT UNIQUE NOT NULL,"
+                         "user_id INTEGER NOT NULL,"
+                         "expires_at DATETIME,"
+                         "FOREIGN KEY(user_id) REFERENCES users(id))");
+
+    if (!ok)
+        qCritical() << "[ERROR]: could not create table 'tokens'";
 }
 
 QSqlDatabase DatabaseManager::database() const
