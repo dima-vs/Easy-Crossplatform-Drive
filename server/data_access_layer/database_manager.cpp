@@ -14,36 +14,36 @@ void DatabaseManager::initDatabase()
     m_isOpen = m_mainDB.open();
 
     if (!m_isOpen)
-        qDebug() << "[ERROR]: could not open database 'main_database.db'";
+        qCritical() << "[ERROR]: could not open database 'main_database.db'";
 
     createTables();
 }
 
-bool DatabaseManager::isDBOpen()
+bool DatabaseManager::isDBOpen() const
 {
     return m_isOpen;
 }
 
-void DatabaseManager::createTables()
+void DatabaseManager::createTables() const
 {
     createUsersTable();
     createFilesTable();
 }
 
-void DatabaseManager::createUsersTable()
+void DatabaseManager::createUsersTable() const
 {
     QSqlQuery query(m_mainDB);
     bool ok = query.exec("CREATE TABLE IF NOT EXISTS users("
                "id INTEGER PRIMARY KEY AUTOINCREMENT,"
                "username TEXT UNIQUE NOT NULL,"
-               "email TEXT UNIQUE,"
-               "password TEXT NOT NULL)");
+               "email TEXT UNIQUE NOT NULL,"
+               "password_hash TEXT NOT NULL)");
 
     if (!ok)
-        qDebug() << "[ERROR]: could not create table 'users'";
+        qCritical() << "[ERROR]: could not create table 'users'";
 }
 
-void DatabaseManager::createFilesTable()
+void DatabaseManager::createFilesTable() const
 {
     QSqlQuery query(m_mainDB);
     bool ok = query.exec("CREATE TABLE IF NOT EXISTS files("
@@ -51,17 +51,24 @@ void DatabaseManager::createFilesTable()
                "owner_id INTEGER NOT NULL,"
                "type TEXT NOT NULL,"
                "logical_name TEXT NOT NULL,"
-               "server_name TEXT NOT NULL,"
-               "size INTEGER,"
+               "server_name TEXT UNIQUE,"
+               "size INTEGER NOT NULL,"
                "upload_time DATETIME DEFAULT CURRENT_TIMESTAMP,"
-               "parent_id INTEGER DEFAULT 0,"
-               "FOREIGN KEY(owner_id) REFERENCES users(id))");
+               "parent_id INTEGER DEFAULT NULL,"
+               "FOREIGN KEY(owner_id) REFERENCES users(id)"
+               "FOREIGN KEY(parent_id) REFERENCES files(id)"
+               "UNIQUE(owner_id, parent_id, logical_name))");
 
     if (!ok)
-        qDebug() << "[ERROR]: could not create table 'files'";
+        qCritical() << "[ERROR]: could not create table 'files'";
 }
 
-QSqlDatabase DatabaseManager::database()
+QSqlDatabase DatabaseManager::database() const
 {
     return m_mainDB;
+}
+
+DatabaseManager::~DatabaseManager()
+{
+    m_mainDB.close();
 }

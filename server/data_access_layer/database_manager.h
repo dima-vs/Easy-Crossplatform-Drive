@@ -10,17 +10,16 @@ class DatabaseManager
 private:
     QSqlDatabase m_mainDB;
     bool m_isOpen;
-    //QSqlQuery m_mainDBQuery;
 public:
     DatabaseManager();
-    ~DatabaseManager() {};
+    ~DatabaseManager();
     void initDatabase();
-    QSqlDatabase database();
-    bool isDBOpen();
+    QSqlDatabase database() const;
+    bool isDBOpen() const;
 private:
-    void createTables();
-    void createUsersTable();
-    void createFilesTable();
+    void createTables() const;
+    void createUsersTable() const;
+    void createFilesTable() const;
 };
 
 #endif // DATABASE_MANAGER_H

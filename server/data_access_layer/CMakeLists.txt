@@ -9,7 +9,11 @@ set(DAL_SOURCES
     database_manager.h database_manager.cpp
 )
 
-add_library(DAL_Lib STATIC ${DAL_SOURCES})
+add_library(DAL_Lib STATIC ${DAL_SOURCES}
+    user_repository.h user_repository.cpp
+    user.h user.cpp
+    file.h file.cpp
+    file_repository.h file_repository.cpp)
 
 target_link_libraries(DAL_Lib PUBLIC Qt${QT_VERSION_MAJOR}::Sql Qt${QT_VERSION_MAJOR}::Core)
 target_include_directories(DAL_Lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
