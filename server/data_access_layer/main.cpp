@@ -7,24 +7,68 @@
 #include "user_repository.h"
 #include "file_repository.h"
 #include "token_repository.h"
+#include "file_storage.h"
 
-void printFile(const File& f)
-{
-    if (f.isValid()) {
-        qInfo() << "[FILE FOUND] ID:" << f.id()
-        << "Name:" << f.logicalName()
-        << "Type:" << f.type()
-        << "ParentID:" << f.parentId().toInt();
-    } else {
-        qInfo() << "[FILE NOT FOUND]";
-    }
-}
+
+void testDatabase();
+void testFileStorage();
 
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
     qDebug() << "DataAccessLayer";
 
+    testFileStorage();
+
+    return 0;
+    //return a.exec();
+}
+
+void testFileStorage()
+{
+    QString storagePath = "./test_storage/files";
+    FileStorage storage(storagePath);
+
+    QString sName = "test_chunked_file.dat";
+
+    storage.removeFile(sName);
+
+    qDebug() << "\n1. Writing chunks in random order...";
+
+    QByteArray chunk2 = "WORLD";
+    storage.writeChunk(sName, 5, chunk2);
+
+    QByteArray chunk1 = "HELLO";
+    storage.writeChunk(sName, 0, chunk1);
+
+    QByteArray chunk3 = "!";
+    storage.writeChunk(sName, 10, chunk3);
+
+    qint64 size = storage.getFileSize(sName);
+    qDebug() << "Current file size:" << size << "bytes (Expected: 11)";
+
+    qDebug() << "\n2. Reading data back...";
+
+    QByteArray fullData = storage.readChunk(sName, 0, size);
+    qDebug() << "Full content:" << fullData << "(Expected: HELLOWORLD!)";
+
+    QByteArray midData = storage.readChunk(sName, 5, 5);
+    qDebug() << "Middle content:" << midData << "(Expected: WORLD)";
+
+    qDebug() << "\n3. Testing error cases...";
+    QByteArray outOfBounds = storage.readChunk(sName, 100, 10);
+    qDebug() << "Read out of bounds returned size:" << outOfBounds.size();
+
+    // qDebug() << "\n4. Removing file...";
+    // if (storage.removeFile(sName)) {
+    //     qDebug() << "File successfully removed.";
+    // }
+
+    qDebug() << "Does file still exist (size check):" << storage.getFileSize(sName);
+}
+
+void testDatabase()
+{
     DatabaseManager db;
     UserRepository userRep(db);
 
@@ -54,7 +98,7 @@ int main(int argc, char *argv[])
     int imgDirId = fileRep.getFile(uid, { "Images" }).id();
     // /Images/icon.png
     fileRep.addNewFile(File(uid, "file", "icon.png",
-                        "fsdlkgjgerhg45j.bin", 2048, imgDirId));
+                            "fsdlkgjgerhg45j.bin", 2048, imgDirId));
 
     // /Images/Animals
     fileRep.addNewFile(File(uid, "directory", "Animals", QVariant(), 0, imgDirId));
@@ -86,7 +130,4 @@ int main(int argc, char *argv[])
         "id1", "token1", uid, QDateTime::currentDateTime().addDays(1)));
 
     tokenRep.cleanExpiredTokens();
-    return 0;
-
-    //return a.exec();
 }

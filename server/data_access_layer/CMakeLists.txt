@@ -15,7 +15,8 @@ add_library(DAL_Lib STATIC ${DAL_SOURCES}
     file.h file.cpp
     file_repository.h file_repository.cpp
     token.h token.cpp
-    token_repository.h token_repository.cpp)
+    token_repository.h token_repository.cpp
+    file_storage.h file_storage.cpp)
 
 target_link_libraries(DAL_Lib PUBLIC Qt${QT_VERSION_MAJOR}::Sql Qt${QT_VERSION_MAJOR}::Core)
 target_include_directories(DAL_Lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
