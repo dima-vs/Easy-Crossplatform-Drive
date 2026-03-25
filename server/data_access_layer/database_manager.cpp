@@ -57,11 +57,49 @@ void DatabaseManager::createFilesTable() const
                "upload_time DATETIME DEFAULT CURRENT_TIMESTAMP,"
                "parent_id INTEGER DEFAULT NULL,"
                "FOREIGN KEY(owner_id) REFERENCES users(id)"
-               "FOREIGN KEY(parent_id) REFERENCES files(id)"
-               "UNIQUE(owner_id, parent_id, logical_name))");
+               "FOREIGN KEY(parent_id) REFERENCES files(id))");
 
     if (!ok)
         qCritical() << "[ERROR]: could not create table 'files'";
+
+    createUniqueRootIndexOnFiles();
+}
+
+void DatabaseManager::createUniqueRootIndexOnFiles() const
+{
+    if (!createChildUniqueIndex() || !createRootUniqueIndex()) {
+        qCritical() << "[ERROR]: failed to initialize unique indexes for 'files'";
+    } else {
+        qDebug() << "[SUCCESS]: Unique indexes for 'files' initialized";
+    }
+}
+
+bool DatabaseManager::createChildUniqueIndex() const
+{
+    QSqlQuery query(m_mainDB);
+    bool ok = query.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_files_unique_child "
+                         "ON files(owner_id, parent_id, logical_name) "
+                         "WHERE parent_id IS NOT NULL");
+
+    if (!ok) {
+        qCritical() << "[ERROR]: could not create index idx_files_unique_child:"
+                    << query.lastError().text();
+    }
+    return ok;
+}
+
+bool DatabaseManager::createRootUniqueIndex() const
+{
+    QSqlQuery query(m_mainDB);
+    bool ok = query.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_files_unique_root "
+                         "ON files(owner_id, logical_name) "
+                         "WHERE parent_id IS NULL");
+
+    if (!ok) {
+        qCritical() << "[ERROR]: could not create index idx_files_unique_root:"
+                    << query.lastError().text();
+    }
+    return ok;
 }
 
 void DatabaseManager::createTokensTable() const

@@ -21,6 +21,9 @@ private:
     void createUsersTable() const;
     void createFilesTable() const;
     void createTokensTable() const;
+    void createUniqueRootIndexOnFiles() const;
+    bool createChildUniqueIndex() const;
+    bool createRootUniqueIndex() const;
 };
 
 #endif // DATABASE_MANAGER_H
