@@ -13,12 +13,27 @@
 void testDatabase();
 void testFileStorage();
 
+void printFileInfo(const File &file) {
+    qDebug() << "--- File Info ---";
+    qDebug() << "ID:         " << (file.isIDSet() ? QString::number(file.id()) : "Not set");
+    qDebug() << "Name:       " << file.logicalName();
+    qDebug() << "Type:       " << file.type();
+    qDebug() << "Size:       " << file.size() << "bytes";
+    qDebug() << "Owner ID:   " << file.ownerId();
+    qDebug() << "Upload Time:" << file.uploadTime().toString(Qt::ISODate);
+    qDebug() << "Server Name:" << file.serverName();
+    qDebug() << "Parent ID:  " << file.parentId();
+    qDebug() << "Valid:      " << file.isValid();
+    qDebug() << "-----------------";
+}
+
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
     qDebug() << "DataAccessLayer";
 
-    testFileStorage();
+    testDatabase();
+    //testFileStorage();
 
     return 0;
     //return a.exec();
@@ -130,4 +145,11 @@ void testDatabase()
         "id1", "token1", uid, QDateTime::currentDateTime().addDays(1)));
 
     tokenRep.cleanExpiredTokens();
+
+    QList<File> fileList = fileRep.getFilesByOwner(uid);
+    qDebug() << "File list size: " << fileList.size();
+    for (File& fileObj : fileList)
+    {
+        printFileInfo(fileObj);
+    }
 }

@@ -251,3 +251,39 @@ bool FileRepository::getFileId(int ownerId, const QList<QString>& fullPath, int&
     outId = currentParentId;
     return true;
 }
+
+QList<File> FileRepository::getFilesByOwner(int ownerId) const
+{
+    QSqlQuery query(m_db.database());
+    query.prepare("SELECT id, owner_id, type, logical_name, server_name, "
+                  "size, upload_time, parent_id FROM files WHERE owner_id = :owner_id");
+    query.bindValue(":owner_id", ownerId);
+
+    if (!query.exec())
+    {
+        qCritical() << "[ERROR] FileRepository::getFilesByOwner(): query failed."
+                    << query.lastError().text();
+        return QList<File>();
+    }
+
+    QList<File> result;
+    while (query.next())
+    {
+        int fileId = query.value("id").toInt();
+        int ownerId = query.value("owner_id").toInt();
+        QString type = query.value("type").toString();
+        QString logicalName = query.value("logical_name").toString();
+        QVariant serverName = query.value("server_name");
+        long long size = query.value("size").toLongLong();
+        QDateTime uploadTime = query.value("upload_time").toDateTime();
+        QVariant parentId = query.value("parent_id");
+
+        result.append(File(
+            fileId, ownerId,
+            type, logicalName,
+            serverName, size,
+            uploadTime, parentId));
+    }
+
+    return result;
+}

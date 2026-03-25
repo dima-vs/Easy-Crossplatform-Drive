@@ -15,7 +15,7 @@ public:
     bool addNewFile(const File& file) const;
     File getFile(int id) const;
     File getFile(int ownerId, const QList<QString>& fullPath) const;
-    //QList<File> getFilesByOwner(int ownerId);
+    QList<File> getFilesByOwner(int ownerId) const;
     // delete any object
     bool deleteFile(int ownerId, const QList<QString>& fullPath) const;
 private:
