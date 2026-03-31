@@ -13,8 +13,6 @@ find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
 
 add_library(Common_Lib STATIC 
-
-    serialization/user_dto_json.h
     dto/auth_dto/register_init_request_dto.h
     dto/auth_dto/register_init_response_dto.h
     dto/auth_dto/confirm_register_request_dto.h
@@ -32,7 +30,12 @@ add_library(Common_Lib STATIC
     dto/file_dto/file_rename_request_dto.h
     dto/file_dto/file_rename_response_dto.h
 
-    #serialization/user_dto_json.cpp
+    serialization/auth/auth_json.h
+    serialization/auth/auth_json.cpp
+    serialization/file/file_json.h
+    serialization/file/file_json.cpp
+    serialization/server_limits/server_limits_json.h
+    serialization/server_limits/server_limits_json.cpp
 )
 target_link_libraries(Common_Lib PUBLIC Qt${QT_VERSION_MAJOR}::Core)
 target_include_directories(Common_Lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
