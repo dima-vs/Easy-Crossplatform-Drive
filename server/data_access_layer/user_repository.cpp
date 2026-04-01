@@ -9,8 +9,8 @@ bool UserRepository::addNewUser(const User& user) const
 {
     if (!user.isValid())
     {
-        qCritical() << "[ERROR] UserRepository::addNewUser: could not add a new user. " <<
-            "User is not valid";
+        qCritical() << "could not add a new user:" <<
+            "user is not valid";
         return false;
     }
 
@@ -24,7 +24,7 @@ bool UserRepository::addNewUser(const User& user) const
     bool qResult = query.exec();
 
     if (!qResult)
-        qCritical() << "[ERROR] UserRepository::addNewUser: " << query.lastError().text();
+        qCritical() << query.lastError().text();
     return qResult;
 }
 
@@ -36,8 +36,7 @@ User UserRepository::getUser(int id) const
 
     if (!query.exec())
     {
-        qCritical() << "[ERROR] UserRepository::getUser(id): query failed. " <<
-            query.lastError().text();
+        qCritical() << query.lastError().text();
         return User();
     }
 
@@ -51,8 +50,7 @@ User UserRepository::getUser(int id) const
             );
     }
 
-    qDebug() << "[INFO] UserRepository::getUser(id): user with id " <<
-        id << " not found.";
+    qWarning() << "user with id" << id << "not found";
     return User();
 }
 
@@ -64,8 +62,7 @@ User UserRepository::getUser(QString username) const
 
     if (!query.exec())
     {
-        qCritical() << "[ERROR] UserRepository::getUser(username): query failed." <<
-            query.lastError().text();
+        qCritical() << query.lastError().text();
         return User();
     }
 
@@ -79,8 +76,7 @@ User UserRepository::getUser(QString username) const
             );
     }
 
-    qDebug() << "[INFO] UserRepository::getUser(username): user " <<
-        username << " not found.";
+    qWarning() << "user" << username << "not found";
     return User();
 }
 
@@ -94,18 +90,16 @@ bool UserRepository::deleteUser(QString username) const
     bool qResult = query.exec();
     if (!qResult)
     {
-        qCritical() << "[ERROR] UserRepository::deleteUser(username): query failed." <<
-            query.lastError().text();
+        qCritical() << query.lastError().text();
         return false;
     }
 
     if (query.numRowsAffected() == 0)
     {
-        qCritical() << "[ERROR] UserRepository::deleteUser(username): " <<
-            "could not delete user " << username;
+        qCritical() << "could not delete user " << username;
         return false;
     }
 
-    qDebug() << "[SUCCESS] UserRepository::deleteUser(username): user " << username << "deleted.";
+    qInfo() << "user" << username << "deleted";
     return true;
 }

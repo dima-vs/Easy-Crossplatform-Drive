@@ -12,7 +12,7 @@ bool TokenRepository::addNewToken(const Token& token) const
 {
     if (!token.isValid())
     {
-        qCritical() << "[ERROR] TokenRepository::addNewToken: token is not valid";
+        qCritical() << "token is not valid";
         return false;
     }
 
@@ -27,7 +27,7 @@ bool TokenRepository::addNewToken(const Token& token) const
 
     if (!query.exec())
     {
-        qCritical() << "[ERROR] TokenRepository::addNewToken:" << query.lastError().text();
+        qCritical() << query.lastError().text();
         return false;
     }
 
@@ -42,7 +42,7 @@ Token TokenRepository::getToken(QString id) const
 
     if (!query.exec())
     {
-        qCritical() << "[ERROR] TokenRepository::getToken:" << query.lastError().text();
+        qCritical() << query.lastError().text();
         return Token();
     }
 
@@ -56,7 +56,7 @@ Token TokenRepository::getToken(QString id) const
             );
     }
 
-    qDebug() << "[INFO] TokenRepository::getToken: Token" << id << "not found";
+    qWarning() << "token with id" << id << "not found";
     return Token();
 }
 
@@ -68,15 +68,17 @@ bool TokenRepository::deleteToken(QString id) const
 
     if (!query.exec())
     {
-        qCritical() << "[ERROR] TokenRepository::deleteToken:" << query.lastError().text();
+        qCritical() << query.lastError().text();
         return false;
     }
 
     if (query.numRowsAffected() == 0)
     {
-        qWarning() << "[WARN] TokenRepository::deleteToken: No token found with id" << id;
+        qWarning() << "token with id" << id << "not found";
         return false;
     }
+
+    qInfo() << "token with id" << id << "deleted";
 
     return true;
 }
@@ -87,13 +89,13 @@ bool TokenRepository::cleanExpiredTokens() const
     query.prepare("DELETE FROM tokens WHERE expires_at < DATETIME('now')");
 
     if (!query.exec()) {
-        qCritical() << "[ERROR] TokenRepository::cleanExpiredTokens:" << query.lastError().text();
+        qCritical() << query.lastError().text();
         return false;
     }
 
     int removed = query.numRowsAffected();
     if (removed > 0) {
-        qDebug() << "[INFO] TokenRepository::cleanExpiredTokens: removed" << removed << "expired sessions.";
+        qDebug() << "removed" << removed << "expired sessions.";
     }
 
     return true;
@@ -107,10 +109,10 @@ bool TokenRepository::deleteByUser(int userId) const
     query.bindValue(":user_id", userId);
 
     if (!query.exec()) {
-        qCritical() << "[ERROR] TokenRepository::deleteByUser:" << query.lastError().text();
+        qCritical() << query.lastError().text();
         return false;
     }
 
-    qDebug() << "[INFO] TokenRepository::deleteByUser: all tokens for user" << userId << "deleted.";
+    qInfo() << "all tokens for user" << userId << "deleted.";
     return true;
 }

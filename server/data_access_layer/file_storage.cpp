@@ -18,22 +18,20 @@ bool FileStorage::writeChunk(const QString& serverName, qint64 offset,
 
     if (!file.open(QIODevice::ReadWrite))
     {
-        qCritical() << "[ERROR] FileStorage::writeChunk: cannot open file" <<
-            serverName;
+        qCritical() << "cannot open file" << serverName;
         return false;
     }
 
     if (!file.seek(offset))
     {
-        qCritical() << "[ERROR] FileStorage::writeChunk: cannot set" <<
-            "position pointer at" << offset << ". File name:" << serverName;
+        qCritical() << "cannot set position pointer at" <<
+            offset << "in file" << serverName;
         return false;
     }
 
     if (file.write(data) == -1)
     {
-        qCritical() << "[ERROR] FileStorage::writeChunk: cannot write to file" <<
-            serverName;
+        qCritical() << "cannot write to file" << serverName;
         return false;
     }
 
@@ -47,8 +45,7 @@ QByteArray FileStorage::readChunk(const QString& serverName, qint64 offset, qint
 
     if (!file.open(QIODevice::ReadOnly))
     {
-        qCritical() << "[ERROR] FileStorage::readChunk: cannot open file" <<
-            serverName;
+        qCritical() << "cannot open file" << serverName;
         return QByteArray();
     }
 
@@ -56,23 +53,22 @@ QByteArray FileStorage::readChunk(const QString& serverName, qint64 offset, qint
 
     if (offset >= fileSize)
     {
-        qDebug() << "[INFO] FileStorage::readChunk: offset" << offset
-                 << "is beyond file size" << fileSize << ". File name:" << serverName;
+        qWarning() << "offset" << offset << "is beyond file size"
+                   << fileSize << "of file" << serverName;
         return QByteArray();
     }
 
     if (!file.seek(offset))
     {
-        qCritical() << "[ERROR] FileStorage::readChunk: cannot set" <<
-            "position pointer at" << offset << ". File name:" << serverName;
+        qCritical() << "cannot set position pointer at" << offset
+                    << "in file" << serverName;
         return QByteArray();
     }
 
     QByteArray chunkRead = file.read(size);
     if (chunkRead.size() == 0)
     {
-        qCritical() << "[ERROR] FileStorage::readChunk: cannot read a chunk of file" <<
-            serverName;
+        qCritical() << "cannot read a chunk of file" << serverName;
         return QByteArray();
     }
 
@@ -85,15 +81,13 @@ bool FileStorage::removeFile(const QString& serverName) const
     QFile file(getSecurePath(serverName));
     if (!file.exists())
     {
-        qCritical() << "[ERROR] FileStorage::getFileSize: file" <<
-            serverName << "doesn't exist";
+        qCritical() << "file" << serverName << "doesn't exist";
         return false;
     }
 
     if (file.remove())
     {
-        qDebug() << "[SUCCESS] FileStorage::removeFile: file" <<
-            serverName << "removed";
+        qInfo() << "file" << serverName << "removed";
         return true;
     }
     return false;
@@ -105,8 +99,7 @@ qint64 FileStorage::getFileSize(const QString& serverName) const
     QFileInfo fileInf(getSecurePath(serverName));
     if (!fileInf.exists())
     {
-        qCritical() << "[ERROR] FileStorage::getFileSize: file" <<
-            serverName << "doesn't exist";
+        qCritical() << "file" << serverName << "doesn't exist";
         return 0;
     }
 
@@ -126,9 +119,9 @@ void FileStorage::ensureStorageExists()
     {
         if (dir.mkpath("."))
         {
-            qDebug() << "[INFO] FileStorage::getSecurePath: storage directory created at" << m_baseStoragePath;
+            qInfo() << "storage directory created at" << m_baseStoragePath;
         } else {
-            qCritical() << "[ERROR] FileStorage::getSecurePath: could not create storage directory!";
+            qCritical() << "could not create storage directory" << m_baseStoragePath;
         }
     }
 }

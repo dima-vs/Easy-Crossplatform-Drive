@@ -8,8 +8,8 @@ bool FileRepository::addNewFile(const File& file) const
 {
     if (!file.isValid())
     {
-        qCritical() << "[ERROR] FileRepository::addNewFile: could not add a new file. " <<
-            "File is not valid";
+        qCritical() << "could not add a new file:" <<
+            "'file' parameter is not valid";
         return false;
     }
 
@@ -28,12 +28,15 @@ bool FileRepository::addNewFile(const File& file) const
 
     if (!query.exec())
     {
-        qCritical() << "[ERROR] FileRepository::addNewFile: failed to insert file."
-                    << "Database error:" << query.lastError().text();
+        qCritical() << "failed to insert file:"
+                    << query.lastError().text();
         return false;
     }
 
-    qDebug() << "[SUCCESS] FileRepository::addNewFile: added" << file.logicalName();
+    qInfo().noquote()
+        << file.type()
+        << "\"" + file.logicalName() + "\""
+        << "added";
     return true;
 }
 
@@ -46,8 +49,7 @@ File FileRepository::getFile(int id) const
 
     if (!query.exec())
     {
-        qCritical() << "[ERROR] FileRepository::getFile(id): query failed."
-                    << query.lastError().text();
+        qCritical() << query.lastError().text();
         return File();
     }
 
@@ -74,7 +76,7 @@ File FileRepository::getFile(int id) const
             );
     }
 
-    qDebug() << "[INFO] FileRepository::getFile(id): file with id" << id << "not found.";
+    qWarning() << "file object with id" << id << "not found";
     return File();
 }
 
@@ -93,7 +95,10 @@ bool FileRepository::deleteFile(int ownerId, const QList<QString>& fullPath) con
     if (!getFileId(ownerId, fullPath, rootObjId))
         return false;
 
-    return deleteRecursive(rootObjId);
+    bool deleteResult = deleteRecursive(rootObjId);
+    if (deleteResult)
+        qInfo() << "file object" << fullPath.join("/") << "deleted";
+    return deleteResult;
 }
 
 bool FileRepository::deleteRecursive(int objId) const
@@ -102,8 +107,7 @@ bool FileRepository::deleteRecursive(int objId) const
 
     if (!db.transaction())
     {
-        qCritical() << "[ERROR] FileRepository::deleteRecursive:" <<
-                       "could not start transaction";
+        qCritical() << "could not start transaction:" << db.lastError().text();
         return false;
     }
 
@@ -147,8 +151,7 @@ bool FileRepository::deleteRecursive(int objId) const
 
     if (!db.commit())
     {
-        qCritical() << "[ERROR] FileRepository::deleteRecursive:" <<
-                       "could not commit transaction";
+        qCritical() << "could not commit transaction:" << db.lastError().text();
         db.rollback();
         return false;
     }
@@ -163,8 +166,7 @@ bool FileRepository::deleteFileChildren(int parentId) const
     query.bindValue(":parent_id", parentId);
     if (!query.exec())
     {
-        qCritical() << "[ERROR] FileRepository::deleteFileChildren: query failed." <<
-            query.lastError().text();
+        qCritical() << query.lastError().text();
         return false;
     }
     return true;
@@ -179,8 +181,7 @@ bool FileRepository::saveChildrenDirectoriesId(int parentId, QList<int>& directo
 
     if (!query.exec())
     {
-        qCritical() << "[ERROR] FileRepository::saveChildrenDirectoriesId: query failed." <<
-            query.lastError().text();
+        qCritical() << query.lastError().text();
         return false;
     }
 
@@ -201,8 +202,7 @@ bool FileRepository::deleteObjects(const QList<int>& idListToDelete) const
         query.bindValue(":id", objId);
         if (!query.exec())
         {
-            qCritical() << "[ERROR] FileRepository::deleteObjects: query failed." <<
-                query.lastError().text();
+            qCritical() << query.lastError().text();
             return false;
         }
     }
@@ -233,7 +233,7 @@ bool FileRepository::getFileId(int ownerId, const QList<QString>& fullPath, int&
 
         if (!query.exec())
         {
-            qCritical() << "[ERROR] FileRepository::getFileId: path search failed." << query.lastError().text();
+            qCritical() << "path search query failed:" << query.lastError().text();
             return false;
         }
 
@@ -242,8 +242,7 @@ bool FileRepository::getFileId(int ownerId, const QList<QString>& fullPath, int&
             isRoot = false;
         } else {
             // if one of the path segments not found, file doesn't exist
-            qDebug() << "[INFO] FileRepository::getFileId: segment" <<
-                objName << "not found";
+            qWarning() << "segment" << objName << "not found";
             return false;
         }
     }
@@ -261,8 +260,7 @@ QList<File> FileRepository::getFilesByOwner(int ownerId) const
 
     if (!query.exec())
     {
-        qCritical() << "[ERROR] FileRepository::getFilesByOwner(): query failed."
-                    << query.lastError().text();
+        qCritical() << query.lastError().text();
         return QList<File>();
     }
 

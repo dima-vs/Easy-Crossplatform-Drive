@@ -18,7 +18,7 @@ std::optional<RegisterInitRequestDTO> fromJsonRegisterInitRequest(const QJsonObj
         dto.email = json["email"].toString();
         return dto;
     } else {
-        qWarning() << "[Serialization] invalid or missing 'email' field in JSON";
+        qWarning() << "invalid or missing 'email' field in JSON";
         return std::nullopt;
     }
 }
@@ -29,7 +29,7 @@ QJsonObject toJson(const RegisterInitRequestDTO& dto)
 
     if (dto.email.isEmpty())
     {
-        qDebug() << "[Serialization] serializing empty email";
+        qDebug() << "serializing empty email";
     }
 
     obj["email"] = dto.email;
@@ -46,13 +46,13 @@ std::optional<RegisterInitResponseDTO> fromJsonRegisterInitResponse(const QJsonO
 
     if (!json.contains("verificationId") || !json["verificationId"].isString())
     {
-        qWarning() << "[Serialization] invalid or missing 'verificationId' field in JSON";
+        qWarning() << "invalid or missing 'verificationId' field in JSON";
         return std::nullopt;
     }
 
     if (!json.contains("expiresAt") || !json["expiresAt"].isString())
     {
-        qWarning() << "[Serialization] invalid or missing 'expiresAt' field in JSON";
+        qWarning() << "invalid or missing 'expiresAt' field in JSON";
         return std::nullopt;
     }
 
@@ -61,7 +61,7 @@ std::optional<RegisterInitResponseDTO> fromJsonRegisterInitResponse(const QJsonO
 
     if (!dto.expiresAt.isValid())
     {
-        qWarning() << "[Serialization] invalid 'expiresAt' date format (expected ISO 8601)";
+        qWarning() << "invalid 'expiresAt' date format (expected ISO 8601)";
         return std::nullopt;
     }
 
@@ -74,11 +74,11 @@ QJsonObject toJson(const RegisterInitResponseDTO& dto)
 
     if (dto.verificationId.isEmpty())
     {
-        qDebug() << "[Serialization] serializing empty verificationId";
+        qDebug() << "serializing empty verificationId";
     }
     if (!dto.expiresAt.isValid())
     {
-        qDebug() << "[Serialization] serializing invalid expiresAt date";
+        qDebug() << "serializing invalid expiresAt date";
     }
 
     obj["verificationId"] = dto.verificationId;
@@ -97,12 +97,12 @@ std::optional<LoginRequestDTO> fromJsonLoginRequest(const QJsonObject& json)
 
     if (!json.contains("login") || !json["login"].isString())
     {
-        qWarning() << "[Serialization] invalid or missing 'login' field in JSON";
+        qWarning() << "invalid or missing 'login' field in JSON";
         return std::nullopt;
     }
     if (!json.contains("password") || !json["password"].isString())
     {
-        qWarning() << "[Serialization] invalid or missing 'password' field in JSON";
+        qWarning() << "invalid or missing 'password' field in JSON";
         return std::nullopt;
     }
 
@@ -118,11 +118,11 @@ QJsonObject toJson(const LoginRequestDTO& dto)
 
     if (dto.login.isEmpty())
     {
-        qDebug() << "[Serialization] serializing empty login";
+        qDebug() << "serializing empty login";
     }
     if (dto.password.isEmpty())
     {
-        qDebug() << "[Serialization] serializing empty password";
+        qDebug() << "serializing empty password";
     }
 
     obj["login"] = dto.login;
@@ -141,23 +141,23 @@ std::optional<ConfirmRegisterRequestDTO> fromJsonConfirmRegisterRequest(const QJ
 
     if (!json.contains("verificationId") || !json["verificationId"].isString())
     {
-        qWarning() << "[Serialization] invalid or missing 'verificationId' field in JSON";
+        qWarning() << "invalid or missing 'verificationId' field in JSON";
         return std::nullopt;
     }
 
     if (!json.contains("accessCode") || !json["accessCode"].isDouble())
     {
-        qWarning() << "[Serialization] invalid or missing 'accessCode' field in JSON";
+        qWarning() << "invalid or missing 'accessCode' field in JSON";
         return std::nullopt;
     }
     if (!json.contains("username") || !json["username"].isString())
     {
-        qWarning() << "[Serialization] invalid or missing 'username' field in JSON";
+        qWarning() << "invalid or missing 'username' field in JSON";
         return std::nullopt;
     }
     if (!json.contains("password") || !json["password"].isString())
     {
-        qWarning() << "[Serialization] invalid or missing 'password' field in JSON";
+        qWarning() << "invalid or missing 'password' field in JSON";
         return std::nullopt;
     }
 
@@ -175,15 +175,15 @@ QJsonObject toJson(const ConfirmRegisterRequestDTO& dto)
 
     if (dto.verificationId.isEmpty())
     {
-        qDebug() << "[Serialization] serializing empty verificationId";
+        qDebug() << "serializing empty verificationId";
     }
     if (dto.username.isEmpty())
     {
-        qDebug() << "[Serialization] serializing empty username";
+        qDebug() << "serializing empty username";
     }
     if (dto.password.isEmpty())
     {
-        qDebug() << "[Serialization] serializing empty password";
+        qDebug() << "serializing empty password";
     }
 
     obj["verificationId"] = dto.verificationId;
@@ -204,12 +204,12 @@ std::optional<AuthResponseDTO> fromJsonAuthResponse(const QJsonObject& json)
 
     if (!json.contains("accessToken") || !json["accessToken"].isString())
     {
-        qWarning() << "[Serialization] invalid or missing 'accessToken' field in JSON";
+        qWarning() << "invalid or missing 'accessToken' field in JSON";
         return std::nullopt;
     }
     if (!json.contains("expiresAt") || !json["expiresAt"].isString())
     {
-        qWarning() << "[Serialization] invalid or missing 'expiresAt' field in JSON";
+        qWarning() << "invalid or missing 'expiresAt' field in JSON";
         return std::nullopt;
     }
 
@@ -218,7 +218,7 @@ std::optional<AuthResponseDTO> fromJsonAuthResponse(const QJsonObject& json)
 
     if (!dto.expiresAt.isValid())
     {
-        qWarning() << "[Serialization] invalid 'expiresAt' date format (expected ISO 8601)";
+        qWarning() << "invalid 'expiresAt' date format (expected ISO 8601)";
         return std::nullopt;
     }
 
@@ -231,11 +231,11 @@ QJsonObject toJson(const AuthResponseDTO& dto)
 
     if (dto.accessToken.isEmpty())
     {
-        qDebug() << "[Serialization] serializing empty accessToken";
+        qDebug() << "serializing empty accessToken";
     }
     if (!dto.expiresAt.isValid())
     {
-        qDebug() << "[Serialization] serializing invalid expiresAt date";
+        qDebug() << "serializing invalid expiresAt date";
     }
 
     obj["accessToken"] = dto.accessToken;

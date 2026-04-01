@@ -1,5 +1,4 @@
 #include <QDebug>
-
 #include "database_manager.h"
 
 DatabaseManager::DatabaseManager(): m_isOpen(false)
@@ -14,7 +13,7 @@ void DatabaseManager::initDatabase()
     m_isOpen = m_mainDB.open();
 
     if (!m_isOpen)
-        qCritical() << "[ERROR]: could not open database 'main_database.db'";
+        qCritical() << "could not open database 'main_database.db'";
 
     createTables();
 }
@@ -41,7 +40,12 @@ void DatabaseManager::createUsersTable() const
                "password_hash TEXT NOT NULL)");
 
     if (!ok)
-        qCritical() << "[ERROR]: could not create table 'users'";
+    {
+        qCritical() << "could not create table 'users': "
+                    << query.lastError().text();
+    } else {
+        qInfo() << "table 'users' is ready";
+    }
 }
 
 void DatabaseManager::createFilesTable() const
@@ -60,7 +64,12 @@ void DatabaseManager::createFilesTable() const
                "FOREIGN KEY(parent_id) REFERENCES files(id))");
 
     if (!ok)
-        qCritical() << "[ERROR]: could not create table 'files'";
+    {
+        qCritical() << "could not create table 'files': "
+                    << query.lastError().text();
+    } else {
+        qInfo() << "table 'files' is ready";
+    }
 
     createUniqueRootIndexOnFiles();
 }
@@ -68,9 +77,9 @@ void DatabaseManager::createFilesTable() const
 void DatabaseManager::createUniqueRootIndexOnFiles() const
 {
     if (!createChildUniqueIndex() || !createRootUniqueIndex()) {
-        qCritical() << "[ERROR]: failed to initialize unique indexes for 'files'";
+        qCritical() << "failed to initialize unique indexes for 'files'";
     } else {
-        qDebug() << "[SUCCESS]: Unique indexes for 'files' initialized";
+        qInfo() << "unique indexes for 'files' initialized";
     }
 }
 
@@ -82,9 +91,10 @@ bool DatabaseManager::createChildUniqueIndex() const
                          "WHERE parent_id IS NOT NULL");
 
     if (!ok) {
-        qCritical() << "[ERROR]: could not create index idx_files_unique_child:"
-                    << query.lastError().text();
+        qCritical() << "could not create index 'idx_files_unique_child':" <<
+            query.lastError().text();
     }
+
     return ok;
 }
 
@@ -96,9 +106,10 @@ bool DatabaseManager::createRootUniqueIndex() const
                          "WHERE parent_id IS NULL");
 
     if (!ok) {
-        qCritical() << "[ERROR]: could not create index idx_files_unique_root:"
-                    << query.lastError().text();
+        qCritical() << "could not create index 'idx_files_unique_root':" <<
+            query.lastError().text();
     }
+
     return ok;
 }
 
@@ -112,8 +123,11 @@ void DatabaseManager::createTokensTable() const
                          "expires_at DATETIME,"
                          "FOREIGN KEY(user_id) REFERENCES users(id))");
 
-    if (!ok)
-        qCritical() << "[ERROR]: could not create table 'tokens'";
+    if (!ok) {
+        qCritical() << "could not create table 'tokens':" << query.lastError().text();
+    } else {
+        qInfo() << "table 'tokens' is ready";
+    }
 }
 
 QSqlDatabase DatabaseManager::database() const

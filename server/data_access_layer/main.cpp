@@ -27,6 +27,7 @@ void printFileInfo(const File &file) {
     qDebug() << "-----------------";
 }
 
+
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
@@ -131,7 +132,7 @@ void testDatabase()
     fileRep.addNewFile(File(uid, "directory", "cache", QVariant(), 0, catsDirId));
 
     // delete /Images/Animals/Cats/black_cat.png
-    //fileRep.deleteFile(uid, { "Images", "Animals", "Cats", "black_cat.png" });
+    fileRep.deleteFile(uid, { "Images", "Animals", "Cats", "black_cat.png" });
 
 
     TokenRepository tokenRep(db);
