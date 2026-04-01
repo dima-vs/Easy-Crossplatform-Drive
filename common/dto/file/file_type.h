@@ -17,7 +17,7 @@ enum class FileType
     Unknown
 };
 
-QString fileTypeToString(FileType ft)
+inline QString fileTypeToString(FileType ft)
 {
     switch(ft)
     {
@@ -28,7 +28,7 @@ QString fileTypeToString(FileType ft)
     return UNKNOWN_TYPE_STR;
 }
 
-FileType stringToFileType(const QString& s)
+inline FileType stringToFileType(const QString& s)
 {
     if (s == FILE_TYPE_STR)      return FileType::File;
     if (s == DIRECTORY_TYPE_STR) return FileType::Directory;
