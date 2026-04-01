@@ -21,9 +21,9 @@ struct StorageLimitsDTO
 
 struct TransferLimitsResponseDTO
 {
-    UploadLimitsDto upload;
-    DownloadLimitsDto download;
-    StorageLimitsDto storage;
+    UploadLimitsDTO upload;
+    DownloadLimitsDTO download;
+    StorageLimitsDTO storage;
 };
 
 #endif // LIMITS_TRANSFER_DTO_H
