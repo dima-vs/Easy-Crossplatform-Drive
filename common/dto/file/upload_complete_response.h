@@ -1,20 +1,23 @@
-#ifndef FILE_METADATA_RESPONSE_DTO_H
-#define FILE_METADATA_RESPONSE_DTO_H
+#ifndef UPLOAD_COMPLETE_RESPONSE_H
+#define UPLOAD_COMPLETE_RESPONSE_H
 
 #include <QString>
 #include <QtTypes>
 #include <QDateTime>
 #include <optional>
-#include "file_type_enum.h"
 
-struct FileMetadataResponseDTO
+namespace DTO::File
+{
+
+struct UploadCompleteResponse
 {
     QDateTime createdAt;
-    FileType type;
     int fileId;
     QString fileName;
     std::optional<int> parentId; // null = root
     qint64 size;
 };
 
-#endif // FILE_METADATA_RESPONSE_DTO_H
+}
+
+#endif // UPLOAD_COMPLETE_RESPONSE_H

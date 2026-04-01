@@ -1,13 +1,16 @@
-#ifndef FILE_CREATE_EMPTY_RESPONSE_H
-#define FILE_CREATE_EMPTY_RESPONSE_H
+#ifndef CREATE_EMPTY_RESPONSE_H
+#define CREATE_EMPTY_RESPONSE_H
 
 #include <QString>
 #include <QtTypes>
 #include <QDateTime>
 #include <optional>
-#include "file_type_enum.h"
+#include "file_type.h"
 
-struct FileCreateEmptyResponseDTO
+namespace DTO::File
+{
+
+struct CreateEmptyResponse
 {
     QDateTime createdAt;
     int fileId;
@@ -15,4 +18,6 @@ struct FileCreateEmptyResponseDTO
     std::optional<int> parentId; // null = root
 };
 
-#endif // FILE_CREATE_EMPTY_RESPONSE_H
+}
+
+#endif // CREATE_EMPTY_RESPONSE_H

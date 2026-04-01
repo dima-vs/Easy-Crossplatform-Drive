@@ -1,14 +1,14 @@
-#include "serialization/server_limits/server_limits_json.h"
+#include "serialization/server_limits/json.h"
 
 namespace Serialization::ServerLimits
 {
 
 // ==========================================
-// [TransferLimitsResponseDTO]
+// [DTO::ServerLimits::TransferResponse]
 // ==========================================
-std::optional<TransferLimitsResponseDTO> fromJsonTransferLimitsResponse(const QJsonObject& json)
+std::optional<DTO::ServerLimits::TransferResponse> fromJsonTransferResponse(const QJsonObject& json)
 {
-    TransferLimitsResponseDTO dto;
+    DTO::ServerLimits::TransferResponse dto;
 
     if (!json.contains("upload") || !json["upload"].isObject())
     {
@@ -61,7 +61,7 @@ std::optional<TransferLimitsResponseDTO> fromJsonTransferLimitsResponse(const QJ
     return dto;
 }
 
-QJsonObject toJson(const TransferLimitsResponseDTO& dto)
+QJsonObject toJson(const DTO::ServerLimits::TransferResponse& dto)
 {
     QJsonObject root;
 

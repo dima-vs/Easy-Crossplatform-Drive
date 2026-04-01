@@ -3,8 +3,9 @@
 #include <QString>
 #include <QJsonDocument>
 #include <QFile>
-#include "serialization/auth/auth_json.h"
-#include "dto/auth_dto/confirm_register_request_dto.h"
+#include "serialization/auth/json.h"
+#include "serialization/server_limits/json.h"
+#include "dto/auth/confirm_register_request.h"
 
 using namespace Serialization;
 
@@ -13,7 +14,7 @@ int main(int argc, char *argv[])
     QCoreApplication a(argc, argv);
     qDebug() << "Common";
 
-    ConfirmRegisterRequestDTO confRegDto;
+    DTO::Auth::ConfirmRegisterRequest confRegDto;
     confRegDto.accessCode = 434543;
     confRegDto.password = "123345";
     confRegDto.username = "username";
@@ -28,7 +29,7 @@ int main(int argc, char *argv[])
     file.write(jsDoc.toJson());
 
     qDebug() << "[AuthResponse] has value: " <<
-        Auth::fromJsonAuthResponse(jsObj)
+        Auth::fromJsonGeneralResponse(jsObj)
                             .has_value(); // false
     qDebug() << "[RegisterInitResponse] has value: " <<
         Auth::fromJsonRegisterInitResponse(jsObj)
@@ -37,7 +38,7 @@ int main(int argc, char *argv[])
         Auth::fromJsonConfirmRegisterRequest(jsObj)
                             .has_value(); // true
 
-    ConfirmRegisterRequestDTO otherConfRegDto =
+    DTO::Auth::ConfirmRegisterRequest otherConfRegDto =
         Auth::fromJsonConfirmRegisterRequest(jsObj).value();
 
     file.close();

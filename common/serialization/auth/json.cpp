@@ -1,17 +1,17 @@
 #include <QDebug>
 #include <QDateTime>
 #include <QString>
-#include "serialization/auth/auth_json.h"
+#include "serialization/auth/json.h"
 
 namespace Serialization::Auth
 {
 
 // ==========================================
-// [RegisterInitRequestDTO]
+// [DTO::Auth::RegisterInitRequest]
 // ==========================================
-std::optional<RegisterInitRequestDTO> fromJsonRegisterInitRequest(const QJsonObject& json)
+std::optional<DTO::Auth::RegisterInitRequest> fromJsonRegisterInitRequest(const QJsonObject& json)
 {
-    RegisterInitRequestDTO dto;
+    DTO::Auth::RegisterInitRequest dto;
 
     if (json.contains("email") && json["email"].isString())
     {
@@ -23,7 +23,7 @@ std::optional<RegisterInitRequestDTO> fromJsonRegisterInitRequest(const QJsonObj
     }
 }
 
-QJsonObject toJson(const RegisterInitRequestDTO& dto)
+QJsonObject toJson(const DTO::Auth::RegisterInitRequest& dto)
 {
     QJsonObject obj;
 
@@ -38,11 +38,11 @@ QJsonObject toJson(const RegisterInitRequestDTO& dto)
 
 
 // ==========================================
-// [RegisterInitResponseDTO]
+// [DTO::Auth::RegisterInitResponse]
 // ==========================================
-std::optional<RegisterInitResponseDTO> fromJsonRegisterInitResponse(const QJsonObject& json)
+std::optional<DTO::Auth::RegisterInitResponse> fromJsonRegisterInitResponse(const QJsonObject& json)
 {
-    RegisterInitResponseDTO dto;
+    DTO::Auth::RegisterInitResponse dto;
 
     if (!json.contains("verificationId") || !json["verificationId"].isString())
     {
@@ -68,7 +68,7 @@ std::optional<RegisterInitResponseDTO> fromJsonRegisterInitResponse(const QJsonO
     return dto;
 }
 
-QJsonObject toJson(const RegisterInitResponseDTO& dto)
+QJsonObject toJson(const DTO::Auth::RegisterInitResponse& dto)
 {
     QJsonObject obj;
 
@@ -89,11 +89,11 @@ QJsonObject toJson(const RegisterInitResponseDTO& dto)
 
 
 // ==========================================
-// [LoginRequestDTO]
+// [DTO::Auth::LoginRequest]
 // ==========================================
-std::optional<LoginRequestDTO> fromJsonLoginRequest(const QJsonObject& json)
+std::optional<DTO::Auth::LoginRequest> fromJsonLoginRequest(const QJsonObject& json)
 {
-    LoginRequestDTO dto;
+    DTO::Auth::LoginRequest dto;
 
     if (!json.contains("login") || !json["login"].isString())
     {
@@ -112,7 +112,7 @@ std::optional<LoginRequestDTO> fromJsonLoginRequest(const QJsonObject& json)
     return dto;
 }
 
-QJsonObject toJson(const LoginRequestDTO& dto)
+QJsonObject toJson(const DTO::Auth::LoginRequest& dto)
 {
     QJsonObject obj;
 
@@ -133,11 +133,11 @@ QJsonObject toJson(const LoginRequestDTO& dto)
 
 
 // ==========================================
-// [ConfirmRegisterRequestDTO]
+// [DTO::Auth::ConfirmRegisterRequest]
 // ==========================================
-std::optional<ConfirmRegisterRequestDTO> fromJsonConfirmRegisterRequest(const QJsonObject& json)
+std::optional<DTO::Auth::ConfirmRegisterRequest> fromJsonConfirmRegisterRequest(const QJsonObject& json)
 {
-    ConfirmRegisterRequestDTO dto;
+    DTO::Auth::ConfirmRegisterRequest dto;
 
     if (!json.contains("verificationId") || !json["verificationId"].isString())
     {
@@ -169,7 +169,7 @@ std::optional<ConfirmRegisterRequestDTO> fromJsonConfirmRegisterRequest(const QJ
     return dto;
 }
 
-QJsonObject toJson(const ConfirmRegisterRequestDTO& dto)
+QJsonObject toJson(const DTO::Auth::ConfirmRegisterRequest& dto)
 {
     QJsonObject obj;
 
@@ -196,11 +196,11 @@ QJsonObject toJson(const ConfirmRegisterRequestDTO& dto)
 
 
 // ==========================================
-// [AuthResponseDTO]
+// [DTO::Auth::GeneralResponse]
 // ==========================================
-std::optional<AuthResponseDTO> fromJsonAuthResponse(const QJsonObject& json)
+std::optional<DTO::Auth::GeneralResponse> fromJsonGeneralResponse(const QJsonObject& json)
 {
-    AuthResponseDTO dto;
+    DTO::Auth::GeneralResponse dto;
 
     if (!json.contains("accessToken") || !json["accessToken"].isString())
     {
@@ -225,7 +225,7 @@ std::optional<AuthResponseDTO> fromJsonAuthResponse(const QJsonObject& json)
     return dto;
 }
 
-QJsonObject toJson(const AuthResponseDTO& dto)
+QJsonObject toJson(const DTO::Auth::GeneralResponse& dto)
 {
     QJsonObject obj;
 

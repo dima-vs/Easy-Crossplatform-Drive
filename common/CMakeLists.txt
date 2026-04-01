@@ -13,29 +13,29 @@ find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
 
 add_library(Common_Lib STATIC 
-    dto/auth_dto/register_init_request_dto.h
-    dto/auth_dto/register_init_response_dto.h
-    dto/auth_dto/confirm_register_request_dto.h
-    dto/auth_dto/auth_response_dto.h
-    dto/auth_dto/login_request_dto.h
-    dto/server_limits_dto/limits_transfer_dto.h
-    dto/file_dto/file_tree_response_dto.h
-    dto/file_dto/upload_init_request_dto.h
-    dto/file_dto/upload_init_response_dto.h
-    dto/file_dto/upload_complete_response_dto.h
-    dto/file_dto/file_metadata_response_dto.h
-    dto/file_dto/file_type_enum.h
-    dto/file_dto/file_create_empty_request.h
-    dto/file_dto/file_create_empty_response.h
-    dto/file_dto/file_rename_request_dto.h
-    dto/file_dto/file_rename_response_dto.h
+    dto/auth/register_init_request.h
+    dto/auth/register_init_response.h
+    dto/auth/confirm_register_request.h
+    dto/auth/general_response.h
+    dto/auth/login_request.h
+    dto/server_limits/transfer.h
+    dto/file/tree_response.h
+    dto/file/upload_init_request.h
+    dto/file/upload_init_response.h
+    dto/file/upload_complete_response.h
+    dto/file/metadata_response.h
+    dto/file/file_type.h
+    dto/file/create_empty_request.h
+    dto/file/create_empty_response.h
+    dto/file/rename_request.h
+    dto/file/rename_response.h
 
-    serialization/auth/auth_json.h
-    serialization/auth/auth_json.cpp
-    serialization/file/file_json.h
-    serialization/file/file_json.cpp
-    serialization/server_limits/server_limits_json.h
-    serialization/server_limits/server_limits_json.cpp
+    serialization/auth/json.h
+    serialization/auth/json.cpp
+    serialization/file/json.h
+    serialization/file/json.cpp
+    serialization/server_limits/json.h
+    serialization/server_limits/json.cpp
 )
 target_link_libraries(Common_Lib PUBLIC Qt${QT_VERSION_MAJOR}::Core)
 target_include_directories(Common_Lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

@@ -1,11 +1,14 @@
-#ifndef UPLOAD_INIT_REQUEST_DTO_H
-#define UPLOAD_INIT_REQUEST_DTO_H
+#ifndef UPLOAD_INIT_REQUEST_H
+#define UPLOAD_INIT_REQUEST_H
 
 #include <QString>
 #include <QtTypes>
 #include <optional>
 
-struct UploadInitRequestDTO
+namespace DTO::File
+{
+
+struct UploadInitRequest
 {
     QString fileName;
     std::optional<int> parentId; // null = root
@@ -13,4 +16,6 @@ struct UploadInitRequestDTO
     bool overwrite;
 };
 
-#endif // UPLOAD_INIT_REQUEST_DTO_H
+}
+
+#endif // UPLOAD_INIT_REQUEST_H
