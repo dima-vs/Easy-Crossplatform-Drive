@@ -1,11 +1,12 @@
 #include <QSqlQuery>
+#include <QVariant>
 #include <QDebug>
 #include "user_repository.h"
 
 UserRepository::UserRepository(DatabaseManager &db):
     m_db(db) {}
 
-bool UserRepository::addNewUser(const User& user) const
+bool UserRepository::addNewUser(User &user) const
 {
     if (!user.isValid())
     {
@@ -23,8 +24,22 @@ bool UserRepository::addNewUser(const User& user) const
 
     bool qResult = query.exec();
 
-    if (!qResult)
+    if (qResult)
+    {
+        // try to update source object's id
+        QVariant id = query.lastInsertId();
+        if (id.isValid()) {
+            qDebug() << "inserted ID:" << id.toInt();
+            user.setId(id.toInt());
+        } else {
+            qDebug() << "lastInsertId is not supported by this driver";
+        }
+    }
+    else
+    {
         qCritical() << query.lastError().text();
+    }
+
     return qResult;
 }
 

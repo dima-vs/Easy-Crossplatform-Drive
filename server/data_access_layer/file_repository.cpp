@@ -1,10 +1,11 @@
 #include <QSqlDatabase>
+#include <QVariant>
 #include "file_repository.h"
 
 FileRepository::FileRepository(DatabaseManager& db):
     m_db(db) {}
 
-bool FileRepository::addNewFile(const File& file) const
+bool FileRepository::addNewFile(File &file) const
 {
     if (!file.isValid())
     {
@@ -26,18 +27,31 @@ bool FileRepository::addNewFile(const File& file) const
     query.bindValue(":size", file.size());
     query.bindValue(":parent_id", file.parentId());
 
-    if (!query.exec())
+    bool qResult = query.exec();
+
+    if (qResult)
+    {
+        // try to update source object's id
+        QVariant id = query.lastInsertId();
+        if (id.isValid()) {
+            qDebug() << "inserted ID:" << id.toInt();
+            file.setId(id.toInt());
+        } else {
+            qDebug() << "lastInsertId is not supported by this driver";
+        }
+
+        qInfo().noquote()
+            << file.type()
+            << "\"" + file.logicalName() + "\""
+            << "added";
+    }
+    else
     {
         qCritical() << "failed to insert file:"
                     << query.lastError().text();
-        return false;
     }
 
-    qInfo().noquote()
-        << file.type()
-        << "\"" + file.logicalName() + "\""
-        << "added";
-    return true;
+    return qResult;
 }
 
 File FileRepository::getFile(int id) const

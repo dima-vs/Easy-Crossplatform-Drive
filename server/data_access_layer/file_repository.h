@@ -12,7 +12,7 @@ private:
     DatabaseManager& m_db;
 public:
     FileRepository(DatabaseManager& db);
-    bool addNewFile(const File& file) const;
+    bool addNewFile(File& file) const;
     File getFile(int id) const;
     File getFile(int ownerId, const QList<QString>& fullPath) const;
     QList<File> getFilesByOwner(int ownerId) const;

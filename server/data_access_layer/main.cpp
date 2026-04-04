@@ -83,15 +83,95 @@ void testFileStorage()
     qDebug() << "Does file still exist (size check):" << storage.getFileSize(sName);
 }
 
+// void testDatabase()
+// {
+//     DatabaseManager db;
+//     UserRepository userRep(db);
+
+//     User u4("user4", "user4@gmail.com", "34retww455y5");
+//     userRep.addNewUser(User("user1", "user1@gmail.com", "12345"));
+//     userRep.addNewUser(User("user2", "user2@gmail.com", "11111111111"));
+//     userRep.addNewUser(User("user3", "user3@gmail.com", "fffffffff"));
+//     userRep.addNewUser(u4);
+
+//     User user = userRep.getUser("user3");
+//     qDebug() << user.id() <<
+//         user.username() <<
+//         user.email() <<
+//         user.passwordHash();
+
+//     userRep.deleteUser("user2");
+
+//     User user3 = userRep.getUser("user3");
+//     int uid = user3.id();
+
+//     FileRepository fileRep(db);
+//     // File(ownerId, type, logicalName, serverName, size, [parentId])
+//     // servername is empty (QVariant()) for directories
+//     fileRep.addNewFile(File(uid, "directory", "Images", QVariant(), 0));
+//     // /Videos
+//     fileRep.addNewFile(File(uid, "directory", "Videos", QVariant(), 0));
+
+//     int imgDirId = fileRep.getFile(uid, { "Images" }).id();
+//     // /Images/icon.png
+//     fileRep.addNewFile(File(uid, "file", "icon.png",
+//                             "fsdlkgjgerhg45j.bin", 2048, imgDirId));
+
+//     // /Images/Animals
+//     fileRep.addNewFile(File(uid, "directory", "Animals", QVariant(), 0, imgDirId));
+//     int animalsDirId = fileRep.getFile(uid, { "Images", "Animals" }).id();
+//     // /Images/Animals/Cats
+//     fileRep.addNewFile(File(uid, "directory", "Cats", QVariant(), 0, animalsDirId));
+
+//     int catsDirId = fileRep.getFile(uid, { "Images", "Animals", "Cats" }).id();
+//     // /Images/Animals/Cats/black_cat.png
+//     fileRep.addNewFile(File(uid, "file", "black_cat.png", "someservername1.bin", 5120, catsDirId));
+//     // /Images/Animals/Cats/white_cat.png
+//     fileRep.addNewFile(File(uid, "file", "white_cat.jpg", "someservername2.bin", 43544, catsDirId));
+
+//     fileRep.addNewFile(File(uid, "directory", "temp", QVariant(), 0, catsDirId));
+//     fileRep.addNewFile(File(uid, "directory", "cache", QVariant(), 0, catsDirId));
+
+//     // delete /Images/Animals/Cats/black_cat.png
+//     fileRep.deleteFile(uid, { "Images", "Animals", "Cats", "black_cat.png" });
+
+
+//     TokenRepository tokenRep(db);
+//     tokenRep.addNewToken(Token(
+//         "id1", "token1", uid, QDateTime::currentDateTime().addDays(1)));
+//     tokenRep.addNewToken(Token(
+//         "id2", "token2", uid, QDateTime::currentDateTime().addDays(1)));
+//     tokenRep.addNewToken(Token(
+//         "id3", "token3", uid, QDateTime::currentDateTime().addYears(-1)));
+//     tokenRep.addNewToken(Token(
+//         "id1", "token1", uid, QDateTime::currentDateTime().addDays(1)));
+
+//     tokenRep.cleanExpiredTokens();
+
+//     QList<File> fileList = fileRep.getFilesByOwner(uid);
+//     qDebug() << "File list size: " << fileList.size();
+//     for (File& fileObj : fileList)
+//     {
+//         printFileInfo(fileObj);
+//     }
+// }
+
 void testDatabase()
 {
     DatabaseManager db;
     UserRepository userRep(db);
 
-    userRep.addNewUser(User("user1", "user1@gmail.com", "12345"));
-    userRep.addNewUser(User("user2", "user2@gmail.com", "11111111111"));
-    userRep.addNewUser(User("user3", "user3@gmail.com", "fffffffff"));
-    userRep.addNewUser(User("user4", "user4@gmail.com", "34retww455y5"));
+    User u1("user1", "user1@gmail.com", "12345");
+    userRep.addNewUser(u1);
+
+    User u2("user2", "user2@gmail.com", "11111111111");
+    userRep.addNewUser(u2);
+
+    User u3("user3", "user3@gmail.com", "fffffffff");
+    userRep.addNewUser(u3);
+
+    User u4("user4", "user4@gmail.com", "34retww455y5");
+    userRep.addNewUser(u4);
 
     User user = userRep.getUser("user3");
     qDebug() << user.id() <<
@@ -105,45 +185,67 @@ void testDatabase()
     int uid = user3.id();
 
     FileRepository fileRep(db);
+
     // File(ownerId, type, logicalName, serverName, size, [parentId])
     // servername is empty (QVariant()) for directories
-    fileRep.addNewFile(File(uid, "directory", "Images", QVariant(), 0));
+
+    // /Images/
+    File fImages(uid, "directory", "Images", QVariant(), 0);
+    fileRep.addNewFile(fImages);
+
     // /Videos
-    fileRep.addNewFile(File(uid, "directory", "Videos", QVariant(), 0));
+    File fVideos(uid, "directory", "Videos", QVariant(), 0);
+    fileRep.addNewFile(fVideos);
 
     int imgDirId = fileRep.getFile(uid, { "Images" }).id();
+
     // /Images/icon.png
-    fileRep.addNewFile(File(uid, "file", "icon.png",
-                            "fsdlkgjgerhg45j.bin", 2048, imgDirId));
+    File fIcon(uid, "file", "icon.png", "fsdlkgjgerhg45j.bin", 2048, imgDirId);
+    fileRep.addNewFile(fIcon);
 
     // /Images/Animals
-    fileRep.addNewFile(File(uid, "directory", "Animals", QVariant(), 0, imgDirId));
+    File fAnimals(uid, "directory", "Animals", QVariant(), 0, imgDirId);
+    fileRep.addNewFile(fAnimals);
+
     int animalsDirId = fileRep.getFile(uid, { "Images", "Animals" }).id();
+
     // /Images/Animals/Cats
-    fileRep.addNewFile(File(uid, "directory", "Cats", QVariant(), 0, animalsDirId));
+    File fCats(uid, "directory", "Cats", QVariant(), 0, animalsDirId);
+    fileRep.addNewFile(fCats);
 
     int catsDirId = fileRep.getFile(uid, { "Images", "Animals", "Cats" }).id();
-    // /Images/Animals/Cats/black_cat.png
-    fileRep.addNewFile(File(uid, "file", "black_cat.png", "someservername1.bin", 5120, catsDirId));
-    // /Images/Animals/Cats/white_cat.png
-    fileRep.addNewFile(File(uid, "file", "white_cat.jpg", "someservername2.bin", 43544, catsDirId));
 
-    fileRep.addNewFile(File(uid, "directory", "temp", QVariant(), 0, catsDirId));
-    fileRep.addNewFile(File(uid, "directory", "cache", QVariant(), 0, catsDirId));
+    // /Images/Animals/Cats/black_cat.png
+    File fBlackCat(uid, "file", "black_cat.png", "someservername1.bin", 5120, catsDirId);
+    fileRep.addNewFile(fBlackCat);
+
+    // /Images/Animals/Cats/white_cat.png
+    File fWhiteCat(uid, "file", "white_cat.jpg", "someservername2.bin", 43544, catsDirId);
+    fileRep.addNewFile(fWhiteCat);
+
+    File fTemp(uid, "directory", "temp", QVariant(), 0, catsDirId);
+    fileRep.addNewFile(fTemp);
+
+    File fCache(uid, "directory", "cache", QVariant(), 0, catsDirId);
+    fileRep.addNewFile(fCache);
 
     // delete /Images/Animals/Cats/black_cat.png
     fileRep.deleteFile(uid, { "Images", "Animals", "Cats", "black_cat.png" });
 
 
     TokenRepository tokenRep(db);
-    tokenRep.addNewToken(Token(
-        "id1", "token1", uid, QDateTime::currentDateTime().addDays(1)));
-    tokenRep.addNewToken(Token(
-        "id2", "token2", uid, QDateTime::currentDateTime().addDays(1)));
-    tokenRep.addNewToken(Token(
-        "id3", "token3", uid, QDateTime::currentDateTime().addYears(-1)));
-    tokenRep.addNewToken(Token(
-        "id1", "token1", uid, QDateTime::currentDateTime().addDays(1)));
+
+    Token t1("id1", "token1", uid, QDateTime::currentDateTime().addDays(1));
+    tokenRep.addNewToken(t1);
+
+    Token t2("id2", "token2", uid, QDateTime::currentDateTime().addDays(1));
+    tokenRep.addNewToken(t2);
+
+    Token t3("id3", "token3", uid, QDateTime::currentDateTime().addYears(-1));
+    tokenRep.addNewToken(t3);
+
+    Token t1_copy("id1", "token1", uid, QDateTime::currentDateTime().addDays(1));
+    tokenRep.addNewToken(t1_copy);
 
     tokenRep.cleanExpiredTokens();
 

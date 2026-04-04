@@ -11,7 +11,7 @@ private:
     DatabaseManager& m_db;
 public:
     UserRepository(DatabaseManager& db);
-    bool addNewUser(const User& user) const;
+    bool addNewUser(User& user) const;
     User getUser(int id) const;
     User getUser(QString username) const;
     bool deleteUser(QString username) const;
