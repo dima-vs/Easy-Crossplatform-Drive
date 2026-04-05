@@ -12,8 +12,9 @@ private:
 public:
     TokenRepository(DatabaseManager& db);
     bool addNewToken(const Token& token) const;
-    Token getToken(QString id) const;
-    bool deleteToken(QString id) const;
+    Token getToken(const QString& id) const;
+    bool exists(const QString& id) const;
+    bool deleteToken(const QString& id) const;
     bool cleanExpiredTokens() const;
     bool deleteByUser(int userId) const;
 };

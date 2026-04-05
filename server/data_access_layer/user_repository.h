@@ -13,8 +13,8 @@ public:
     UserRepository(DatabaseManager& db);
     bool addNewUser(User& user) const;
     User getUser(int id) const;
-    User getUser(QString username) const;
-    bool deleteUser(QString username) const;
+    User getUser(const QString& username) const;
+    bool deleteUser(const QString& username) const;
 };
 
 #endif // USER_REPOSITORY_H

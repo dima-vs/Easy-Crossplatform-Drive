@@ -69,7 +69,7 @@ User UserRepository::getUser(int id) const
     return User();
 }
 
-User UserRepository::getUser(QString username) const
+User UserRepository::getUser(const QString &username) const
 {
     QSqlQuery query(m_db.database());
     query.prepare("SELECT id, username, email, password_hash FROM users WHERE username = :username");
@@ -95,7 +95,7 @@ User UserRepository::getUser(QString username) const
     return User();
 }
 
-bool UserRepository::deleteUser(QString username) const
+bool UserRepository::deleteUser(const QString &username) const
 {
     QSqlQuery query(m_db.database());
     query.prepare("DELETE FROM users WHERE username = :username");
