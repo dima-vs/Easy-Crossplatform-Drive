@@ -118,7 +118,7 @@ void DatabaseManager::createTokensTable() const
     QSqlQuery query(m_mainDB);
     bool ok = query.exec("CREATE TABLE IF NOT EXISTS tokens("
                          "id TEXT PRIMARY KEY,"
-                         "token_hash TEXT UNIQUE NOT NULL,"
+                         "token_hash TEXT NOT NULL,"
                          "user_id INTEGER NOT NULL,"
                          "expires_at DATETIME,"
                          "FOREIGN KEY(user_id) REFERENCES users(id))");
