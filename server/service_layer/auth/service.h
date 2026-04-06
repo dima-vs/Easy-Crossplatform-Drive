@@ -13,6 +13,7 @@
 #include "service_result.h"
 #include "auth/models.h"
 #include "auth/error_codes.h"
+#include "email/email_sender.h"
 
 namespace Service::Auth
 {
@@ -28,6 +29,8 @@ class AuthService : public QObject
 private:
     UserRepository& m_userRep;
     TokenRepository& m_tokenRep;
+    Service::Email::IEmailSender& m_emailSender;
+
     // registration session duration in seconds
     int m_regSessionsDurationSec;
     int m_userSessionsDurationSec;
@@ -39,7 +42,10 @@ private:
     // {uuid: RegistrationSession}
     QMap<QString, Model::RegistrationSession> m_activeRegistrationSessions;
 public:
-    AuthService(UserRepository& userRep, TokenRepository& tokenRep);
+    AuthService(
+        UserRepository& userRep,
+        TokenRepository& tokenRep,
+        Service::Email::IEmailSender& emailSender);
 
     ServiceResult<Model::RegistrationSessionResult, ServiceError> startRegistrationSession(const QString& email);
     AuthResult completeRegistration(const QString& verificationId,

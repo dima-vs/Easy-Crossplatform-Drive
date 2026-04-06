@@ -8,6 +8,21 @@
 #include "user_repository.h"
 #include "file_repository.h"
 #include "token_repository.h"
+#include "email/email_sender.h"
+
+
+class MailServiceSpy : public Service::Email::IEmailSender
+{
+public:
+    int lastSentCode = 0;
+    QString lastEmail;
+
+    void sendAccessCode(const QString& email, int code) override
+    {
+        lastSentCode = code;
+        lastEmail = email;
+    }
+};
 
 int main(int argc, char *argv[])
 {
@@ -28,25 +43,38 @@ int main(int argc, char *argv[])
     QTextStream input(stdin);
     QTextStream output(stdout);
 
-    Service::Auth::AuthService authService(userRep, tokenRep);
-    RegResult regResult =
-        authService.startRegistrationSession("my_email@gmail.com");
+    MailServiceSpy mailSpy;
+    Service::Auth::AuthService authService(userRep, tokenRep, mailSpy);
 
-    output << "Enter an access code: ";
-    output.flush();
-
-    bool ok;
-    int accessCode = input.readLine().toInt(&ok);
-    if (!ok)
+    for (int i = 1; i <= 4; ++i)
     {
-        qDebug() << "Incorrect input!";
-        return -1;
+        QString email = QString("user%1@gmail.com").arg(i);
+        QString username = QString("user_name_%1").arg(i);
+        QString password = "password123";
+
+        qDebug() << "--- Registering user" << i << ":" << email << "---";
+
+        RegResult regResult = authService.startRegistrationSession(email);
+
+        if (!regResult.isOk())
+        {
+            qDebug() << "Failed to start registration for" << email;
+            continue;
+        }
+
+        AuthResult authResult = authService.completeRegistration(
+            regResult.data().varificationId,
+            mailSpy.lastSentCode,
+            username,
+            password
+            );
+
+        if (authResult.isOk()) {
+            qDebug() << "Successfully registered:" << username;
+        } else {
+            qDebug() << "Failed to complete registration for" << username;
+        }
     }
 
-    AuthResult authResult = authService.completeRegistration(
-        regResult.data().varificationId, accessCode, "my_user_name", "12345678"
-    );
-
-    return 0;
-    //return a.exec();
+    return a.exec();
 }

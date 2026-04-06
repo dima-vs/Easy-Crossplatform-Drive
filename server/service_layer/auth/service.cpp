@@ -12,8 +12,13 @@
 namespace Service::Auth
 {
 
-AuthService::AuthService(UserRepository &userRep, TokenRepository &tokenRep):
+AuthService::AuthService(
+    UserRepository &userRep,
+    TokenRepository &tokenRep,
+    Service::Email::IEmailSender &emailSender
+    ) :
     m_userRep(userRep), m_tokenRep(tokenRep),
+    m_emailSender(emailSender),
     m_regSessionsDurationSec(180), // 3 min
     m_userSessionsDurationSec(604800), // 1 week
     m_codeEntryAttemptsLimit(3)
@@ -46,11 +51,13 @@ void AuthService::clearExpiredRegistrationSessions()
             return pair.second.expiresAt < QDateTime::currentDateTimeUtc();
         }
     );
+    qDebug() << "expired registration sessions cleared";
 }
 
 void AuthService::clearExpiredTokens() const
 {
-    m_tokenRep.cleanExpiredTokens();
+    m_tokenRep.cleanExpiredTokens(QDateTime::currentDateTimeUtc());
+    qDebug() << "expired tokens cleared";
 }
 
 ServiceResult<Model::RegistrationSessionResult, ServiceError>
@@ -61,6 +68,7 @@ ServiceResult<Model::RegistrationSessionResult, ServiceError>
 
     // TEST
     qDebug() << "generated access code =" << accessCode << "for email" << email;
+    m_emailSender.sendAccessCode(email, accessCode);
 
     // init registration session
     Model::RegistrationSession regSession;
