@@ -2,6 +2,9 @@
 #include <QDebug>
 #include <QString>
 #include <QTextStream>
+#include <QDateTime>
+#include <QDate>
+#include <QTime>
 
 #include "auth/service.h"
 #include "database_manager.h"
@@ -9,7 +12,7 @@
 #include "file_repository.h"
 #include "token_repository.h"
 #include "email/email_sender.h"
-
+#include "datetime/time_provider_interface.h"
 
 class MailServiceSpy : public Service::Email::IEmailSender
 {
@@ -21,6 +24,17 @@ public:
     {
         lastSentCode = code;
         lastEmail = email;
+    }
+};
+
+class MockTimeProvider : public Service::Time::ITimeProvider
+{
+public:
+    QDateTime manualTime;
+
+    QDateTime currentDateTimeUtc() const override
+    {
+        return manualTime;
     }
 };
 
@@ -44,10 +58,19 @@ int main(int argc, char *argv[])
     QTextStream output(stdout);
 
     MailServiceSpy mailSpy;
-    Service::Auth::AuthService authService(userRep, tokenRep, mailSpy);
+    MockTimeProvider timeProvider;
+    Service::Auth::AuthService authService(userRep, tokenRep, mailSpy, timeProvider);
+
+    timeProvider.manualTime = QDateTime(QDate(2026, 4, 6), QTime(12, 0, 0));
 
     for (int i = 1; i <= 4; ++i)
     {
+        if (i == 4)
+        {
+            // skip a month for fourth user
+            timeProvider.manualTime = timeProvider.manualTime.addMonths(1);
+        }
+
         QString email = QString("user%1@gmail.com").arg(i);
         QString username = QString("user_name_%1").arg(i);
         QString password = "password123";
@@ -76,5 +99,11 @@ int main(int argc, char *argv[])
         }
     }
 
-    return a.exec();
+    timeProvider.manualTime = timeProvider.manualTime
+                              .addMonths(-1)
+                              .addDays(8);
+    // fourth user's token must remain
+    authService.clearExpiredTokens();
+
+    return 0;
 }

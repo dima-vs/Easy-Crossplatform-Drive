@@ -15,40 +15,24 @@ namespace Service::Auth
 AuthService::AuthService(
     UserRepository &userRep,
     TokenRepository &tokenRep,
-    Service::Email::IEmailSender &emailSender
+    Service::Email::IEmailSender &emailSender,
+    Time::ITimeProvider &timeProvider
     ) :
     m_userRep(userRep), m_tokenRep(tokenRep),
     m_emailSender(emailSender),
+    m_timeProvider(timeProvider),
     m_regSessionsDurationSec(180), // 3 min
     m_userSessionsDurationSec(604800), // 1 week
     m_codeEntryAttemptsLimit(3)
 {
-    m_registrationSessionsCleanupTimer.setInterval(600000); // 10 min
-    m_tokensCleanupTimer.setInterval(86400000 * 1); // 1 day
 
-    connect(
-        &m_registrationSessionsCleanupTimer,
-        &QTimer::timeout,
-        this,
-        &AuthService::clearExpiredRegistrationSessions
-        );
-
-    connect(
-        &m_tokensCleanupTimer,
-        &QTimer::timeout,
-        this,
-        &AuthService::clearExpiredTokens
-        );
-
-    m_registrationSessionsCleanupTimer.start();
-    m_tokensCleanupTimer.start();
 }
 
 void AuthService::clearExpiredRegistrationSessions()
 {
     m_activeRegistrationSessions.removeIf(
-        [](std::pair<const QString&, Model::RegistrationSession&> pair) {
-            return pair.second.expiresAt < QDateTime::currentDateTimeUtc();
+        [this](std::pair<const QString&, Model::RegistrationSession&> pair) {
+            return pair.second.expiresAt < this->m_timeProvider.currentDateTimeUtc();
         }
     );
     qDebug() << "expired registration sessions cleared";
@@ -56,7 +40,7 @@ void AuthService::clearExpiredRegistrationSessions()
 
 void AuthService::clearExpiredTokens() const
 {
-    m_tokenRep.cleanExpiredTokens(QDateTime::currentDateTimeUtc());
+    m_tokenRep.cleanExpiredTokens(m_timeProvider.currentDateTimeUtc());
     qDebug() << "expired tokens cleared";
 }
 
@@ -76,7 +60,7 @@ ServiceResult<Model::RegistrationSessionResult, ServiceError>
     regSession.attemptsCount = 0;
     regSession.email = email;
 
-    QDateTime now = QDateTime::currentDateTimeUtc();
+    QDateTime now = m_timeProvider.currentDateTimeUtc();
     regSession.expiresAt = now.addSecs(m_regSessionsDurationSec);
 
     QUuid uuid = QUuid::createUuid();
@@ -104,7 +88,7 @@ AuthResult AuthService::completeRegistration(
     Model::RegistrationSession& regSession =
         m_activeRegistrationSessions[verificationId];
     // check if registration session expired
-    if (regSession.expiresAt < QDateTime::currentDateTimeUtc())
+    if (regSession.expiresAt < m_timeProvider.currentDateTimeUtc())
     {
         m_activeRegistrationSessions.remove(verificationId);
         return AuthResult::fail(ServiceError::SessionExpired);
@@ -178,7 +162,7 @@ AuthResult AuthService::createUserSession(const QString& userName, int userId) c
         ).toHex()
     );
 
-    QDateTime now = QDateTime::currentDateTimeUtc();
+    QDateTime now = m_timeProvider.currentDateTimeUtc();
     QDateTime expiresAt = now.addSecs(m_userSessionsDurationSec);
 
     Token token(id, tokenHash, userId, expiresAt);
