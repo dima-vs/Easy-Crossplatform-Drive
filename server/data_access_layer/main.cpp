@@ -1,6 +1,7 @@
 #include <QCoreApplication>
 #include <QDebug>
 #include <QString>
+#include <QDateTime>
 #include <QVariant>
 
 #include "database_manager.h"
@@ -175,7 +176,7 @@ void testDatabase()
     Token t1_copy("id1", "token1", uid, QDateTime::currentDateTime().addDays(1));
     tokenRep.addNewToken(t1_copy);
 
-    tokenRep.cleanExpiredTokens();
+    tokenRep.cleanExpiredTokens(QDateTime::currentDateTimeUtc());
 
     QList<File> fileList = fileRep.getFilesByOwner(uid);
     qDebug() << "File list size: " << fileList.size();

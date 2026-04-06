@@ -2,6 +2,7 @@
 #define TOKEN_REPOSITORY_H
 
 #include <QString>
+#include <QDateTime>
 #include "database_manager.h"
 #include "token.h"
 
@@ -15,7 +16,7 @@ public:
     Token getToken(const QString& id) const;
     bool exists(const QString& id) const;
     bool deleteToken(const QString& id) const;
-    bool cleanExpiredTokens() const;
+    bool cleanExpiredTokens(QDateTime currentDateTime) const;
     bool deleteByUser(int userId) const;
 };
 

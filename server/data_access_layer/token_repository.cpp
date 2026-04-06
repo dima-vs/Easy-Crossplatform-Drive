@@ -99,12 +99,14 @@ bool TokenRepository::deleteToken(const QString &id) const
     return true;
 }
 
-bool TokenRepository::cleanExpiredTokens() const
+bool TokenRepository::cleanExpiredTokens(QDateTime currentDateTime) const
 {
     QSqlQuery query(m_db.database());
-    query.prepare("DELETE FROM tokens WHERE expires_at < DATETIME('now')");
+    query.prepare("DELETE FROM tokens WHERE expires_at < :now");
+    query.bindValue(":now", currentDateTime);
 
-    if (!query.exec()) {
+    if (!query.exec())
+    {
         qCritical() << query.lastError().text();
         return false;
     }
@@ -116,7 +118,6 @@ bool TokenRepository::cleanExpiredTokens() const
 
     return true;
 }
-
 
 bool TokenRepository::deleteByUser(int userId) const
 {
