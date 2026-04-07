@@ -47,6 +47,10 @@ void AuthService::clearExpiredTokens() const
 ServiceResult<Model::RegistrationSessionResult, ServiceError>
     AuthService::startRegistrationSession(const QString& email)
 {
+    if (m_userRep.existsByEmail(email))
+        return ServiceResult<Model::RegistrationSessionResult, ServiceError>
+            ::fail(ServiceError::UserAlreadyExists);
+
     // generate 6 digits access code
     int accessCode = QRandomGenerator::system()->bounded(100000, 1000000);
 
@@ -84,6 +88,9 @@ AuthResult AuthService::completeRegistration(
 {
     if (!m_activeRegistrationSessions.contains(verificationId))
         return AuthResult::fail(ServiceError::SessionDoesNotExists);
+
+    if (m_userRep.exists(userName))
+        return AuthResult::fail(ServiceError::UserAlreadyExists);
 
     Model::RegistrationSession& regSession =
         m_activeRegistrationSessions[verificationId];

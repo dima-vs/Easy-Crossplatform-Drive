@@ -107,6 +107,44 @@ TEST_F(AuthServiceTest, SuccessfulRegistrationFlow)
     EXPECT_TRUE(m_userRep.exists(username));
 }
 
+TEST_F(AuthServiceTest, RegistrationFailsIfUserAlreadyExists)
+{
+    expectEmailSent(2);
+
+    QString email = "newuser@gmail.com";
+    QString username = "new_user_1";
+    QString password = "strong_password";
+
+    // first user registration
+    auto startRes = m_authService.startRegistrationSession(email);
+    ASSERT_TRUE(startRes.isOk());
+
+    auto completeRes = m_authService.completeRegistration(
+        startRes.data().verificationId, m_mailSpy.m_lastSentCode, username, password
+        );
+    ASSERT_TRUE(completeRes.isOk());
+    EXPECT_TRUE(m_userRep.exists(username));
+
+    // === Email duplicate ===
+    auto startResDuplicateEmail = m_authService.startRegistrationSession(email);
+
+    EXPECT_FALSE(startResDuplicateEmail.isOk());
+    EXPECT_EQ(startResDuplicateEmail.error(), ErrorCode::Auth::ServiceError::UserAlreadyExists);
+
+    // === Username duplicate ===
+    QString email2 = "another_email@gmail.com";
+
+    auto startRes2 = m_authService.startRegistrationSession(email2);
+    ASSERT_TRUE(startRes2.isOk());
+
+    auto completeResDuplicateUsername = m_authService.completeRegistration(
+        startRes2.data().verificationId, m_mailSpy.m_lastSentCode, username, "another_password"
+        );
+
+    EXPECT_FALSE(completeResDuplicateUsername.isOk());
+    EXPECT_EQ(completeResDuplicateUsername.error(), ErrorCode::Auth::ServiceError::UserAlreadyExists);
+}
+
 TEST_F(AuthServiceTest, CompleteRegistrationFailsOnWrongCode)
 {
     expectEmailSent();

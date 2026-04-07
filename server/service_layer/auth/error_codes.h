@@ -14,7 +14,8 @@ enum class ServiceError
     TokenAlreadyExists,
     CannotAddNewToken,
     IdIsNotSet,
-    TooManyAttempts
+    TooManyAttempts,
+    UserAlreadyExists
 };
 
 }
