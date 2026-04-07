@@ -71,7 +71,7 @@ ServiceResult<Model::RegistrationSessionResult, ServiceError>
     // init registration result
     Model::RegistrationSessionResult regResult;
     regResult.expiresAt = regSession.expiresAt;
-    regResult.varificationId = verificationId;
+    regResult.verificationId = verificationId;
 
     return ServiceResult<Model::RegistrationSessionResult, ServiceError>::ok(regResult);
 }

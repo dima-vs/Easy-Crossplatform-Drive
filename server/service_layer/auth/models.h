@@ -17,7 +17,7 @@ struct RegistrationSession
 
 struct RegistrationSessionResult
 {
-    QString varificationId;
+    QString verificationId;
     QDateTime expiresAt;
 };
 

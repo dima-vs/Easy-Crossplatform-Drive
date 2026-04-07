@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
         }
 
         AuthResult authResult = authService.completeRegistration(
-            regResult.data().varificationId,
+            regResult.data().verificationId,
             mailSpy.lastSentCode,
             username,
             password
