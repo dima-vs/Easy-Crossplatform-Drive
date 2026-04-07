@@ -1,19 +1,28 @@
 #include <QDebug>
 #include "database_manager.h"
 
-DatabaseManager::DatabaseManager(): m_isOpen(false)
+DatabaseManager::DatabaseManager(const QString &dbName, const QString& connectionName): m_isOpen(false)
 {
-    initDatabase();
+    initDatabase(dbName, connectionName);
 }
 
-void DatabaseManager::initDatabase()
+void DatabaseManager::initDatabase(const QString& dbName, const QString& connectionName)
 {
-    m_mainDB = QSqlDatabase::addDatabase("QSQLITE");
-    m_mainDB.setDatabaseName("main_database.db");
+    m_mainDB = QSqlDatabase::addDatabase("QSQLITE", connectionName);
+    m_mainDB.setDatabaseName(dbName);
+    m_mainDB.setConnectOptions();
     m_isOpen = m_mainDB.open();
 
-    if (!m_isOpen)
-        qCritical() << "could not open database 'main_database.db'";
+    if (m_isOpen)
+    {
+        QSqlQuery pragmaQuery(m_mainDB);
+        pragmaQuery.exec("PRAGMA foreign_keys = ON;");
+    }
+    else
+    {
+        qCritical() << "could not open database" << dbName;
+        return;
+    }
 
     createTables();
 }
@@ -137,5 +146,7 @@ QSqlDatabase DatabaseManager::database() const
 
 DatabaseManager::~DatabaseManager()
 {
-    m_mainDB.close();
+    QString connectionName = m_mainDB.connectionName();
+    m_mainDB = QSqlDatabase();
+    QSqlDatabase::removeDatabase(connectionName);
 }

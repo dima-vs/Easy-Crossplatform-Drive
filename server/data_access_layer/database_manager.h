@@ -4,6 +4,7 @@
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QSqlQuery>
+#include <QString>
 
 class DatabaseManager
 {
@@ -11,9 +12,12 @@ private:
     QSqlDatabase m_mainDB;
     bool m_isOpen;
 public:
-    DatabaseManager();
+    DatabaseManager(
+        const QString& dbName = "main_database.db",
+        const QString& connectionName = "main_connection.db"
+        );
     ~DatabaseManager();
-    void initDatabase();
+    void initDatabase(const QString& dbName, const QString& connectionName);
     QSqlDatabase database() const;
     bool isDBOpen() const;
 private:
