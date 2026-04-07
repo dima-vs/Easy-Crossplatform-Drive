@@ -78,8 +78,11 @@ TEST_F(UserRepositoryTest, UserStorageWorks)
 
     EXPECT_TRUE(m_userRep.exists("user1"));
     EXPECT_TRUE(m_userRep.exists(5));
+    EXPECT_TRUE(m_userRep.existsByEmail("user5@gmail.com"));
+
     EXPECT_FALSE(m_userRep.exists("user100"));
     EXPECT_FALSE(m_userRep.exists(50));
+    EXPECT_FALSE(m_userRep.existsByEmail("user9@gmail.com"));
 }
 
 TEST_F(UserRepositoryTest, UniqueConstraintWork)

@@ -18,6 +18,7 @@ public:
     QList<User> getAllUsers() const;
     bool exists(int id) const;
     bool exists(const QString &username) const;
+    bool existsByEmail(const QString &email) const;
     bool deleteUser(const QString& username) const;
 };
 

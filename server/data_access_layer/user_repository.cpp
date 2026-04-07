@@ -151,6 +151,21 @@ bool UserRepository::exists(const QString &username) const
     return query.next();
 }
 
+bool UserRepository::existsByEmail(const QString &email) const
+{
+    QSqlQuery query(m_db.database());
+    query.prepare("SELECT 1 FROM users WHERE email = :email LIMIT 1");
+    query.bindValue(":email", email);
+
+    if (!query.exec())
+    {
+        qCritical() << "existsByEmail failed:" << query.lastError().text();
+        return false;
+    }
+
+    return query.next();
+}
+
 bool UserRepository::deleteUser(const QString &username) const
 {
     QSqlQuery query(m_db.database());
