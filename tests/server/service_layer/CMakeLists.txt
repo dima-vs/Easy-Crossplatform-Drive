@@ -1,0 +1,4 @@
+set(SERVICE_LAYER_TESTS
+    ${CMAKE_CURRENT_SOURCE_DIR}/auth_service_test.cpp
+    PARENT_SCOPE
+)
