@@ -24,7 +24,9 @@ public:
     QDateTime expiresAt() const { return m_expiresAt; }
 
     bool isValid() const { return m_isValid; }
-    bool isExpired() const { return QDateTime::currentDateTime() > m_expiresAt; }
+    bool isExpired(const QDateTime& current) const {
+        return current > m_expiresAt;
+    }
 };
 
 #endif // TOKEN_H
