@@ -95,6 +95,62 @@ User UserRepository::getUser(const QString &username) const
     return User();
 }
 
+QList<User> UserRepository::getAllUsers() const
+{
+    QList<User> users;
+    QSqlQuery query(m_db.database());
+    query.prepare("SELECT id, username, email, password_hash FROM users");
+
+    if (!query.exec())
+    {
+        qCritical() << "getAllUsers failed:" << query.lastError().text();
+        return users;
+    }
+
+    while (query.next())
+    {
+        users.append(User(
+            query.value("id").toInt(),
+            query.value("username").toString(),
+            query.value("email").toString(),
+            query.value("password_hash").toString()
+            ));
+    }
+
+    return users;
+}
+
+bool UserRepository::exists(int id) const
+{
+    QSqlQuery query(m_db.database());
+
+    query.prepare("SELECT 1 FROM users WHERE id = :id LIMIT 1");
+    query.bindValue(":id", id);
+
+    if (!query.exec())
+    {
+        qCritical() << "exists(id) failed:" << query.lastError().text();
+        return false;
+    }
+
+    return query.next();
+}
+
+bool UserRepository::exists(const QString &username) const
+{
+    QSqlQuery query(m_db.database());
+    query.prepare("SELECT 1 FROM users WHERE username = :username LIMIT 1");
+    query.bindValue(":username", username);
+
+    if (!query.exec())
+    {
+        qCritical() << "exists(username) failed:" << query.lastError().text();
+        return false;
+    }
+
+    return query.next();
+}
+
 bool UserRepository::deleteUser(const QString &username) const
 {
     QSqlQuery query(m_db.database());

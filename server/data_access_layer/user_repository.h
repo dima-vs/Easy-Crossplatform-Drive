@@ -2,6 +2,7 @@
 #define USER_REPOSITORY_H
 
 #include <QString>
+#include <QList>
 #include "database_manager.h"
 #include "user.h"
 
@@ -14,6 +15,9 @@ public:
     bool addNewUser(User& user) const;
     User getUser(int id) const;
     User getUser(const QString& username) const;
+    QList<User> getAllUsers() const;
+    bool exists(int id) const;
+    bool exists(const QString &username) const;
     bool deleteUser(const QString& username) const;
 };
 
