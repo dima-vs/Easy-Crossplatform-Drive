@@ -12,10 +12,12 @@ enum class ServiceError
     PasswordHashingFailed,
     CannotAddNewUser,
     TokenAlreadyExists,
+    TokenNotFound,
     CannotAddNewToken,
     IdIsNotSet,
     TooManyAttempts,
-    UserAlreadyExists
+    UserAlreadyExists,
+    UserNotFound
 };
 
 }

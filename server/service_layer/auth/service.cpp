@@ -4,6 +4,7 @@
 #include <sodium.h>
 #include <string>
 #include <utility>
+#include <QStringList>
 
 #include "service.h"
 #include "user.h"
@@ -23,7 +24,10 @@ AuthService::AuthService(
     m_timeProvider(timeProvider),
     m_regSessionsDurationSec(180), // 3 min
     m_userSessionsDurationSec(604800), // 1 week
-    m_codeEntryAttemptsLimit(3)
+    m_codeEntryAttemptsLimit(3),
+
+    m_tokenIdPartSize(16),
+    m_tokenSecretPartSize(32)
 {
 
 }
@@ -135,25 +139,68 @@ AuthResult AuthService::completeRegistration(
     return authResult;
 }
 
+AuthResult AuthService::login(const QString& userName, const QString& password)
+{
+    User user = m_userRep.getUser(userName);
+
+    if (!user.isValid())
+        return AuthResult::fail(ServiceError::UserNotFound);
+
+    if(!verifyPassword(password, user.passwordHash()))
+        return AuthResult::fail(ServiceError::InvalidCredentials);
+
+    return createUserSession(userName, user.id());
+}
+
+AuthResult AuthService::authenticateByToken(const QString& tokenString)
+{
+    QPair<QString, QString> tokenIdAndSecret = parseToken(tokenString);
+
+    QString tokenId = tokenIdAndSecret.first;
+    QString tokenSecret = tokenIdAndSecret.second;
+    if (tokenId.isEmpty() || tokenSecret.isEmpty())
+        return AuthResult::fail(ServiceError::InvalidCredentials);
+
+    Token token = m_tokenRep.getToken(tokenId);
+    if (!token.isValid())
+        return AuthResult::fail(ServiceError::TokenNotFound);
+
+    if (token.expiresAt() < m_timeProvider.currentDateTimeUtc())
+        return AuthResult::fail(ServiceError::SessionExpired);
+
+    if (hashTokenSecret(tokenSecret) != token.tokenHash())
+        return AuthResult::fail(ServiceError::InvalidCredentials);
+
+    User user = m_userRep.getUser(token.userId());
+    if (!user.isValid())
+        return AuthResult::fail(ServiceError::UserNotFound);
+
+    Model::Result result;
+    result.userName = user.username();
+    result.accessToken = tokenString;
+    result.expiresAt = token.expiresAt();
+
+    return AuthResult::ok(result);
+}
+
 AuthResult AuthService::createUserSession(const QString& userName, int userId) const
 {
-    const int idSize = 16;
-    const int tokenSize = 32;
     // max count of iterations to generate token in case of
     // it's id already exists
     const int token_generation_limit = 8;
 
     bool tokenGenerated = false;
-    QString id;
-    QString accessToken;
+    QString tokenId;
+    QString tokenSecret;
 
     for (int i = 0; i < token_generation_limit; ++i)
     {
-        QPair<QString, QString> idAndToken = generateIdAndAccessToken(idSize, tokenSize);
-        id = idAndToken.first;
-        accessToken = idAndToken.second;
+        QPair<QString, QString> tokenIdAndSecret =
+            generateTokenIdAndSecret(m_tokenIdPartSize, m_tokenSecretPartSize);
+        tokenId = tokenIdAndSecret.first;
+        tokenSecret = tokenIdAndSecret.second;
 
-        if (!m_tokenRep.exists(id))
+        if (!m_tokenRep.exists(tokenId))
         {
             tokenGenerated = true;
             break;
@@ -163,25 +210,51 @@ AuthResult AuthService::createUserSession(const QString& userName, int userId) c
     if (!tokenGenerated)
         return AuthResult::fail(ServiceError::TokenAlreadyExists);
 
-    QString tokenHash = QString::fromUtf8(
-        QCryptographicHash::hash(
-            accessToken.toUtf8(), QCryptographicHash::Algorithm::Sha256
-        ).toHex()
-    );
+    QString tokenHash = hashTokenSecret(tokenSecret);
 
     QDateTime now = m_timeProvider.currentDateTimeUtc();
     QDateTime expiresAt = now.addSecs(m_userSessionsDurationSec);
 
-    Token token(id, tokenHash, userId, expiresAt);
+    Token token(tokenId, tokenHash, userId, expiresAt);
     if (!m_tokenRep.addNewToken(token))
         return AuthResult::fail(ServiceError::CannotAddNewToken);
 
     Model::Result result;
     result.userName = userName;
-    result.accessToken = accessToken;
+    result.accessToken = composeToken(tokenId, tokenSecret);
     result.expiresAt = expiresAt;
 
     return AuthResult::ok(result);
+}
+
+QString AuthService::hashTokenSecret(const QString &secret) const
+{
+    QString tokenHash = QString::fromUtf8(
+        QCryptographicHash::hash(
+            secret.toUtf8(), QCryptographicHash::Algorithm::Sha256
+            ).toHex()
+        );
+
+    return tokenHash;
+}
+
+QString AuthService::composeToken(const QString& id, const QString& secret) const
+{
+    // token format: [ID].[SECRET]
+    return QString("%1.%2").arg(id, secret);
+}
+
+QPair<QString, QString> AuthService::parseToken(const QString& tokenString) const
+{
+    QStringList parts = tokenString.split('.');
+
+    if (parts.size() != 2)
+    {
+        return QPair<QString, QString>(QString(), QString());
+    }
+
+    // first = ID, second = SECRET
+    return QPair<QString, QString>(parts[0], parts[1]);
 }
 
 QString AuthService::hashPassword(const QString& password) const
@@ -228,22 +301,23 @@ QString AuthService::generateUuid() const
 }
 
 QPair<QString, QString>
-    AuthService::generateIdAndAccessToken(int idSize, int tokenSize) const
+    AuthService::generateTokenIdAndSecret(int idSize, int tokenSize) const
 {
-    QPair<QString, QString> idAndToken;
+    QPair<QString, QString> tokenIdAndSecret;
     // actual size of bytes will be increased due to Base64 conversion
-    idAndToken.first = QString::fromUtf8(
+    tokenIdAndSecret.first = QString::fromUtf8(
         generateRandomBytes(idSize).toBase64(
             QByteArray::Base64UrlEncoding | QByteArray::OmitTrailingEquals
             )
     );
-    idAndToken.second = QString::fromUtf8(
+
+    tokenIdAndSecret.second = QString::fromUtf8(
         generateRandomBytes(tokenSize).toBase64(
             QByteArray::Base64UrlEncoding | QByteArray::OmitTrailingEquals
             )
     );
 
-    return idAndToken;
+    return tokenIdAndSecret;
 }
 
 QByteArray AuthService::generateRandomBytes(int size) const

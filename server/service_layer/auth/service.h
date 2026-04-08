@@ -36,6 +36,9 @@ private:
     int m_userSessionsDurationSec;
     int m_codeEntryAttemptsLimit;
 
+    int m_tokenIdPartSize;
+    int m_tokenSecretPartSize;
+
     // {uuid: RegistrationSession}
     QMap<QString, Model::RegistrationSession> m_activeRegistrationSessions;
 public:
@@ -51,8 +54,8 @@ public:
                          int accessCode,
                          const QString& userName,
                          const QString& password);
-    // AuthResult login(const QString& userName, const QString& password);
-    // AuthResult authenticateByToken(const QString& tokenString);
+    AuthResult login(const QString& userName, const QString& password);
+    AuthResult authenticateByToken(const QString& tokenString);
 
     void clearExpiredRegistrationSessions();
     void clearExpiredTokens() const;
@@ -60,10 +63,12 @@ private:
     QString hashPassword(const QString& password) const;
     bool verifyPassword(const QString& password, const QString& passwordHash) const;
     QString generateUuid() const;
-    QPair<QString, QString> generateIdAndAccessToken(int idSize, int tokenSize) const;
+    QPair<QString, QString> generateTokenIdAndSecret(int idSize, int tokenSize) const;
     QByteArray generateRandomBytes(int size) const;
     AuthResult createUserSession(const QString &userName, int userId) const;
-
+    QString composeToken(const QString& id, const QString& secret) const;
+    QPair<QString, QString> parseToken(const QString& tokenString) const;
+    QString hashTokenSecret(const QString &secret) const;
 };
 
 }
