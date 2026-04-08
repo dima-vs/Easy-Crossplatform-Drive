@@ -13,6 +13,7 @@ enum class ServiceError
     CannotAddNewUser,
     TokenAlreadyExists,
     TokenNotFound,
+    UuidAlreadyExists,
     CannotAddNewToken,
     IdIsNotSet,
     TooManyAttempts,

@@ -59,7 +59,10 @@ int main(int argc, char *argv[])
 
     MailServiceSpy mailSpy;
     MockTimeProvider timeProvider;
-    Service::Auth::AuthService authService(userRep, tokenRep, mailSpy, timeProvider);
+    Service::Auth::AuthService authService(
+        userRep, tokenRep,
+        mailSpy, timeProvider,
+        Config::Auth::AuthConfig());
 
     timeProvider.manualTime = QDateTime(QDate(2026, 4, 6), QTime(12, 0, 0));
 

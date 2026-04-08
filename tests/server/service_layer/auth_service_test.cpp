@@ -54,7 +54,10 @@ protected:
         m_DBManager(":memory:", QUuid::createUuid().toString()),
         m_userRep(m_DBManager),
         m_tokenRep(m_DBManager),
-        m_authService(m_userRep, m_tokenRep, m_mailSpy, m_timeProvider)
+        m_authService(
+              m_userRep, m_tokenRep,
+              m_mailSpy, m_timeProvider,
+              Config::Auth::AuthConfig())
     {
         m_timeProvider.m_manualTime = QDateTime::currentDateTimeUtc();
     }
@@ -158,7 +161,7 @@ TEST_F(AuthServiceTest, SuccessfulRegistrationFlow)
 
     EXPECT_EQ(completeRes.data().userName, username);
     EXPECT_FALSE(completeRes.data().accessToken.isEmpty());
-    // access token must consist of 2 parts: [ID] and [TOKEN]
+    // access token must consist of 2 parts: [ID] and [SECRET]
     EXPECT_EQ(accessTokenPartsCount(completeRes.data().accessToken), 2);
 
     EXPECT_TRUE(m_userRep.exists(username));
@@ -310,7 +313,7 @@ TEST_F(AuthServiceTest, SuccessfulLoginFlow)
     ASSERT_TRUE(loginRes.isOk());
     EXPECT_EQ(loginRes.data().userName, m_username);
     EXPECT_FALSE(loginRes.data().accessToken.isEmpty());
-    // access token must consist of 2 parts: [ID] and [TOKEN]
+    // access token must consist of 2 parts: [ID] and [SECRET]
     EXPECT_EQ(accessTokenPartsCount(loginRes.data().accessToken), 2);
 
     QString tokenId = parseToken(loginRes.data().accessToken).first;
@@ -344,7 +347,7 @@ TEST_F(AuthServiceTest, AuthenticateAndLoginWorks)
     ASSERT_TRUE(loginRes.isOk());
     EXPECT_EQ(loginRes.data().userName, m_username);
     EXPECT_FALSE(loginRes.data().accessToken.isEmpty());
-    // access token must consist of 2 parts: [ID] and [TOKEN]
+    // access token must consist of 2 parts: [ID] and [SECRET]
     EXPECT_EQ(accessTokenPartsCount(loginRes.data().accessToken), 2);
 
     QString tokenId = parseToken(loginRes.data().accessToken).first;

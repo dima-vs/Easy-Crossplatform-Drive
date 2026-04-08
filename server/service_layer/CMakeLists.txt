@@ -19,7 +19,8 @@ add_library(Service_Lib STATIC ${SERVICE_SOURCES}
     auth/models.h
     auth/error_codes.h
     email/email_sender.h
-    datetime/time_provider_interface.h)
+    datetime/time_provider_interface.h
+    auth/auth_config.h)
 target_link_libraries(Service_Lib PUBLIC Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Network PUBLIC DAL_Lib unofficial-sodium::sodium)
 target_include_directories(Service_Lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

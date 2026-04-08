@@ -17,17 +17,13 @@ AuthService::AuthService(
     UserRepository &userRep,
     TokenRepository &tokenRep,
     Service::Email::IEmailSender &emailSender,
-    Time::ITimeProvider &timeProvider
+    Time::ITimeProvider &timeProvider,
+    const AuthConfig &authConfig
     ) :
     m_userRep(userRep), m_tokenRep(tokenRep),
     m_emailSender(emailSender),
     m_timeProvider(timeProvider),
-    m_regSessionsDurationSec(180), // 3 min
-    m_userSessionsDurationSec(604800), // 1 week
-    m_codeEntryAttemptsLimit(3),
-
-    m_tokenIdPartSize(16),
-    m_tokenSecretPartSize(32)
+    m_authConfig(authConfig)
 {
 
 }
@@ -69,10 +65,26 @@ ServiceResult<Model::RegistrationSessionResult, ServiceError>
     regSession.email = email;
 
     QDateTime now = m_timeProvider.currentDateTimeUtc();
-    regSession.expiresAt = now.addSecs(m_regSessionsDurationSec);
+    regSession.expiresAt = now.addSecs(m_authConfig.security.regSessionsDurationSec);
 
-    QUuid uuid = QUuid::createUuid();
-    QString verificationId = uuid.toString(QUuid::StringFormat::WithoutBraces);
+    QString verificationId;
+    bool idGenerated = false;
+
+    for (int i = 0; i < m_authConfig.uuid.generationAttemptsLimit; ++i)
+    {
+        QUuid uuid = QUuid::createUuid();
+        verificationId = uuid.toString(QUuid::StringFormat::WithoutBraces);
+        if (!m_activeRegistrationSessions.contains(verificationId))
+        {
+            idGenerated = true;
+            break;
+        }
+    }
+
+    if (!idGenerated)
+        return ServiceResult<Model::RegistrationSessionResult, ServiceError>::fail(
+            ServiceError::UuidAlreadyExists);
+
     // add session to active sessions map
     m_activeRegistrationSessions[verificationId] = regSession;
 
@@ -109,7 +121,7 @@ AuthResult AuthService::completeRegistration(
     {
         regSession.attemptsCount += 1;
 
-        if (regSession.attemptsCount >= m_codeEntryAttemptsLimit)
+        if (regSession.attemptsCount >= m_authConfig.security.codeEntryAttemptsLimit)
         {
             m_activeRegistrationSessions.remove(verificationId);
             return AuthResult::fail(ServiceError::TooManyAttempts);
@@ -185,18 +197,14 @@ AuthResult AuthService::authenticateByToken(const QString& tokenString)
 
 AuthResult AuthService::createUserSession(const QString& userName, int userId) const
 {
-    // max count of iterations to generate token in case of
-    // it's id already exists
-    const int token_generation_limit = 8;
-
     bool tokenGenerated = false;
     QString tokenId;
     QString tokenSecret;
 
-    for (int i = 0; i < token_generation_limit; ++i)
+    for (int i = 0; i < m_authConfig.token.idGenerationAttemptsLimit; ++i)
     {
         QPair<QString, QString> tokenIdAndSecret =
-            generateTokenIdAndSecret(m_tokenIdPartSize, m_tokenSecretPartSize);
+            generateTokenIdAndSecret(m_authConfig.token.tokenIdEntropyBytes, m_authConfig.token.tokenSecretEntropyBytes);
         tokenId = tokenIdAndSecret.first;
         tokenSecret = tokenIdAndSecret.second;
 
@@ -213,7 +221,7 @@ AuthResult AuthService::createUserSession(const QString& userName, int userId) c
     QString tokenHash = hashTokenSecret(tokenSecret);
 
     QDateTime now = m_timeProvider.currentDateTimeUtc();
-    QDateTime expiresAt = now.addSecs(m_userSessionsDurationSec);
+    QDateTime expiresAt = now.addSecs(m_authConfig.security.userSessionsDurationSec);
 
     Token token(tokenId, tokenHash, userId, expiresAt);
     if (!m_tokenRep.addNewToken(token))
