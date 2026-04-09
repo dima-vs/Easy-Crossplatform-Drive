@@ -5,7 +5,7 @@
 #include <QDir>
 #include "file_storage.h"
 
-FileStorage::FileStorage(QString &baseStoragePath):
+FileStorage::FileStorage(const QString &baseStoragePath):
     m_baseStoragePath(baseStoragePath)
 {
     ensureStorageExists();

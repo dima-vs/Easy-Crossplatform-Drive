@@ -8,9 +8,9 @@
 class FileStorage
 {
 private:
-    QString& m_baseStoragePath;
+    QString m_baseStoragePath;
 public:
-    FileStorage(QString& baseStoragePath);
+    FileStorage(const QString& baseStoragePath);
 
     bool writeChunk(const QString& serverName, qint64 offset,
                     const QByteArray& data) const;

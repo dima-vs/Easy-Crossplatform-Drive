@@ -1,5 +1,5 @@
 #include <QSqlDatabase>
-#include <QVariant>
+#include <QQueue>
 #include "file_repository.h"
 
 FileRepository::FileRepository(DatabaseManager& db):
@@ -69,25 +69,7 @@ File FileRepository::getFile(int id) const
 
     if (query.next())
     {
-        int fileId = query.value("id").toInt();
-        int ownerId = query.value("owner_id").toInt();
-        QString type = query.value("type").toString();
-        QString logicalName = query.value("logical_name").toString();
-        QVariant serverName = query.value("server_name");
-        long long size = query.value("size").toLongLong();
-        QDateTime uploadTime = query.value("upload_time").toDateTime();
-        QVariant parentId = query.value("parent_id");
-
-        return File(
-            fileId,
-            ownerId,
-            type,
-            logicalName,
-            serverName,
-            size,
-            uploadTime,
-            parentId
-            );
+        return extractFileFromQuery(query);
     }
 
     qWarning() << "file object with id" << id << "not found";
@@ -103,20 +85,157 @@ File FileRepository::getFile(int ownerId, const QList<QString> &fullPath) const
     return getFile(objId);
 }
 
-bool FileRepository::deleteFile(int ownerId, const QList<QString>& fullPath) const
+File FileRepository::getFile(int ownerId, QVariant parentId, const QString fileName) const
+{
+    QSqlQuery query(m_db.database());
+
+    if (parentId.isNull())
+    {
+        query.prepare("SELECT id, owner_id, type, logical_name, "
+                      "server_name, size, upload_time, parent_id "
+                      "FROM files WHERE owner_id = :owner_id AND "
+                      "logical_name = :logical_name AND "
+                      "parent_id IS NULL");
+    }
+    else
+    {
+        query.prepare("SELECT id, owner_id, type, logical_name, "
+                      "server_name, size, upload_time, parent_id "
+                      "FROM files WHERE owner_id = :owner_id AND "
+                      "logical_name = :logical_name AND "
+                      "parent_id IS :parent_id");
+        query.bindValue(":parent_id", parentId);
+    }
+
+    query.bindValue(":owner_id", ownerId);
+    query.bindValue(":logical_name", fileName);
+
+    if (!query.exec())
+    {
+        qCritical() << query.lastError().text();
+        return File();
+    }
+
+    if (query.next())
+    {
+        return extractFileFromQuery(query);
+    }
+
+    qWarning() << "file object not found";
+    return File();
+}
+
+File FileRepository::extractFileFromQuery(const QSqlQuery& query) const
+{
+    int fileId = query.value("id").toInt();
+    int ownerId = query.value("owner_id").toInt();
+    QString type = query.value("type").toString();
+    QString logicalName = query.value("logical_name").toString();
+    QVariant serverName = query.value("server_name");
+    long long size = query.value("size").toLongLong();
+    QDateTime uploadTime = query.value("upload_time").toDateTime();
+    QVariant parentId = query.value("parent_id");
+
+    return File(
+        fileId,
+        ownerId,
+        type,
+        logicalName,
+        serverName,
+        size,
+        uploadTime,
+        parentId
+        );
+}
+
+bool FileRepository::getAllNestedObjects(
+    int ownerId,
+    const QList<QString>& fullPath,
+    QPair<QList<File>, QList<File>>& outFilesAndDirs
+    ) const
 {
     int rootObjId = 0;
     if (!getFileId(ownerId, fullPath, rootObjId))
         return false;
 
-    bool deleteResult = deleteRecursive(rootObjId);
-    if (deleteResult)
-        qInfo() << "file object" << fullPath.join("/") << "deleted";
-    return deleteResult;
+    return getAllObjectsRecursive(rootObjId, outFilesAndDirs);
 }
 
-bool FileRepository::deleteRecursive(int objId) const
+bool FileRepository::getAllObjectsRecursive(
+    int rootId,
+    QPair<QList<File>, QList<File>>& outFilesAndDirs
+    ) const
 {
+    File rootObj = getFile(rootId);
+    if (!rootObj.isValid())
+        return false;
+
+    // if rootObj is file, just add it and leave the method
+    if (rootObj.type() == "file")
+    {
+        outFilesAndDirs.first.append(rootObj);
+        return true;
+    }
+
+    // if rootObj is directory, add it to the dir list
+    outFilesAndDirs.second.append(rootObj);
+
+    QQueue<int> dirsToProcess;
+    dirsToProcess.enqueue(rootId);
+
+    while (!dirsToProcess.isEmpty())
+    {
+        int currentParentId = dirsToProcess.dequeue();
+
+        QSqlQuery query(m_db.database());
+        query.prepare("SELECT id, owner_id, type, logical_name, server_name, "
+                      "size, upload_time, parent_id FROM files "
+                      "WHERE parent_id = :parent_id");
+        query.bindValue(":parent_id", currentParentId);
+
+        if (!query.exec())
+        {
+            qCritical() << query.lastError().text();
+            return false;
+        }
+
+        while (query.next())
+        {
+            File child = extractFileFromQuery(query);
+            if (child.type() == "file")
+            {
+                // add to file list
+                outFilesAndDirs.first.append(child);
+            }
+            else
+            {
+                // add to dir list
+                outFilesAndDirs.second.append(child);
+                dirsToProcess.enqueue(child.id());
+            }
+        }
+    }
+
+    return true;
+}
+
+bool FileRepository::deleteFile(int ownerId, const QList<QString>& fullPath) const
+{
+    QList<QString> notUsed;
+    return deleteFile(ownerId, fullPath, notUsed);
+}
+
+
+bool FileRepository::deleteFile(int ownerId,
+                                const QList<QString>& fullPath,
+                                QList<QString>& physicalFilesToDeleteOut,
+                                int* outObjectsDeleted
+                                ) const
+{
+    QPair<QList<File>, QList<File>> filesAndDirs;
+    if (!getAllNestedObjects(ownerId, fullPath, filesAndDirs))
+        return false;
+
     QSqlDatabase db = m_db.database();
 
     if (!db.transaction())
@@ -125,42 +244,33 @@ bool FileRepository::deleteRecursive(int objId) const
         return false;
     }
 
-    QList<QList<int>> hierarchyLevels;
-    hierarchyLevels.append(QList<int> { objId });
-
-    while (true)
+    // collect file IDs and server names to delete
+    QList<int> fileIdsToDelete;
+    for (const File& file : filesAndDirs.first)
     {
-        QList<int> currentHierarchy = hierarchyLevels.last();
-        QList<int> childrenHierarchy;
-
-        for (int currentId : currentHierarchy)
-        {
-            if (!deleteFileChildren(currentId))
-            {
-                db.rollback();
-                return false;
-            }
-
-            if (!saveChildrenDirectoriesId(currentId, childrenHierarchy))
-            {
-                db.rollback();
-                return false;
-            }
-        }
-
-        if (childrenHierarchy.isEmpty())
-            break;
-
-        hierarchyLevels.append(childrenHierarchy);
+        fileIdsToDelete.append(file.id());
+        physicalFilesToDeleteOut.append(file.serverName().toString());
     }
 
-    for (int i = hierarchyLevels.size() - 1; i >= 0; --i)
+    // delete all the files
+    if (!fileIdsToDelete.isEmpty() && !deleteObjects(fileIdsToDelete))
     {
-        if (!deleteObjects(hierarchyLevels[i]))
-        {
-            db.rollback();
-            return false;
-        }
+        db.rollback();
+        return false;
+    }
+
+    // collect directory IDs in reverse order to delete
+    QList<int> dirIdsToDelete;
+    for (int i = filesAndDirs.second.size() - 1; i >= 0; --i)
+    {
+        dirIdsToDelete.append(filesAndDirs.second[i].id());
+    }
+
+    // delete all the directories
+    if (!dirIdsToDelete.isEmpty() && !deleteObjects(dirIdsToDelete))
+    {
+        db.rollback();
+        return false;
     }
 
     if (!db.commit())
@@ -170,40 +280,14 @@ bool FileRepository::deleteRecursive(int objId) const
         return false;
     }
 
-    return true;
-}
-
-bool FileRepository::deleteFileChildren(int parentId) const
-{
-    QSqlQuery query(m_db.database());
-    query.prepare("DELETE FROM files WHERE parent_id = :parent_id AND type = 'file'");
-    query.bindValue(":parent_id", parentId);
-    if (!query.exec())
+    // set count of deleted objects
+    if (outObjectsDeleted != nullptr)
     {
-        qCritical() << query.lastError().text();
-        return false;
-    }
-    return true;
-}
-
-bool FileRepository::saveChildrenDirectoriesId(int parentId, QList<int>& directoriesId) const
-{
-    QSqlQuery query(m_db.database());
-    query.prepare("SELECT id FROM files WHERE"
-                  " parent_id = :parent_id AND type = 'directory'");
-    query.bindValue(":parent_id", parentId);
-
-    if (!query.exec())
-    {
-        qCritical() << query.lastError().text();
-        return false;
+        *outObjectsDeleted = filesAndDirs.first.size() +
+                             filesAndDirs.second.size();
     }
 
-    while (query.next())
-    {
-        int dirId = query.value(0).toInt();
-        directoriesId.append(dirId);
-    }
+    qInfo() << "file object" << fullPath.join("/") << "deleted";
     return true;
 }
 
@@ -226,6 +310,12 @@ bool FileRepository::deleteObjects(const QList<int>& idListToDelete) const
 
 bool FileRepository::getFileId(int ownerId, const QList<QString>& fullPath, int& outId) const
 {
+    if (fullPath.isEmpty())
+    {
+        qWarning() << "cannot get file: path is empty";
+        return false;
+    }
+
     int currentParentId = 0;
     bool isRoot = true;
 
@@ -254,7 +344,9 @@ bool FileRepository::getFileId(int ownerId, const QList<QString>& fullPath, int&
         if (query.next()) {
             currentParentId = query.value(0).toInt();
             isRoot = false;
-        } else {
+        }
+        else
+        {
             // if one of the path segments not found, file doesn't exist
             qWarning() << "segment" << objName << "not found";
             return false;
@@ -281,20 +373,7 @@ QList<File> FileRepository::getFilesByOwner(int ownerId) const
     QList<File> result;
     while (query.next())
     {
-        int fileId = query.value("id").toInt();
-        int ownerId = query.value("owner_id").toInt();
-        QString type = query.value("type").toString();
-        QString logicalName = query.value("logical_name").toString();
-        QVariant serverName = query.value("server_name");
-        long long size = query.value("size").toLongLong();
-        QDateTime uploadTime = query.value("upload_time").toDateTime();
-        QVariant parentId = query.value("parent_id");
-
-        result.append(File(
-            fileId, ownerId,
-            type, logicalName,
-            serverName, size,
-            uploadTime, parentId));
+        result.append(extractFileFromQuery(query));
     }
 
     return result;

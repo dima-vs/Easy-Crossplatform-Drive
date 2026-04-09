@@ -44,11 +44,61 @@ protected:
         return -1;
     }
 
+    QString generateServerName(int dirDepth, int fileIdx=-1)
+    {
+        User user = m_userRep.getUser(m_testUserId);
+        if (!user.isValid())
+            return QString();
+
+        QString username = user.username();
+        QStringList path = getFolderPath(dirDepth);
+        QString result = username + "_" + path.join(".");
+
+        if (fileIdx >= 0)
+            result += QString(".SomeFile%1.png").arg(fileIdx);
+
+        return result;
+    }
+
+    QString generateServerName(const QString& logicalName, QVariant parentId)
+    {
+        User user = m_userRep.getUser(m_testUserId);
+        if (!user.isValid())
+            return QString();
+
+        QString username = user.username();
+        QString result = username + "_";
+
+        if (parentId.isNull())
+            return result + "NULL_" + logicalName;
+
+        QStringList fullPath;
+        int currentParentId = parentId.toInt();
+
+        while (currentParentId != 0)
+        {
+            File dir = m_fileRep.getFile(currentParentId);
+
+            if (!dir.isValid())
+                return "";
+
+            fullPath.append(dir.logicalName());
+            if (dir.parentId().isNull()) {
+                break;
+            }
+
+            currentParentId = dir.parentId().toInt();
+        }
+
+        std::reverse(fullPath.begin(), fullPath.end());
+        return result + fullPath.join(".") + "." + logicalName;
+    }
+
     int createFile(const QString& name, int size,
                    QVariant parentId = QVariant(QMetaType::fromType<int>())
                    )
     {
-        QString serverName = QUuid::createUuid().toString() + ".bin";
+        QString serverName = generateServerName(name, parentId);
         File file(m_testUserId, "file", name, serverName, size, parentId);
         if (m_fileRep.addNewFile(file))
         {
@@ -114,8 +164,10 @@ TEST_F(FileRepositoryTest, HierarchyStorageWorks)
 
     // /Images/Animals
     int animalsDirId = createDir("Animals", imgDirId);
+    ASSERT_GT(animalsDirId, 0);
     // /Images/Animals/Cats
     int catsDirId = createDir("Cats", animalsDirId);
+    ASSERT_GT(catsDirId, 0);
 
     // /Images/Animals/Cats/black_cat.png
     int catFileId = createFile("black_cat.png", 5120, catsDirId);
@@ -233,30 +285,83 @@ TEST_F(FileRepositoryTest, DeleteFileWorks)
 
 TEST_F(FileRepositoryTest, RecursiveDeleteFileWorks)
 {
-    fillRecursive(30, 10);
-    // 10x30 files and 30 folders
-    int currentObjCount = 10 * 30 + 30;
+    fillRecursive(5, 3);
+    // === 5x3 files and 5 folders ===
+    int currentObjCount = 5 * 3 + 5;
     EXPECT_EQ(m_fileRep.getFilesByOwner(m_testUserId).size(), currentObjCount);
 
-    QList<QString> deepFilePath = getFolderPath(30);
+    // === delete file inside a folder at depth 5 ===
+    QList<QString> deepFilePath = getFolderPath(5);
     deepFilePath.append("SomeFile1.png");
 
-    EXPECT_TRUE(m_fileRep.deleteFile(m_testUserId, deepFilePath));
+    QList<QString> serverNamesToDeleteOut;
+    int totalObjectsDeleted = -1;
+    bool lastOpSuccess = m_fileRep.deleteFile(
+        m_testUserId,
+        deepFilePath,
+        serverNamesToDeleteOut,
+        &totalObjectsDeleted
+        );
+
+    ASSERT_TRUE(lastOpSuccess);
+    int objectsMustBeDeleted = 1;
+    ASSERT_EQ(serverNamesToDeleteOut.size(), 1);
+    EXPECT_EQ(totalObjectsDeleted, objectsMustBeDeleted);
+
+    QString serverNameFromRep = serverNamesToDeleteOut[0];
+    QString generatedServerName = generateServerName(5, 1);
+    EXPECT_EQ(serverNameFromRep, generatedServerName)
+        << "Reference: " << serverNameFromRep.toStdString()
+        << "\n:Generated" << generatedServerName.toStdString();
+
     currentObjCount -= 1; // 1 file deleted
     EXPECT_EQ(m_fileRep.getFilesByOwner(m_testUserId).size(), currentObjCount);
 
-    // delete folder at depth 15
-    QList<QString> midFolderPath = getFolderPath(15);
-    EXPECT_TRUE(m_fileRep.deleteFile(m_testUserId, midFolderPath));
+    // === delete folder at depth 3 ===
+    QList<QString> midFolderPath = getFolderPath(3);
 
-    // deleted 16 folders, each of which (except 30th one) have 10 files
-    // 30th folder have 9, because we deleted 1 file before
-    currentObjCount -= 16 + 15 * 10 + 9;
+    serverNamesToDeleteOut.clear();
+    lastOpSuccess = m_fileRep.deleteFile(
+        m_testUserId,
+        midFolderPath,
+        serverNamesToDeleteOut,
+        &totalObjectsDeleted
+        );
+    ASSERT_TRUE(lastOpSuccess);
+
+    // deleted 3 folders, each of which (except 5th one) have 3 files
+    // 5th folder have 2, because we deleted 1 file before
+    objectsMustBeDeleted = 3 + 2 * 3 + 2;
+    currentObjCount -= objectsMustBeDeleted;
+    // count only files deleted
+    ASSERT_EQ(serverNamesToDeleteOut.size(), 2 * 3 + 2);
     EXPECT_EQ(m_fileRep.getFilesByOwner(m_testUserId).size(), currentObjCount);
+    EXPECT_EQ(totalObjectsDeleted, objectsMustBeDeleted);
 
-    // remove root folder
+    for (int i = 3; i <= 5; ++i)
+    {
+        for (int j = 1; j <= 3; ++j)
+        {
+            if ((i == 5) && (j == 1))
+                continue;
+            generatedServerName = generateServerName(i, j);
+            EXPECT_TRUE(serverNamesToDeleteOut.contains(generatedServerName));
+        }
+    }
+
+    // === remove root folder ===
     QList<QString> rootFolderPath = getFolderPath(1);
-    EXPECT_TRUE(m_fileRep.deleteFile(m_testUserId, rootFolderPath));
+    serverNamesToDeleteOut.clear();
+    lastOpSuccess = m_fileRep.deleteFile(
+        m_testUserId,
+        rootFolderPath,
+        serverNamesToDeleteOut,
+        &totalObjectsDeleted
+        );
+    ASSERT_TRUE(lastOpSuccess);
+    // deleted 2 folders, each of which have 3 files
+    objectsMustBeDeleted = 2 + 2 * 3;
+    EXPECT_EQ(totalObjectsDeleted, objectsMustBeDeleted);
 
     // user must not have any objects anymore
     EXPECT_EQ(m_fileRep.getFilesByOwner(m_testUserId).size(), 0);
