@@ -16,6 +16,7 @@
 #include "auth/error_codes.h"
 #include "email/email_sender.h"
 #include "datetime/time_provider_interface.h"
+#include "security/password_hasher_interface.h"
 
 namespace Service::Auth
 {
@@ -32,6 +33,7 @@ private:
     TokenRepository& m_tokenRep;
     Service::Email::IEmailSender& m_emailSender;
     Service::Time::ITimeProvider& m_timeProvider;
+    Service::Security::IPasswordHasher& m_pswHasher;
 
     AuthConfig m_authConfig;
 
@@ -43,6 +45,7 @@ public:
         TokenRepository& tokenRep,
         Service::Email::IEmailSender& emailSender,
         Service::Time::ITimeProvider& timeProvider,
+        Service::Security::IPasswordHasher& pswHasher,
         const AuthConfig& authConfig
         );
 
@@ -57,8 +60,6 @@ public:
     void clearExpiredRegistrationSessions();
     void clearExpiredTokens() const;
 private:
-    QString hashPassword(const QString& password) const;
-    bool verifyPassword(const QString& password, const QString& passwordHash) const;
     QString generateUuid() const;
     QPair<QString, QString> generateTokenIdAndSecret(int idSize, int tokenSize) const;
     QByteArray generateRandomBytes(int size) const;

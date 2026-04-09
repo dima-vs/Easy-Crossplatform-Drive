@@ -18,11 +18,13 @@ AuthService::AuthService(
     TokenRepository &tokenRep,
     Service::Email::IEmailSender &emailSender,
     Time::ITimeProvider &timeProvider,
+    Security::IPasswordHasher &pswHasher,
     const AuthConfig &authConfig
     ) :
     m_userRep(userRep), m_tokenRep(tokenRep),
     m_emailSender(emailSender),
     m_timeProvider(timeProvider),
+    m_pswHasher(pswHasher),
     m_authConfig(authConfig)
 {
 
@@ -130,7 +132,7 @@ AuthResult AuthService::completeRegistration(
         return AuthResult::fail(ServiceError::InvalidCredentials);
     }
 
-    QString passwordHash = hashPassword(password);
+    QString passwordHash = m_pswHasher.hashPassword(password);
     if (passwordHash.isEmpty())
         return AuthResult::fail(ServiceError::PasswordHashingFailed);
 
@@ -158,7 +160,7 @@ AuthResult AuthService::login(const QString& userName, const QString& password)
     if (!user.isValid())
         return AuthResult::fail(ServiceError::UserNotFound);
 
-    if(!verifyPassword(password, user.passwordHash()))
+    if(!m_pswHasher.verifyPassword(password, user.passwordHash()))
         return AuthResult::fail(ServiceError::InvalidCredentials);
 
     return createUserSession(userName, user.id());
@@ -263,43 +265,6 @@ QPair<QString, QString> AuthService::parseToken(const QString& tokenString) cons
 
     // first = ID, second = SECRET
     return QPair<QString, QString>(parts[0], parts[1]);
-}
-
-QString AuthService::hashPassword(const QString& password) const
-{
-    char out_hash[crypto_pwhash_STRBYTES] = {0};
-    QByteArray pwBytes = password.toUtf8();
-
-    if (crypto_pwhash_str(
-            out_hash,
-            pwBytes.constData(),
-            pwBytes.size(),
-            crypto_pwhash_OPSLIMIT_INTERACTIVE,
-            crypto_pwhash_MEMLIMIT_INTERACTIVE
-            ) != 0)
-    {
-        qCritical() << "sodium: out of memory or internal error";
-        return QString();
-    }
-
-    return QString::fromUtf8(out_hash);
-}
-
-bool AuthService::verifyPassword(const QString& password, const QString& passwordHash) const
-{
-    if (passwordHash.isEmpty()) return false;
-
-    QByteArray pwBytes = password.toUtf8();
-    // QByteArray garantees zero-terminated string
-    QByteArray hashBytes = passwordHash.toLatin1();
-
-    int result = crypto_pwhash_str_verify(
-        hashBytes.constData(),
-        pwBytes.constData(),
-        pwBytes.size()
-        );
-
-    return result == 0;
 }
 
 QString AuthService::generateUuid() const

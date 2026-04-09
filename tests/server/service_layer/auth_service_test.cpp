@@ -10,7 +10,10 @@
 #include "user_repository.h"
 #include "token_repository.h"
 #include "auth/service.h"
-
+#include "auth/auth_config.h"
+#include "security/sodium_password_hasher.h"
+#include "security/security_config.h"
+#include <sodium.h>
 
 class MailServiceSpy : public Service::Email::IEmailSender
 {
@@ -43,6 +46,7 @@ protected:
 
     MailServiceSpy m_mailSpy;
     testing::NiceMock<MockTimeProvider> m_timeProvider;
+    Service::Security::SodiumPasswordHasher m_pswHasher;
     Service::Auth::AuthService m_authService;
 
     // registration data
@@ -54,9 +58,13 @@ protected:
         m_DBManager(":memory:", QUuid::createUuid().toString()),
         m_userRep(m_DBManager),
         m_tokenRep(m_DBManager),
+        m_pswHasher(Service::Security::SodiumPasswordHasher(
+              Config::Security::PasswordHashing { crypto_pwhash_OPSLIMIT_MIN, crypto_pwhash_MEMLIMIT_MIN,  }
+              )),
         m_authService(
               m_userRep, m_tokenRep,
               m_mailSpy, m_timeProvider,
+              m_pswHasher,
               Config::Auth::AuthConfig())
     {
         m_timeProvider.m_manualTime = QDateTime::currentDateTimeUtc();
