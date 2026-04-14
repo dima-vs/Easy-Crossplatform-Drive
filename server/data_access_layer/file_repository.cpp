@@ -151,41 +151,118 @@ File FileRepository::extractFileFromQuery(const QSqlQuery& query) const
 bool FileRepository::getAllNestedObjects(
     int ownerId,
     const QList<QString>& fullPath,
-    QPair<QList<File>, QList<File>>& outFilesAndDirs
+    QPair<QList<File>, QList<File>>& outFilesAndDirs,
+    QVariant maxDepth
     ) const
 {
+    int maxDepthNum = maxDepth.isNull() ? -1 : maxDepth.toInt();
     int rootObjId = 0;
     if (!getFileId(ownerId, fullPath, rootObjId))
         return false;
 
-    return getAllObjectsRecursive(rootObjId, outFilesAndDirs);
+    return getAllObjectsRecursive(
+        rootObjId,
+        outFilesAndDirs,
+        maxDepthNum
+        );
+}
+
+bool FileRepository::getAllNestedObjects(
+    int ownerId,
+    QVariant parentId,
+    QPair<QList<File>, QList<File>>& outFilesAndDirs,
+    QVariant maxDepth
+    ) const
+{
+    int maxDepthNum = maxDepth.isNull() ? -1 : maxDepth.toInt();
+
+    // === Concrete object ===
+    if (!parentId.isNull())
+    {
+        return getAllObjectsRecursive(
+            parentId.toInt(),
+            outFilesAndDirs,
+            maxDepthNum);
+    }
+
+    // === Root ===
+    if (maxDepthNum <= 0 && maxDepthNum != -1)
+        return false;
+
+    QQueue<QPair<int, int>> dirsToProcess;
+    QSqlQuery query(m_db.database());
+    query.prepare("SELECT id, owner_id, type, logical_name, server_name, "
+                  "size, upload_time, parent_id FROM files "
+                  "WHERE owner_id = :owner_id AND parent_id IS NULL");
+    query.bindValue(":owner_id", ownerId);
+
+    if (!query.exec())
+        return false;
+
+    while (query.next())
+    {
+        File child = extractFileFromQuery(query);
+        if (child.type() == "file")
+        {
+            // add to file list
+            outFilesAndDirs.first.append(child);
+        }
+        else
+        {
+            // add to dir list
+            outFilesAndDirs.second.append(child);
+            dirsToProcess.enqueue({child.id(), 1});
+        }
+    }
+
+    return processBFSQueue(dirsToProcess, outFilesAndDirs, maxDepthNum);
 }
 
 bool FileRepository::getAllObjectsRecursive(
     int rootId,
-    QPair<QList<File>, QList<File>>& outFilesAndDirs
+    QPair<QList<File>, QList<File>>& outFilesAndDirs,
+    int maxDepth
     ) const
 {
+    if (maxDepth <= 0 && maxDepth != -1)
+        return false;
+
     File rootObj = getFile(rootId);
     if (!rootObj.isValid())
         return false;
 
-    // if rootObj is file, just add it and leave the method
     if (rootObj.type() == "file")
     {
         outFilesAndDirs.first.append(rootObj);
         return true;
     }
 
-    // if rootObj is directory, add it to the dir list
     outFilesAndDirs.second.append(rootObj);
 
-    QQueue<int> dirsToProcess;
-    dirsToProcess.enqueue(rootId);
+    // <dirId, dirDepth>
+    QQueue<QPair<int, int>> dirsToProcess;
+    dirsToProcess.enqueue({ rootId, 1 });
 
+    return processBFSQueue(dirsToProcess, outFilesAndDirs, maxDepth);
+}
+
+
+bool FileRepository::processBFSQueue(
+    QQueue<QPair<int, int>>& dirsToProcess, // <dirId, dirDepth>
+    QPair<QList<File>, QList<File>>& outFilesAndDirs,
+    int maxDepth
+    ) const
+{
     while (!dirsToProcess.isEmpty())
     {
-        int currentParentId = dirsToProcess.dequeue();
+        auto currentItem = dirsToProcess.dequeue();
+        int currentParentId = currentItem.first;
+        int currentDepth = currentItem.second;
+
+        if ((maxDepth > 0) && (currentDepth >= maxDepth))
+        {
+            continue;
+        }
 
         QSqlQuery query(m_db.database());
         query.prepare("SELECT id, owner_id, type, logical_name, server_name, "
@@ -211,13 +288,14 @@ bool FileRepository::getAllObjectsRecursive(
             {
                 // add to dir list
                 outFilesAndDirs.second.append(child);
-                dirsToProcess.enqueue(child.id());
+                // children of this dir have depth=currentDepth+1
+                dirsToProcess.enqueue({child.id(), currentDepth + 1});
             }
         }
     }
-
     return true;
 }
+
 
 bool FileRepository::deleteFile(int ownerId, const QList<QString>& fullPath) const
 {

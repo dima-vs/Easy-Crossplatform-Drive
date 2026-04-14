@@ -4,6 +4,7 @@
 #include <QString>
 #include <QList>
 #include <QVariant>
+#include <QMetaType>
 #include <QPair>
 #include <memory>
 #include "database_manager.h"
@@ -29,17 +30,40 @@ public:
                     int* outObjectsDeleted = nullptr
                     ) const;
 
+    // Returns all nested files and directories, including the root.
+    // Directories are ordered from root to deepest.
+    // Use reverse order for deletion.
     bool getAllNestedObjects(
         int ownerId,
         const QList<QString>& fullPath,
-        QPair<QList<File>, QList<File>>& outFilesAndDirs
+        QPair<QList<File>, QList<File>>& outFilesAndDirs,
+        QVariant maxDepth = QVariant(QMetaType::fromType<int>())
+        ) const;
+
+    bool getAllNestedObjects(
+        int ownerId,
+        QVariant parentId,
+        QPair<QList<File>, QList<File>>& outFilesAndDirs,
+        QVariant maxDepth = QVariant(QMetaType::fromType<int>())
         ) const;
 private:
     File extractFileFromQuery(const QSqlQuery& query) const;
+
+    bool processBFSQueue(
+        QQueue<QPair<int, int>>& dirsToProcess,
+        QPair<QList<File>, QList<File>>& outFilesAndDirs,
+        int maxDepth
+        ) const;
+
+    // If maxDepth==-1, depth is unlimited.
+    // Depth includes root object, so if depth == 1,
+    // only root object will be returned
     bool getAllObjectsRecursive(
         int id,
-        QPair<QList<File>, QList<File>>& outFilesAndDirs
+        QPair<QList<File>, QList<File>>& outFilesAndDirs,
+        int maxDepth = -1
         ) const;
+
 
     bool getFileId(int ownerId, const QList<QString>& fullPath, int& outId) const;
     bool deleteObjects(const QList<int> &idListToDelete) const;

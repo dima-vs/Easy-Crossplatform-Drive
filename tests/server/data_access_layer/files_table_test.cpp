@@ -269,6 +269,124 @@ TEST_F(FileRepositoryTest, DifferentUsersCanHaveSameFileNames)
     EXPECT_EQ(m_fileRep.getFilesByOwner(secondUserId).size(), 2);
 }
 
+TEST_F(FileRepositoryTest, RecursiveSelectionWorks)
+{
+    /* Lvl
+     *  1          Images             Documents
+     *             /   \                 /
+     *  2    icon.png  Animals    report.pdf
+     *                  /   \
+     *  3           Cats    Dogs
+     *              /        \
+     *  4 black_cat.png    WhiteDogs
+    */
+
+    // /Images
+    int imgDirId = createDir("Images");
+    // /Documents
+    int docDirId = createDir("Documents");
+    // /Documents/report.pdf
+    int reportFileId = createFile("report.pdf", 1246, docDirId);
+    // /Images/icon.png
+    int iconId = createFile("icon.png", 2048, imgDirId);
+    // /Images/Animals
+    int animalsDirId = createDir("Animals", imgDirId);
+    // /Images/Animals/Cats
+    int catsDirId = createDir("Cats", animalsDirId);
+    // /Images/Animals/Dogs
+    int dogsDirId = createDir("Dogs", animalsDirId);
+    // /Images/Animals/Cats/black_cat.png
+    int catFileId = createFile("black_cat.png", 5120, catsDirId);
+    // /Images/Animals/Dogs/WhiteDogs
+    int whiteDogsDirId = createDir("WhiteDogs", dogsDirId);
+
+    QPair<QList<File>, QList<File>> result;
+    bool success = false;
+
+    // === TEST 1: null parent, maxDepth = inf ===
+    result.first.clear();
+    result.second.clear();
+    success = m_fileRep.getAllNestedObjects(
+        m_testUserId, QVariant(), result);
+    EXPECT_TRUE(success);
+    // icon.png, report.pdf, black_cat.png
+    EXPECT_EQ(result.first.size(), 3);
+    // Images, Documents, Animals, Cats, Dogs, WhiteDogs
+    EXPECT_EQ(result.second.size(), 6);
+
+    // check that directories are ordered from root to deepest
+    QString dir0 = result.second[0].logicalName();
+    QString dir1 = result.second[1].logicalName();
+    EXPECT_TRUE((dir0 == "Images" && dir1 == "Documents") ||
+                (dir0 == "Documents" && dir1 == "Images"))
+        << "Level 1 directories are out of order!";
+
+    EXPECT_EQ(result.second[2].logicalName(), "Animals")
+        << "Level 2 directory is out of order!";
+
+    QString dir3 = result.second[3].logicalName();
+    QString dir4 = result.second[4].logicalName();
+    EXPECT_TRUE((dir3 == "Cats" && dir4 == "Dogs") ||
+                (dir3 == "Dogs" && dir4 == "Cats"))
+        << "Level 3 directories are out of order!";
+
+    EXPECT_EQ(result.second[5].logicalName(), "WhiteDogs")
+        << "Level 4 directory is out of order!";
+
+    // === TEST 2: null parent, maxDepth = 1 ===
+    result.first.clear();
+    result.second.clear();
+    success = m_fileRep.getAllNestedObjects(
+        m_testUserId, QVariant(), result, 1);
+    EXPECT_TRUE(success);
+    // Files: [NULL]
+    EXPECT_EQ(result.first.size(), 0);
+    // Directories: Images, Documents
+    EXPECT_EQ(result.second.size(), 2);
+
+    // === TEST 3: null parent, maxDepth = 2 ===
+    result.first.clear();
+    result.second.clear();
+    success = m_fileRep.getAllNestedObjects(
+        m_testUserId, QVariant(), result, 2);
+    EXPECT_TRUE(success);
+    // Files: icon.png, report.pdf
+    EXPECT_EQ(result.first.size(), 2);
+    // Directories: Images, Documents, Animals
+    EXPECT_EQ(result.second.size(), 3);
+
+    // === TEST 4: Images dir, maxDepth = 1 ===
+    result.first.clear();
+    result.second.clear();
+    success = m_fileRep.getAllNestedObjects(
+        m_testUserId, QVariant(imgDirId), result, 1);
+    EXPECT_TRUE(success);
+    // Files: icon.png, report.pdf
+    EXPECT_EQ(result.first.size(), 0);
+    // Directories: Images
+    EXPECT_EQ(result.second.size(), 1);
+
+    // === TEST 5: Images dir, maxDepth = 3 ===
+    // Lvl 1: Images
+    // Lvl 2: icon.png, Animals
+    // Lvl 3: Cats, Dogs
+    result.first.clear();
+    result.second.clear();
+    success = m_fileRep.getAllNestedObjects(
+        m_testUserId, QVariant(imgDirId), result, 3);
+    EXPECT_TRUE(success);
+    EXPECT_EQ(result.first.size(), 1);
+    EXPECT_EQ(result.second.size(), 4);
+
+    // === TEST 6: Empty directory WhiteDogs, maxDepth = inf ===
+    result.first.clear(); result.second.clear();
+    success = m_fileRep.getAllNestedObjects(
+        m_testUserId, QVariant(whiteDogsDirId), result);
+    EXPECT_TRUE(success);
+    EXPECT_EQ(result.first.size(), 0);
+    EXPECT_EQ(result.second.size(), 1);
+}
+
 TEST_F(FileRepositoryTest, DeleteFileWorks)
 {
     int imgDirId = createDir("Images");
