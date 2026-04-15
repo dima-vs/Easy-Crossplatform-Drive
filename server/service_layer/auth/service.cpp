@@ -193,6 +193,7 @@ AuthResult AuthService::authenticateByToken(const QString& tokenString)
     result.userName = user.username();
     result.accessToken = tokenString;
     result.expiresAt = token.expiresAt();
+    result.userId = user.id();
 
     return AuthResult::ok(result);
 }
@@ -233,6 +234,7 @@ AuthResult AuthService::createUserSession(const QString& userName, int userId) c
     result.userName = userName;
     result.accessToken = composeToken(tokenId, tokenSecret);
     result.expiresAt = expiresAt;
+    result.userId = userId;
 
     return AuthResult::ok(result);
 }

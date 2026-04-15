@@ -23,6 +23,7 @@ struct RegistrationSessionResult
 
 struct Result
 {
+    int userId;
     QString userName;
     QString accessToken;
     QDateTime expiresAt;
