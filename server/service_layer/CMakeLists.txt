@@ -13,6 +13,7 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Network)
 
 set(SERVICE_SOURCES
     auth/service.h auth/service.cpp
+    file/service.h file/service.cpp
 )
 add_library(Service_Lib STATIC ${SERVICE_SOURCES}
     service_result.h
@@ -23,7 +24,9 @@ add_library(Service_Lib STATIC ${SERVICE_SOURCES}
     security/password_hasher_interface.h
     auth/auth_config.h
     security/sodium_password_hasher.h security/sodium_password_hasher.cpp
-    security/security_config.h)
+    security/security_config.h
+    file/models.h
+    file/error_codes.h)
 target_link_libraries(Service_Lib PUBLIC Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Network PUBLIC DAL_Lib unofficial-sodium::sodium)
 target_include_directories(Service_Lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

@@ -1,5 +1,5 @@
-#ifndef SERVICE_H
-#define SERVICE_H
+#ifndef AUTH_SERVICE_H
+#define AUTH_SERVICE_H
 
 #include <QDateTime>
 #include <QString>
@@ -71,4 +71,4 @@ private:
 
 }
 
-#endif // SERVICE_H
+#endif // AUTH_SERVICE_H

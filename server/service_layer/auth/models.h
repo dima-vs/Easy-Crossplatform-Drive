@@ -1,5 +1,5 @@
-#ifndef MODELS_H
-#define MODELS_H
+#ifndef AUTH_MODELS_H
+#define AUTH_MODELS_H
 
 #include <QDateTime>
 #include <QString>
@@ -30,4 +30,4 @@ struct Result
 
 }
 
-#endif // MODELS_H
+#endif // AUTH_MODELS_H

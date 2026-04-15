@@ -1,5 +1,5 @@
-#ifndef ERROR_CODES_H
-#define ERROR_CODES_H
+#ifndef AUTH_ERROR_CODES_H
+#define AUTH_ERROR_CODES_H
 
 namespace ErrorCode::Auth
 {
@@ -23,4 +23,4 @@ enum class ServiceError
 
 }
 
-#endif // ERROR_CODES_H
+#endif // AUTH_ERROR_CODES_H
