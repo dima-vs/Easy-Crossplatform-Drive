@@ -6,7 +6,15 @@ namespace ErrorCode::File
 
 enum class ServiceError
 {
-    CannotGetFileTree
+    CannotGetFileTree,
+    FileAlreadyExist,
+    FileTooLarge,
+    UuidAlreadyExists,
+    ChunkTooLarge,
+    InvalidChunkSize,
+    SessionDoesNotExists,
+    InvalidContentRange,
+    FailedToPerformStorageOperation
 };
 
 }
