@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>297</width>
-    <height>279</height>
+    <height>334</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -29,11 +29,11 @@
     <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok</set>
    </property>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>180</y>
+     <y>240</y>
      <width>181</width>
      <height>86</height>
     </rect>
@@ -70,7 +70,7 @@
     <item row="2" column="0">
      <widget class="QLabel" name="label_4">
       <property name="text">
-       <string>Last updated:</string>
+       <string>Type:</string>
       </property>
      </widget>
     </item>
@@ -83,13 +83,13 @@
     </item>
    </layout>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>10</x>
      <y>10</y>
      <width>181</width>
-     <height>161</height>
+     <height>225</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -101,7 +101,24 @@
      </widget>
     </item>
     <item>
-     <widget class="QLineEdit" name="lineEdit"/>
+     <widget class="QLineEdit" name="filenameEdit"/>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_6">
+      <property name="text">
+       <string>Parent folder</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QCheckBox" name="checkBox">
+      <property name="text">
+       <string>Is root?</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="parentnameEdit"/>
     </item>
     <item>
      <widget class="QLabel" name="label_2">

@@ -22,9 +22,11 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
 
 # target_include_directories(Model_Lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_executable(Model_Standalone main.cpp)
+add_executable(Model_Standalone main.cpp
+    model.h
+    model.cpp)
 
 # Видалити після розкоментування бібліотеки вище
-target_link_libraries(Model_Standalone PUBLIC Qt${QT_VERSION_MAJOR}::Core)
+target_link_libraries(Model_Standalone PUBLIC Qt${QT_VERSION_MAJOR}::Core Common_Lib)
 
 # target_link_libraries(Model_Standalone PRIVATE Model_Lib)

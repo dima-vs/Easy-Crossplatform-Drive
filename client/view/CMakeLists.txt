@@ -28,7 +28,8 @@ set(VIEW_SOURCES
     res.qrc
 )
 
-add_library(View_Lib STATIC ${VIEW_SOURCES})
+add_library(View_Lib STATIC ${VIEW_SOURCES}
+    verificationdialog.h verificationdialog.cpp verificationdialog.ui)
 
 target_link_libraries(View_Lib PUBLIC
     Qt${QT_VERSION_MAJOR}::Widgets

@@ -17,6 +17,9 @@ public:
 
 private:
     Ui::propdialog *ui;
+    QString parentBackup;
+private slots:
+    void checkBoxChanged();
 };
 
 #endif // PROPDIALOG_H

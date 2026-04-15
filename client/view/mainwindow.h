@@ -19,10 +19,22 @@ public:
 
 private:
     Ui::MainWindow *ui;
+    void requestFileTree();
+    void downloadFile(int fileId);
+    void uploadFile();
+    void updateProperties(QString name, QStringList access);
+    void deleteFile(int fileId);
+
+    void login(QString email, QString pword);
+    void signup(QString email, QString pword);
+
 
 private slots:
     void on_actionLogin_triggered();
     void on_actionSign_Up_triggered();
+    void on_actionQuit_triggered();
+    void on_actionTest1_triggered();
 
+    void openPropertiesDialog();
 };
 #endif // MAINWINDOW_H
