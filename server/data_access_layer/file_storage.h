@@ -17,6 +17,7 @@ public:
     QByteArray readChunk(const QString& serverName, qint64 offset, qint64 size) const;
     bool removeFile(const QString& serverName) const;
     qint64 getFileSize(const QString& serverName) const;
+    bool exists(const QString& serverName) const;
 private:
     QString getSecurePath(const QString& serverName) const;
     void ensureStorageExists();

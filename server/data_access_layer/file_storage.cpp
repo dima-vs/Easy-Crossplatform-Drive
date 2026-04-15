@@ -81,7 +81,7 @@ bool FileStorage::removeFile(const QString& serverName) const
     QFile file(getSecurePath(serverName));
     if (!file.exists())
     {
-        qCritical() << "file" << serverName << "doesn't exist";
+        qWarning() << "file" << serverName << "doesn't exist";
         return false;
     }
 
@@ -124,4 +124,9 @@ void FileStorage::ensureStorageExists()
             qCritical() << "could not create storage directory" << m_baseStoragePath;
         }
     }
+}
+
+bool FileStorage::exists(const QString& serverName) const
+{
+    return QFile::exists(getSecurePath(serverName));
 }
