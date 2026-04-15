@@ -37,6 +37,7 @@ TEST_F(FileStorageTest, ReadAndWriteChunksInRandomOrder)
 
     QByteArray chunk2 = "WORLD";
     EXPECT_TRUE(m_storage->writeChunk(sName, 5, chunk2));
+    ASSERT_TRUE(m_storage->exists(sName));
 
     QByteArray chunk1 = "HELLO";
     EXPECT_TRUE(m_storage->writeChunk(sName, 0, chunk1));
