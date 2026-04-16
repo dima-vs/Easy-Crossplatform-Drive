@@ -12,21 +12,20 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
 
-# set(MODEL_SOURCES
-#
-# )
-
-# add_library(Model_Lib STATIC ${MODEL_SOURCES})
-
-# target_link_libraries(Model_Lib PUBLIC Qt${QT_VERSION_MAJOR}::Core)
-
-# target_include_directories(Model_Lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-
-add_executable(Model_Standalone main.cpp
+set(MODEL_SOURCES
     model.h
-    model.cpp)
+    model.cpp
+)
 
-# Видалити після розкоментування бібліотеки вище
-target_link_libraries(Model_Standalone PUBLIC Qt${QT_VERSION_MAJOR}::Core Common_Lib)
+add_library(Model_Lib STATIC ${MODEL_SOURCES})
 
-# target_link_libraries(Model_Standalone PRIVATE Model_Lib)
+target_link_libraries(Model_Lib PUBLIC Qt${QT_VERSION_MAJOR}::Core Common_Lib)
+
+target_include_directories(Model_Lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_executable(Model_Standalone main.cpp)
+
+# # Видалити після розкоментування бібліотеки вище
+# target_link_libraries(Model_Standalone PUBLIC Qt${QT_VERSION_MAJOR}::Core Common_Lib)
+
+target_link_libraries(Model_Standalone PRIVATE Model_Lib)

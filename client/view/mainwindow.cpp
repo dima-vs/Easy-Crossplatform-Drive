@@ -50,6 +50,11 @@ void MainWindow::openPropertiesDialog()
         return;
 }
 
+void MainWindow::treeLoaded(QTreeWidget *treeWidget)
+{
+    treeWidget->setParent(ui->treeView);
+}
+
 void MainWindow::on_actionTest1_triggered()
 {
     verificationdialog* verdlg = new verificationdialog(this);

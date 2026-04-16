@@ -13,6 +13,7 @@
 #include "dto/auth/register_init_request.h"
 #include "dto/auth/register_init_response.h"
 #include "dto/auth/general_response.h"
+#include <optional>
 
 class Model : public QObject
 {

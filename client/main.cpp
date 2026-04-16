@@ -1,6 +1,10 @@
 #include "mainwindow.h"
 #include <QApplication>
 
+#include "filetree.h"
+#include "model.h"
+#include <QObject>
+
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
@@ -120,7 +124,14 @@ int main(int argc, char *argv[])
 
     a.setStyleSheet(styleSheet);
 
+    Model m;
+    QList<DTO::File::TreeNodeResponse> l = m.requestFileTree();
+    FileTree f(l);
+
     MainWindow w;
+
+    QObject::connect(&f, &FileTree::initializedProgram, &w, &MainWindow::treeLoaded);
+    f.onLoad();
     w.show();
     return a.exec();
 }

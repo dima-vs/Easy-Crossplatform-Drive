@@ -25,15 +25,17 @@ set(VIEW_SOURCES
     signupdialog.cpp
     signupdialog.h
     signupdialog.ui
+    verificationdialog.h
+    verificationdialog.cpp
+    verificationdialog.ui
     res.qrc
 )
 
-add_library(View_Lib STATIC ${VIEW_SOURCES}
-    verificationdialog.h verificationdialog.cpp verificationdialog.ui)
+add_library(View_Lib STATIC ${VIEW_SOURCES})
 
 target_link_libraries(View_Lib PUBLIC
     Qt${QT_VERSION_MAJOR}::Widgets
-    # додати ViewModel_Lib
+    ViewModel_Lib
 )
 
 add_executable(View_Standalone main.cpp)

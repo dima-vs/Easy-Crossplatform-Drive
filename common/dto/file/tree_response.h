@@ -10,12 +10,12 @@ namespace DTO::File
 
 struct TreeNodeResponse
 {
-    int fileId;
+    int fileId = 0;
     QString name;
-    bool isDirectory;
+    bool isDirectory = false;
 
-    std::optional<qint64> size;
-    std::optional<QList<TreeNodeResponse>> children;
+    std::optional<qint64> size = std::nullopt;
+    std::optional<QList<TreeNodeResponse>> children = std::nullopt;
 };
 
 }

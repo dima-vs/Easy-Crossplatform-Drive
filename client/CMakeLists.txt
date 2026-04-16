@@ -22,6 +22,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt${QT_VERSION_MAJOR}::Core 
     Qt${QT_VERSION_MAJOR}::Widgets
     View_Lib 
-#    ViewModel_Lib 
-#    Model_Lib
+    ViewModel_Lib
+    Model_Lib
 )

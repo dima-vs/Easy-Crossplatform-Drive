@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "filetree.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -28,7 +29,8 @@ private:
     void login(QString email, QString pword);
     void signup(QString email, QString pword);
 
-
+public slots:
+    void treeLoaded(QTreeWidget *treeWidget);
 private slots:
     void on_actionLogin_triggered();
     void on_actionSign_Up_triggered();
