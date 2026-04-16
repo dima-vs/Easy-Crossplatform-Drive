@@ -50,6 +50,7 @@ QList<DTO::File::TreeNodeResponse> Model::requestFileTree()
     child.name = "file.doc";
     child.size = 123;
 
+    rootdir.children = QList<DTO::File::TreeNodeResponse>();
     rootdir.children->append(child);
 
     result.append(rootdir);
