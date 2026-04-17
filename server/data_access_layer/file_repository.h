@@ -22,6 +22,14 @@ public:
     File getFile(int ownerId, const QList<QString>& fullPath) const;
     QList<File> getFilesByOwner(int ownerId) const;
 
+    bool deleteFile(int ownerId, int objId) const;
+
+    bool deleteFile(int ownerId,
+                    int objId,
+                    QList<QString>& physicalFilesToDeleteOut,
+                    int* outObjectsDeleted = nullptr
+                    ) const;
+
     bool deleteFile(int ownerId, const QList<QString>& fullPath) const;
     // delete any object
     bool deleteFile(int ownerId,
@@ -59,6 +67,7 @@ private:
     // Depth includes root object, so if depth == 1,
     // only root object will be returned
     bool getAllObjectsRecursive(
+        int ownerId,
         int id,
         QPair<QList<File>, QList<File>>& outFilesAndDirs,
         int maxDepth = -1

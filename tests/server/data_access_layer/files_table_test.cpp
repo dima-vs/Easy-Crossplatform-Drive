@@ -484,3 +484,54 @@ TEST_F(FileRepositoryTest, RecursiveDeleteFileWorks)
     // user must not have any objects anymore
     EXPECT_EQ(m_fileRep.getFilesByOwner(m_testUserId).size(), 0);
 }
+
+
+TEST_F(FileRepositoryTest, DeleteByIdWorks)
+{
+    // /Photos
+    int photosDirId = createDir("Photos");
+    ASSERT_GT(photosDirId, 0);
+
+    // /Photos/pic1.png
+    int pic1Id = createFile("pic1.png", 1000, photosDirId);
+    ASSERT_GT(pic1Id, 0);
+
+    // /Photos/pic2.png
+    int pic2Id = createFile("pic2.png", 2000, photosDirId);
+    ASSERT_GT(pic2Id, 0);
+
+    // /Photos/Vacation
+    int vacDirId = createDir("Vacation", photosDirId);
+    ASSERT_GT(vacDirId, 0);
+
+    // /Photos/Vacation/sea.png
+    int seaId = createFile("sea.png", 3000, vacDirId);
+    ASSERT_GT(seaId, 0);
+
+    // Photos + pic1 + pic2 + Vacation + sea = 5
+    EXPECT_EQ(m_fileRep.getFilesByOwner(m_testUserId).size(), 5);
+
+    EXPECT_TRUE(m_fileRep.deleteFile(m_testUserId, pic1Id));
+    EXPECT_EQ(m_fileRep.getFilesByOwner(m_testUserId).size(), 4)
+        << "Total count should decrease by 1";
+
+    // security check
+    int hackerUserId = 999;
+    EXPECT_FALSE(m_fileRep.deleteFile(hackerUserId, pic2Id))
+        << "Should fail if the user is not the owner of the file";
+
+    EXPECT_EQ(m_fileRep.getFilesByOwner(m_testUserId).size(), 4);
+
+    QList<QString> deletedPhysicalFiles;
+    int deletedCount = 0;
+
+    EXPECT_TRUE(m_fileRep.deleteFile(m_testUserId, vacDirId, deletedPhysicalFiles, &deletedCount));
+
+    EXPECT_EQ(deletedCount, 2);
+    EXPECT_EQ(deletedPhysicalFiles.size(), 1);
+
+    EXPECT_EQ(m_fileRep.getFilesByOwner(m_testUserId).size(), 2);
+
+    EXPECT_FALSE(m_fileRep.deleteFile(m_testUserId, 999999))
+        << "Should return false for non-existent ID";
+}

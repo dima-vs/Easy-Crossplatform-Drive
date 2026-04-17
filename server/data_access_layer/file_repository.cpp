@@ -161,6 +161,7 @@ bool FileRepository::getAllNestedObjects(
         return false;
 
     return getAllObjectsRecursive(
+        ownerId,
         rootObjId,
         outFilesAndDirs,
         maxDepthNum
@@ -180,6 +181,7 @@ bool FileRepository::getAllNestedObjects(
     if (!parentId.isNull())
     {
         return getAllObjectsRecursive(
+            ownerId,
             parentId.toInt(),
             outFilesAndDirs,
             maxDepthNum);
@@ -219,6 +221,7 @@ bool FileRepository::getAllNestedObjects(
 }
 
 bool FileRepository::getAllObjectsRecursive(
+    int ownerId,
     int rootId,
     QPair<QList<File>, QList<File>>& outFilesAndDirs,
     int maxDepth
@@ -230,6 +233,13 @@ bool FileRepository::getAllObjectsRecursive(
     File rootObj = getFile(rootId);
     if (!rootObj.isValid())
         return false;
+
+    if (rootObj.ownerId() != ownerId)
+    {
+        qWarning() << "security: user" << ownerId
+                   << "tried to access file" << rootId;
+        return false;
+    }
 
     if (rootObj.type() == "file")
     {
@@ -296,22 +306,22 @@ bool FileRepository::processBFSQueue(
     return true;
 }
 
-
-bool FileRepository::deleteFile(int ownerId, const QList<QString>& fullPath) const
+bool FileRepository::deleteFile(int ownerId, int objId) const
 {
     QList<QString> notUsed;
-    return deleteFile(ownerId, fullPath, notUsed);
+    return deleteFile(ownerId, objId, notUsed);
 }
 
-
-bool FileRepository::deleteFile(int ownerId,
-                                const QList<QString>& fullPath,
-                                QList<QString>& physicalFilesToDeleteOut,
-                                int* outObjectsDeleted
-                                ) const
+bool FileRepository::deleteFile(
+    int ownerId,
+    int objId,
+    QList<QString>& physicalFilesToDeleteOut,
+    int* outObjectsDeleted
+    ) const
 {
     QPair<QList<File>, QList<File>> filesAndDirs;
-    if (!getAllNestedObjects(ownerId, fullPath, filesAndDirs))
+
+    if (!getAllNestedObjects(ownerId, QVariant(objId), filesAndDirs))
         return false;
 
     QSqlDatabase db = m_db.database();
@@ -354,7 +364,6 @@ bool FileRepository::deleteFile(int ownerId,
     if (!db.commit())
     {
         qCritical() << "could not commit transaction:" << db.lastError().text();
-        db.rollback();
         return false;
     }
 
@@ -365,8 +374,30 @@ bool FileRepository::deleteFile(int ownerId,
                              filesAndDirs.second.size();
     }
 
-    qInfo() << "file object" << fullPath.join("/") << "deleted";
+    qInfo() << "file object with id" << objId << "deleted";
     return true;
+}
+
+
+bool FileRepository::deleteFile(int ownerId, const QList<QString>& fullPath) const
+{
+    QList<QString> notUsed;
+    return deleteFile(ownerId, fullPath, notUsed);
+}
+
+
+bool FileRepository::deleteFile(
+    int ownerId,
+    const QList<QString>& fullPath,
+    QList<QString>& physicalFilesToDeleteOut,
+    int* outObjectsDeleted
+    ) const
+{
+    int objId = 0;
+    if (!getFileId(ownerId, fullPath, objId))
+        return false;
+
+    return deleteFile(ownerId, objId, physicalFilesToDeleteOut, outObjectsDeleted);
 }
 
 bool FileRepository::deleteObjects(const QList<int>& idListToDelete) const
