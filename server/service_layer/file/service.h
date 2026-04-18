@@ -26,6 +26,7 @@ using TreeResult = ServiceResult<QList<Model::FileNode>, ServiceError>;
 using InitUploadSessionResult = ServiceResult<Model::UploadSessionResult, ServiceError>;
 using FileConfig = Config::File::FileConfig;
 using NoDataResult = ServiceResult<QVariant, ServiceError>;
+using CompleteUploadResult = ServiceResult<Model::CompleteUploadResult, ServiceError>;
 
 class FileService
 {
@@ -65,6 +66,8 @@ public:
         Model::ContentRange contentRange,
         const QByteArray& chunkData
         );
+
+    CompleteUploadResult completeUpload(QString uploadId);
 
 private:
 

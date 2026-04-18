@@ -55,6 +55,15 @@ struct ContentRange
     int totalBytes;
 };
 
+struct CompleteUploadResult
+{
+    QDateTime createdAt;
+    int fileId;
+    QString fileName;
+    QVariant parentId;
+    qint64 size;
+};
+
 }
 
 #endif // FILE_MODELS_H

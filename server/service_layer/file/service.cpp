@@ -127,6 +127,11 @@ InitUploadSessionResult FileService::initUploadSession(
     bool overwrite
     )
 {
+    if (fileSize <= 0)
+    {
+        return InitUploadSessionResult::fail(
+            ServiceError::InvalidFileSize);
+    }
     if (fileSize > m_fileConfig.upload.maxFileSize)
     {
         return InitUploadSessionResult::fail(ServiceError::FileTooLarge);
@@ -239,6 +244,12 @@ NoDataResult FileService::uploadChunk(
         return NoDataResult::fail(ServiceError::InvalidContentRange);
     }
 
+    if (uploadSession.completed)
+    {
+        return NoDataResult::fail(
+            ServiceError::UploadSessionAlreadyCompleted);
+    }
+
     // if the chunk has already been written, skip it
     if (uploadSession.chunksUploaded[chunkIndex])
     {
@@ -288,6 +299,90 @@ NoDataResult FileService::uploadChunk(
             [](bool uploaded) { return uploaded; }
         );
     return NoDataResult::ok(QVariant());
+}
+
+CompleteUploadResult FileService::completeUpload(QString uploadId)
+{
+    if (!m_uploadSessions.contains(uploadId))
+        return CompleteUploadResult::fail(ServiceError::SessionDoesNotExists);
+
+    Model::UploadSession& uploadSession = m_uploadSessions[uploadId];
+    int userId = uploadSession.userId;
+
+    if (!uploadSession.completed)
+    {
+        return CompleteUploadResult::fail(
+            ServiceError::SessionIsNotCompleted);
+    }
+
+    // if file with the same name exists, first, delete it
+    if (uploadSession.wasOverwritten)
+    {
+        int fileToDeleteId = uploadSession.oldFileIdToDelete;
+        ::File fileToDelete = m_fileRep.getFile(fileToDeleteId);
+        if (!fileToDelete.isValid())
+            return CompleteUploadResult::fail(ServiceError::FileNotFound);
+
+        bool fileRecordDeleted = m_fileRep.deleteFile(
+            userId, fileToDeleteId);
+        if (!fileRecordDeleted)
+        {
+            qCritical() << "cannot delete db record about file" <<
+                "with id:" << fileToDeleteId;
+            return CompleteUploadResult::fail(
+                ServiceError::FailedToPerformDBOperation);
+        }
+
+        bool fileDeleted = m_fileStorage.removeFile(
+            fileToDelete.serverName().toString());
+        if (!fileDeleted)
+        {
+            qCritical() << "cannot delete file" <<
+                "with id:" << fileToDeleteId;
+            return CompleteUploadResult::fail(
+                ServiceError::FailedToPerformStorageOperation);
+        }
+    }
+
+    bool fileCreated = m_fileStorage.exists(
+        uploadSession.serverFileName);
+    if (!fileCreated)
+    {
+        return CompleteUploadResult::fail(
+            ServiceError::FileNotCreated);
+    }
+
+    ::File createdFileRecord(
+        userId,
+        "file",
+        uploadSession.fileName,
+        uploadSession.serverFileName,
+        uploadSession.fileSize,
+        uploadSession.parentId
+        );
+    bool fileRecordCreated = m_fileRep.addNewFile(createdFileRecord);
+    if (!fileRecordCreated)
+    {
+        return CompleteUploadResult::fail(
+            ServiceError::FailedToPerformDBOperation);
+    }
+    if (!createdFileRecord.isIDSet())
+    {
+        qCritical() << "database didn't set id after file insertion";
+        return CompleteUploadResult::fail(
+            ServiceError::FailedToPerformDBOperation);
+    }
+
+    m_uploadSessions.remove(uploadId);
+
+    Model::CompleteUploadResult result;
+    result.createdAt = m_timeProvider.currentDateTimeUtc();
+    result.fileId = createdFileRecord.id();
+    result.fileName = createdFileRecord.logicalName();
+    result.parentId = createdFileRecord.parentId();
+    result.size = createdFileRecord.size();
+
+    return CompleteUploadResult::ok(result);
 }
 
 

@@ -8,13 +8,19 @@ enum class ServiceError
 {
     CannotGetFileTree,
     FileAlreadyExist,
+    FileNotFound,
     FileTooLarge,
+    InvalidFileSize,
     UuidAlreadyExists,
     ChunkTooLarge,
     InvalidChunkSize,
     SessionDoesNotExists,
     InvalidContentRange,
-    FailedToPerformStorageOperation
+    FailedToPerformDBOperation,
+    FailedToPerformStorageOperation,
+    SessionIsNotCompleted,
+    FileNotCreated,
+    UploadSessionAlreadyCompleted
 };
 
 }
