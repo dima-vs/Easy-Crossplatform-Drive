@@ -4,6 +4,7 @@
 #include <list>
 #include <vector>
 #include <cmath>
+#include <utility>
 #include <algorithm>
 #include "file/service.h"
 
@@ -383,6 +384,85 @@ CompleteUploadResult FileService::completeUpload(QString uploadId)
     result.size = createdFileRecord.size();
 
     return CompleteUploadResult::ok(result);
+}
+
+DownloadChunkResult FileService::downloadChunk(
+    int userId,
+    int fileId,
+    Model::RequestedRange reqRange,
+    QByteArray& chunkBytesOut
+    )
+{
+    ::File file = m_fileRep.getFile(fileId);
+
+    if (!file.isValid())
+    {
+        return DownloadChunkResult::fail(
+            ServiceError::FileNotFound);
+    }
+
+    if (!m_fileRep.checkPermission(userId, file))
+    {
+        return DownloadChunkResult::fail(
+            ServiceError::PermissionDenied);
+    }
+
+    if (
+        (reqRange.startByte < 0) ||
+        (reqRange.endByte < 0) ||
+        (reqRange.startByte > reqRange.endByte)
+        )
+    {
+        return DownloadChunkResult::fail(
+            ServiceError::InvalidContentRange);
+    }
+
+    if (file.size() > 0 && reqRange.startByte >= file.size())
+    {
+        return DownloadChunkResult::fail(
+            ServiceError::InvalidContentRange);
+    }
+
+    int requestedSize = reqRange.endByte -
+                        reqRange.startByte + 1;
+
+    if (requestedSize <= 0)
+    {
+        return DownloadChunkResult::fail(
+            ServiceError::InvalidContentRange);
+    }
+
+    if (file.size() > m_fileConfig.download.maxFileSize)
+    {
+        return DownloadChunkResult::fail(
+            ServiceError::FileTooLarge);
+    }
+
+    if (requestedSize > m_fileConfig.download.maxChunkSize)
+    {
+        return DownloadChunkResult::fail(
+            ServiceError::ChunkTooLarge);
+    }
+
+    chunkBytesOut = std::move(m_fileStorage.readChunk(
+        file.serverName().toString(),
+        reqRange.startByte,
+        requestedSize
+        ));
+
+    if (chunkBytesOut.isEmpty() && (file.size() > 0))
+    {
+        return DownloadChunkResult::fail(
+            ServiceError::FailedToPerformStorageOperation);
+    }
+
+    Model::ContentRange result;
+    result.startByte = reqRange.startByte;
+    result.totalBytes = file.size();
+    int actualReadSize = chunkBytesOut.size();
+    result.endByte = (actualReadSize > 0) ?
+                         (reqRange.startByte + actualReadSize - 1) : 0;
+    return DownloadChunkResult::ok(result);
 }
 
 

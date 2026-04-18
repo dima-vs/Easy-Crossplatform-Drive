@@ -55,6 +55,12 @@ struct ContentRange
     int totalBytes;
 };
 
+struct RequestedRange
+{
+    int startByte;
+    int endByte; // included
+};
+
 struct CompleteUploadResult
 {
     QDateTime createdAt;

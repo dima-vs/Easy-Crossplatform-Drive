@@ -27,6 +27,7 @@ using InitUploadSessionResult = ServiceResult<Model::UploadSessionResult, Servic
 using FileConfig = Config::File::FileConfig;
 using NoDataResult = ServiceResult<QVariant, ServiceError>;
 using CompleteUploadResult = ServiceResult<Model::CompleteUploadResult, ServiceError>;
+using DownloadChunkResult = ServiceResult<Model::ContentRange, ServiceError>;
 
 class FileService
 {
@@ -69,6 +70,12 @@ public:
 
     CompleteUploadResult completeUpload(QString uploadId);
 
+    DownloadChunkResult downloadChunk(
+        int userId,
+        int fileId,
+        Model::RequestedRange reqRange,
+        QByteArray& chunkBytesOut
+        );
 private:
 
 };

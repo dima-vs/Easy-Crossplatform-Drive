@@ -20,7 +20,8 @@ enum class ServiceError
     FailedToPerformStorageOperation,
     SessionIsNotCompleted,
     FileNotCreated,
-    UploadSessionAlreadyCompleted
+    UploadSessionAlreadyCompleted,
+    PermissionDenied
 };
 
 }
