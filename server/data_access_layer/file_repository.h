@@ -17,6 +17,7 @@ private:
 public:
     FileRepository(DatabaseManager& db);
     bool addNewFile(File& file) const;
+    bool checkPermission(int ownerId, const File& file) const;
     File getFile(int id) const;
     File getFile(int ownerId, QVariant parentId, const QString fileName) const;
     File getFile(int ownerId, const QList<QString>& fullPath) const;

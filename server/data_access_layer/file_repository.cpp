@@ -54,6 +54,11 @@ bool FileRepository::addNewFile(File &file) const
     return qResult;
 }
 
+bool FileRepository::checkPermission(int ownerId, const File& file) const
+{
+    return file.ownerId() == ownerId;
+}
+
 File FileRepository::getFile(int id) const
 {
     QSqlQuery query(m_db.database());
