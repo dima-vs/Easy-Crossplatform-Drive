@@ -9,7 +9,11 @@
 #include "file_repository.h"
 #include "token_repository.h"
 #include "file_storage.h"
+#include "domain/file_type.h"
+#include "converter/file_type_converter.h"
 
+using FileType = Common::Domain::FileType;
+using FileTypeConverter = Common::Converter::FileTypeConverter;
 
 void testDatabase();
 void testFileStorage();
@@ -18,7 +22,7 @@ void printFileInfo(const File &file) {
     qDebug() << "--- File Info ---";
     qDebug() << "ID:         " << (file.isIDSet() ? QString::number(file.id()) : "Not set");
     qDebug() << "Name:       " << file.logicalName();
-    qDebug() << "Type:       " << file.type();
+    qDebug() << "Type:       " << FileTypeConverter::toString(file.type());
     qDebug() << "Size:       " << file.size() << "bytes";
     qDebug() << "Owner ID:   " << file.ownerId();
     qDebug() << "Upload Time:" << file.uploadTime().toString(Qt::ISODate);
@@ -119,43 +123,43 @@ void testDatabase()
     // servername is empty (QVariant()) for directories
 
     // /Images/
-    File fImages(uid, "directory", "Images", QVariant(), 0);
+    File fImages(uid, FileType::Directory, "Images", QVariant(), 0);
     fileRep.addNewFile(fImages);
 
     // /Videos
-    File fVideos(uid, "directory", "Videos", QVariant(), 0);
+    File fVideos(uid, FileType::Directory, "Videos", QVariant(), 0);
     fileRep.addNewFile(fVideos);
 
     int imgDirId = fileRep.getFile(uid, { "Images" }).id();
 
     // /Images/icon.png
-    File fIcon(uid, "file", "icon.png", "fsdlkgjgerhg45j.bin", 2048, imgDirId);
+    File fIcon(uid, FileType::File, "icon.png", "fsdlkgjgerhg45j.bin", 2048, imgDirId);
     fileRep.addNewFile(fIcon);
 
     // /Images/Animals
-    File fAnimals(uid, "directory", "Animals", QVariant(), 0, imgDirId);
+    File fAnimals(uid, FileType::Directory, "Animals", QVariant(), 0, imgDirId);
     fileRep.addNewFile(fAnimals);
 
     int animalsDirId = fileRep.getFile(uid, { "Images", "Animals" }).id();
 
     // /Images/Animals/Cats
-    File fCats(uid, "directory", "Cats", QVariant(), 0, animalsDirId);
+    File fCats(uid, FileType::Directory, "Cats", QVariant(), 0, animalsDirId);
     fileRep.addNewFile(fCats);
 
     int catsDirId = fileRep.getFile(uid, { "Images", "Animals", "Cats" }).id();
 
     // /Images/Animals/Cats/black_cat.png
-    File fBlackCat(uid, "file", "black_cat.png", "someservername1.bin", 5120, catsDirId);
+    File fBlackCat(uid, FileType::File, "black_cat.png", "someservername1.bin", 5120, catsDirId);
     fileRep.addNewFile(fBlackCat);
 
     // /Images/Animals/Cats/white_cat.png
-    File fWhiteCat(uid, "file", "white_cat.jpg", "someservername2.bin", 43544, catsDirId);
+    File fWhiteCat(uid, FileType::File, "white_cat.jpg", "someservername2.bin", 43544, catsDirId);
     fileRep.addNewFile(fWhiteCat);
 
-    File fTemp(uid, "directory", "temp", QVariant(), 0, catsDirId);
+    File fTemp(uid, FileType::Directory, "temp", QVariant(), 0, catsDirId);
     fileRep.addNewFile(fTemp);
 
-    File fCache(uid, "directory", "cache", QVariant(), 0, catsDirId);
+    File fCache(uid, FileType::Directory, "cache", QVariant(), 0, catsDirId);
     fileRep.addNewFile(fCache);
 
     // delete /Images/Animals/Cats/black_cat.png

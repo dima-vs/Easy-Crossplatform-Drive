@@ -5,7 +5,6 @@
 #include <QJsonValue>
 #include <QJsonArray>
 #include <utility>
-#include "dto/file/file_type.h"
 #include "serialization/file/json.h"
 
 namespace Serialization::File
@@ -186,8 +185,8 @@ std::optional<DTO::File::CreateEmptyRequest> fromJsonCreateEmptyRequest(const QJ
         return std::nullopt;
     }
 
-    dto.type = DTO::File::stringToFileType(json["type"].toString());
-    if (dto.type == DTO::File::FileType::Unknown)
+    dto.type = FileTypeConverter::fromString(json["type"].toString());
+    if (dto.type == FileType::Unknown)
     {
         qWarning() << "field 'type' has unknown value";
         return std::nullopt;
@@ -216,7 +215,7 @@ QJsonObject toJson(const DTO::File::CreateEmptyRequest& dto)
         qDebug() << "serializing negative parentId";
     }
 
-    if (dto.type == DTO::File::FileType::Unknown)
+    if (dto.type == FileType::Unknown)
     {
         qDebug() << "serializing unknown type";
     }
@@ -224,7 +223,7 @@ QJsonObject toJson(const DTO::File::CreateEmptyRequest& dto)
     obj["fileName"] = dto.fileName;
     obj["parentId"] = dto.parentId.has_value()?
                           dto.parentId.value() : QJsonValue();
-    obj["type"] = DTO::File::fileTypeToString(dto.type);
+    obj["type"] = FileTypeConverter::toString(dto.type);
     obj["overwrite"] = dto.overwrite;
 
     return obj;
@@ -343,9 +342,9 @@ std::optional<DTO::File::MetadataResponse> fromJsonMetadataResponse(const QJsonO
     }
 
     QString typeStr = json["type"].toString();
-    DTO::File::FileType fileType = DTO::File::stringToFileType(typeStr);
+    FileType fileType = FileTypeConverter::fromString(typeStr);
 
-    if (fileType == DTO::File::FileType::Unknown)
+    if (fileType == FileType::Unknown)
     {
         qWarning() << "invalid 'type' value";
         return std::nullopt;
@@ -370,7 +369,7 @@ QJsonObject toJson(const DTO::File::MetadataResponse& dto)
     obj["fileId"] = dto.fileId;
     obj["fileName"] = dto.fileName;
     obj["size"] = dto.size;
-    obj["type"] = DTO::File::fileTypeToString(dto.type);
+    obj["type"] = FileTypeConverter::toString(dto.type);
     obj["parentId"] = dto.parentId.has_value()?
                           dto.parentId.value() : QJsonValue();
 

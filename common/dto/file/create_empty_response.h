@@ -5,7 +5,6 @@
 #include <QtTypes>
 #include <QDateTime>
 #include <optional>
-#include "file_type.h"
 
 namespace DTO::File
 {

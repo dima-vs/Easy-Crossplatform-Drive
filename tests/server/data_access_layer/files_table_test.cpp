@@ -11,6 +11,11 @@
 #include "file_repository.h"
 #include "user.h"
 #include "file.h"
+#include "domain/file_type.h"
+#include "converter/file_type_converter.h"
+
+using FileType = Common::Domain::FileType;
+using FileTypeConverter = Common::Converter::FileTypeConverter;
 
 class FileRepositoryTest : public testing::Test
 {
@@ -36,7 +41,7 @@ protected:
         QVariant parentId = QVariant(QMetaType::fromType<int>())
         )
     {
-        File dir(m_testUserId, "directory", name, QVariant(), 0, parentId);
+        File dir(m_testUserId, FileType::Directory, name, QVariant(), 0, parentId);
         if (m_fileRep.addNewFile(dir))
         {
             return dir.id();
@@ -99,7 +104,7 @@ protected:
                    )
     {
         QString serverName = generateServerName(name, parentId);
-        File file(m_testUserId, "file", name, serverName, size, parentId);
+        File file(m_testUserId, FileType::File, name, serverName, size, parentId);
         if (m_fileRep.addNewFile(file))
         {
             return file.id();
@@ -227,7 +232,7 @@ TEST_F(FileRepositoryTest, FileAndDirNamesUniqueConstraint)
 TEST_F(FileRepositoryTest, ForeignKeyConstraintFailsOnBadUser)
 {
     int badUserId = 9999;
-    File badFile(badUserId, "file", "note.txt", QUuid::createUuid().toString(), 100);
+    File badFile(badUserId, FileType::File, "note.txt", QUuid::createUuid().toString(), 100);
 
     EXPECT_FALSE(m_fileRep.addNewFile(badFile));
 }
@@ -242,7 +247,7 @@ TEST_F(FileRepositoryTest, DifferentUsersCanHaveSameFileNames)
     ASSERT_GT(rootDocsUser1, 0);
 
     File rootDocsUser2Obj(
-        secondUserId,"directory", "Documents",
+        secondUserId, FileType::Directory, "Documents",
         QVariant(), 0,
         QVariant(QMetaType::fromType<int>())
         );
@@ -260,7 +265,7 @@ TEST_F(FileRepositoryTest, DifferentUsersCanHaveSameFileNames)
     // second user file
     QString serverName2 = QUuid::createUuid().toString() + ".bin";
     File fileUser2Obj(
-        secondUserId, "file", "report.pdf",
+        secondUserId, FileType::File, "report.pdf",
         serverName2, 2048, rootDocsUser2);
     EXPECT_TRUE(m_fileRep.addNewFile(fileUser2Obj))
         << "Should allow second user to create a file with the same name in their own folder";

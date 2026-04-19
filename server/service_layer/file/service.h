@@ -16,6 +16,8 @@
 #include "service_result.h"
 #include "file/file_config.h"
 #include "datetime/time_provider_interface.h"
+#include "domain/file_type.h"
+#include "converter/file_type_converter.h"
 
 namespace Service::File
 {
@@ -28,10 +30,14 @@ using FileConfig = Config::File::FileConfig;
 using NoDataResult = ServiceResult<QVariant, ServiceError>;
 using CompleteUploadResult = ServiceResult<Model::CompleteUploadResult, ServiceError>;
 using DownloadChunkResult = ServiceResult<Model::ContentRange, ServiceError>;
+using CreatedFileObjectResult = ServiceResult<Model::CreatedFileObjectResult, ServiceError>;
 
 class FileService
 {
 private:
+    using FileType = Common::Domain::FileType;
+    using FileTypeConverter = Common::Converter::FileTypeConverter;
+
     FileStorage& m_fileStorage;
     FileRepository& m_fileRep;
     Service::Time::ITimeProvider& m_timeProvider;
@@ -76,8 +82,8 @@ public:
         Model::RequestedRange reqRange,
         QByteArray& chunkBytesOut
         );
-private:
 
+private:
 };
 
 }

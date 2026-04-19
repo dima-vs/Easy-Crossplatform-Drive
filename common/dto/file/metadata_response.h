@@ -5,7 +5,7 @@
 #include <QtTypes>
 #include <QDateTime>
 #include <optional>
-#include "file_type.h"
+#include "domain/file_type.h"
 
 namespace DTO::File
 {
@@ -13,7 +13,7 @@ namespace DTO::File
 struct MetadataResponse
 {
     QDateTime createdAt;
-    FileType type;
+    Common::Domain::FileType type;
     int fileId;
     QString fileName;
     std::optional<int> parentId; // null = root

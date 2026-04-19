@@ -21,7 +21,8 @@ enum class ServiceError
     SessionIsNotCompleted,
     FileNotCreated,
     UploadSessionAlreadyCompleted,
-    PermissionDenied
+    PermissionDenied,
+    InvalidFileObjType
 };
 
 }

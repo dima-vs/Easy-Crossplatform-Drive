@@ -7,12 +7,15 @@
 #include <QFile>
 #include <QDateTime>
 
-#include "dto/file/file_type.h"
 #include "serialization/file/json.h"
 #include "dto/file/metadata_response.h"
 #include "dto/file/tree_response.h"
+#include "domain/file_type.h"
+#include "converter/file_type_converter.h"
 
 using namespace Serialization;
+using FileType = Common::Domain::FileType;
+using FileTypeConverter = Common::Converter::FileTypeConverter;
 
 void testTreeSerialization();
 void logTree(const QList<DTO::File::TreeNodeResponse>& list, int level = 0);
@@ -25,7 +28,7 @@ int main(int argc, char *argv[])
     qDebug() << "\n--- Testing MetadataResponse ---";
     DTO::File::MetadataResponse metaDto;
     metaDto.createdAt = QDateTime::currentDateTime();
-    metaDto.type = DTO::File::FileType::File;
+    metaDto.type = FileType::File;
     metaDto.fileId = 42;
     metaDto.fileName = "book.pdf";
     metaDto.parentId = 10;
@@ -63,6 +66,7 @@ void logTree(const QList<DTO::File::TreeNodeResponse>& list, int level)
         }
     }
 }
+
 void testTreeSerialization()
 {
     using namespace DTO::File;

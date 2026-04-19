@@ -20,7 +20,7 @@ bool FileRepository::addNewFile(File &file) const
                   "VALUES (:owner_id, :type, :logical_name, :server_name, :size, :parent_id)");
 
     query.bindValue(":owner_id", file.ownerId());
-    query.bindValue(":type", file.type());
+    query.bindValue(":type", FileTypeConverter::toString(file.type()));
     query.bindValue(":logical_name", file.logicalName());
 
     query.bindValue(":server_name", file.serverName());
@@ -41,7 +41,7 @@ bool FileRepository::addNewFile(File &file) const
         }
 
         qInfo().noquote()
-            << file.type()
+            << FileTypeConverter::toString(file.type())
             << "\"" + file.logicalName() + "\""
             << "added";
     }
@@ -134,7 +134,8 @@ File FileRepository::extractFileFromQuery(const QSqlQuery& query) const
 {
     int fileId = query.value("id").toInt();
     int ownerId = query.value("owner_id").toInt();
-    QString type = query.value("type").toString();
+    FileType type = FileTypeConverter::fromString(
+        query.value("type").toString());
     QString logicalName = query.value("logical_name").toString();
     QVariant serverName = query.value("server_name");
     long long size = query.value("size").toLongLong();
@@ -209,7 +210,7 @@ bool FileRepository::getAllNestedObjects(
     while (query.next())
     {
         File child = extractFileFromQuery(query);
-        if (child.type() == "file")
+        if (child.type() == FileType::File)
         {
             // add to file list
             outFilesAndDirs.first.append(child);
@@ -246,7 +247,7 @@ bool FileRepository::getAllObjectsRecursive(
         return false;
     }
 
-    if (rootObj.type() == "file")
+    if (rootObj.type() == FileType::File)
     {
         outFilesAndDirs.first.append(rootObj);
         return true;
@@ -294,7 +295,7 @@ bool FileRepository::processBFSQueue(
         while (query.next())
         {
             File child = extractFileFromQuery(query);
-            if (child.type() == "file")
+            if (child.type() == FileType::File)
             {
                 // add to file list
                 outFilesAndDirs.first.append(child);

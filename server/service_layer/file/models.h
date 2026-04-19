@@ -9,6 +9,7 @@
 #include <list>
 #include <QtTypes>
 #include <vector> // for bool optimization
+#include "domain/file_type.h"
 
 namespace ServiceModel::File
 {
@@ -17,7 +18,7 @@ struct FileNode
 {
     int id;
     QString logicalName;
-    QString type;
+    Common::Domain::FileType type;
     QVariant size;
     QDateTime uploadTime;
     std::list<FileNode> children;
@@ -68,6 +69,14 @@ struct CompleteUploadResult
     QString fileName;
     QVariant parentId;
     qint64 size;
+};
+
+struct CreatedFileObjectResult
+{
+    QDateTime createdAt;
+    int fileId;
+    QString fileName;
+    QVariant parentId;
 };
 
 }

@@ -27,12 +27,12 @@ add_library(Common_Lib STATIC
     dto/auth/general_response.h
     dto/auth/login_request.h
     dto/server_limits/transfer.h
+
     dto/file/tree_response.h
     dto/file/upload_init_request.h
     dto/file/upload_init_response.h
     dto/file/upload_complete_response.h
     dto/file/metadata_response.h
-    dto/file/file_type.h
     dto/file/create_empty_request.h
     dto/file/create_empty_response.h
     dto/file/rename_request.h

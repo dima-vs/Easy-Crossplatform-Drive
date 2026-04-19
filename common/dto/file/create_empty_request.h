@@ -3,7 +3,7 @@
 
 #include <QString>
 #include <optional>
-#include "file_type.h"
+#include "domain/file_type.h"
 
 namespace DTO::File
 {
@@ -12,7 +12,7 @@ struct CreateEmptyRequest
 {
     QString fileName;
     std::optional<int> parentId; // null = root
-    FileType type;
+    Common::Domain::FileType type;
     bool overwrite;
 };
 

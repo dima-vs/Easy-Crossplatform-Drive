@@ -355,7 +355,7 @@ CompleteUploadResult FileService::completeUpload(QString uploadId)
 
     ::File createdFileRecord(
         userId,
-        "file",
+        FileType::File,
         uploadSession.fileName,
         uploadSession.serverFileName,
         uploadSession.fileSize,

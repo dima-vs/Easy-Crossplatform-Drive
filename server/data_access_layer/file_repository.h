@@ -7,12 +7,17 @@
 #include <QMetaType>
 #include <QPair>
 #include <memory>
+#include "domain/file_type.h"
+#include "converter/file_type_converter.h"
 #include "database_manager.h"
 #include "file.h"
 
 class FileRepository
 {
 private:
+    using FileType = Common::Domain::FileType;
+    using FileTypeConverter = Common::Converter::FileTypeConverter;
+
     DatabaseManager& m_db;
 public:
     FileRepository(DatabaseManager& db);

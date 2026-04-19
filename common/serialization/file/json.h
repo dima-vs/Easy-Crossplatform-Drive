@@ -1,5 +1,8 @@
 #include <QJsonObject>
 #include <optional>
+#include "domain/file_type.h"
+#include "converter/file_type_converter.h"
+
 #include "dto/file/create_empty_request.h"
 #include "dto/file/create_empty_response.h"
 #include "dto/file/metadata_response.h"
@@ -12,6 +15,9 @@
 
 namespace Serialization::File
 {
+
+using FileType = Common::Domain::FileType;
+using FileTypeConverter = Common::Converter::FileTypeConverter;
 
 // [DTO::File::CreateEmptyRequest]
 std::optional<DTO::File::CreateEmptyRequest> fromJsonCreateEmptyRequest(const QJsonObject& json);

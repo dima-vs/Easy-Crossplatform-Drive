@@ -20,6 +20,7 @@ target_link_libraries(unit_tests
         GTest::gtest
         GTest::gmock
         # GTest::gtest_main
+        Domain_Lib
         Service_Lib
         DAL_Lib
         Qt6::Core
