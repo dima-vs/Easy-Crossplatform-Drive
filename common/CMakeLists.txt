@@ -12,7 +12,15 @@ set(CMAKE_AUTORCC ON)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
 
-add_library(Common_Lib STATIC 
+add_library(Domain_Lib STATIC
+    domain/file_type.h
+    converter/file_type_converter.h
+)
+
+target_link_libraries(Domain_Lib PUBLIC Qt${QT_VERSION_MAJOR}::Core)
+target_include_directories(Domain_Lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_library(Common_Lib STATIC
     dto/auth/register_init_request.h
     dto/auth/register_init_response.h
     dto/auth/confirm_register_request.h

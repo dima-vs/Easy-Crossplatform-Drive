@@ -19,13 +19,13 @@ set(MODEL_SOURCES
 
 add_library(Model_Lib STATIC ${MODEL_SOURCES})
 
-target_link_libraries(Model_Lib PUBLIC Qt${QT_VERSION_MAJOR}::Core Common_Lib)
+target_link_libraries(Model_Lib PUBLIC
+    Qt${QT_VERSION_MAJOR}::Core
+    Domain_Lib
+    Common_Lib
+)
 
 target_include_directories(Model_Lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(Model_Standalone main.cpp)
-
-# # Видалити після розкоментування бібліотеки вище
-# target_link_libraries(Model_Standalone PUBLIC Qt${QT_VERSION_MAJOR}::Core Common_Lib)
-
 target_link_libraries(Model_Standalone PRIVATE Model_Lib)

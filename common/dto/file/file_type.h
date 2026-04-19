@@ -1,5 +1,5 @@
-#ifndef FILE_TYPE_H
-#define FILE_TYPE_H
+#ifndef FILE_TYPE_TMP_H
+#define FILE_TYPE_TMP_H
 
 #include <QString>
 
@@ -38,4 +38,4 @@ inline FileType stringToFileType(const QString& s)
 
 }
 
-#endif // FILE_TYPE_H
+#endif // FILE_TYPE_TMP_H
