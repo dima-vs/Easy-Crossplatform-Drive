@@ -11,6 +11,24 @@ FileStorage::FileStorage(const QString &baseStoragePath):
     ensureStorageExists();
 }
 
+bool FileStorage::createEmptyFile(const QString& serverName) const
+{
+    QString filePath = getSecurePath(serverName);
+    QFile file(filePath);
+
+    if (file.open(QIODevice::WriteOnly))
+    {
+        qDebug() << "empty file created successfully:" << filePath;
+        file.close();
+    } else
+    {
+        qWarning() << "failed to create file:" << file.errorString();
+        return false;
+    }
+
+    return true;
+}
+
 bool FileStorage::writeChunk(const QString& serverName, qint64 offset,
                 const QByteArray& data) const
 {

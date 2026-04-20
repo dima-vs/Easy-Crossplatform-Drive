@@ -12,6 +12,7 @@ private:
 public:
     FileStorage(const QString& baseStoragePath);
 
+    bool createEmptyFile(const QString& serverName) const;
     bool writeChunk(const QString& serverName, qint64 offset,
                     const QByteArray& data) const;
     QByteArray readChunk(const QString& serverName, qint64 offset, qint64 size) const;
