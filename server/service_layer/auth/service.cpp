@@ -42,7 +42,7 @@ void AuthService::clearExpiredRegistrationSessions()
 
 void AuthService::clearExpiredTokens() const
 {
-    m_tokenRep.cleanExpiredTokens(m_timeProvider.currentDateTimeUtc());
+    m_tokenRep.cleanExpired(m_timeProvider.currentDateTimeUtc());
     qDebug() << "expired tokens cleared";
 }
 
@@ -175,7 +175,7 @@ AuthResult AuthService::authenticateByToken(const QString& tokenString)
     if (tokenId.isEmpty() || tokenSecret.isEmpty())
         return AuthResult::fail(ServiceError::InvalidCredentials);
 
-    TokenRecord token = m_tokenRep.getToken(tokenId);
+    TokenRecord token = m_tokenRep.findById(tokenId);
     if (!token.isValid())
         return AuthResult::fail(ServiceError::TokenNotFound);
 
@@ -227,7 +227,7 @@ AuthResult AuthService::createUserSession(const QString& userName, int userId) c
     QDateTime expiresAt = now.addSecs(m_authConfig.security.userSessionsDurationSec);
 
     TokenRecord token(tokenId, tokenHash, userId, expiresAt);
-    if (!m_tokenRep.addNewToken(token))
+    if (!m_tokenRep.add(token))
         return AuthResult::fail(ServiceError::CannotAddNewToken);
 
     Model::Result result;

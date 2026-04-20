@@ -12,12 +12,12 @@ private:
     DatabaseManager& m_db;
 public:
     TokenRepository(DatabaseManager& db);
-    bool addNewToken(const TokenRecord& token) const;
-    TokenRecord getToken(const QString& id) const;
+    bool add(const TokenRecord& record) const;
+    TokenRecord findById(const QString& id) const;
     bool exists(const QString& id) const;
-    bool deleteToken(const QString& id) const;
-    bool cleanExpiredTokens(QDateTime currentDateTime) const;
-    bool deleteByUser(int userId) const;
+    bool remove(const QString& id) const;
+    bool removeByUser(int userId) const;
+    bool cleanExpired(QDateTime currentDateTime) const;
 };
 
 #endif // TOKEN_REPOSITORY_H

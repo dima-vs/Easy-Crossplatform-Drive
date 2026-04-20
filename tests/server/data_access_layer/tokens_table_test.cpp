@@ -36,7 +36,7 @@ protected:
         QDateTime expiresAt = QDateTime::currentDateTimeUtc().addSecs(offsetSecs);
         TokenRecord token(tokenId, "hash_" + tokenId, userId, expiresAt);
 
-        return m_tokenRep.addNewToken(token);
+        return m_tokenRep.add(token);
     }
 };
 
@@ -47,10 +47,10 @@ TEST_F(TokenRepositoryTest, TokenStorageWorks)
     QDateTime expires = QDateTime::currentDateTimeUtc().addDays(1);
     TokenRecord t("token_1", "hash_abc", m_testUserId, expires);
 
-    EXPECT_TRUE(m_tokenRep.addNewToken(t));
+    EXPECT_TRUE(m_tokenRep.add(t));
     EXPECT_TRUE(m_tokenRep.exists("token_1"));
 
-    TokenRecord fetched = m_tokenRep.getToken("token_1");
+    TokenRecord fetched = m_tokenRep.findById("token_1");
     EXPECT_TRUE(fetched.isValid());
     EXPECT_FALSE(fetched.isExpired(expires.addDays(-1)));
     EXPECT_EQ(fetched.id(), QString("token_1"));
@@ -78,10 +78,10 @@ TEST_F(TokenRepositoryTest, DeleteTokenWorks)
     createToken("tok_1");
     EXPECT_TRUE(m_tokenRep.exists("tok_1"));
 
-    EXPECT_TRUE(m_tokenRep.deleteToken("tok_1"));
+    EXPECT_TRUE(m_tokenRep.remove("tok_1"));
     EXPECT_FALSE(m_tokenRep.exists("tok_1"));
 
-    EXPECT_FALSE(m_tokenRep.deleteToken("tok_1"));
+    EXPECT_FALSE(m_tokenRep.remove("tok_1"));
 }
 
 TEST_F(TokenRepositoryTest, DeleteByUserWorks)
@@ -94,7 +94,7 @@ TEST_F(TokenRepositoryTest, DeleteByUserWorks)
     createToken("t_user1_b", 3600, m_testUserId);
     createToken("t_user2_a", 3600, secondUserId);
 
-    EXPECT_TRUE(m_tokenRep.deleteByUser(m_testUserId));
+    EXPECT_TRUE(m_tokenRep.removeByUser(m_testUserId));
 
     EXPECT_FALSE(m_tokenRep.exists("t_user1_a"));
     EXPECT_FALSE(m_tokenRep.exists("t_user1_b"));
@@ -117,13 +117,13 @@ TEST_F(TokenRepositoryTest, CleanExpiredTokensWorks)
     // token from now
     TokenRecord border("border", "h5", m_testUserId, now);
 
-    ASSERT_TRUE(m_tokenRep.addNewToken(future1));
-    ASSERT_TRUE(m_tokenRep.addNewToken(future2));
-    ASSERT_TRUE(m_tokenRep.addNewToken(past1));
-    ASSERT_TRUE(m_tokenRep.addNewToken(past2));
-    ASSERT_TRUE(m_tokenRep.addNewToken(border));
+    ASSERT_TRUE(m_tokenRep.add(future1));
+    ASSERT_TRUE(m_tokenRep.add(future2));
+    ASSERT_TRUE(m_tokenRep.add(past1));
+    ASSERT_TRUE(m_tokenRep.add(past2));
+    ASSERT_TRUE(m_tokenRep.add(border));
 
-    EXPECT_TRUE(m_tokenRep.cleanExpiredTokens(now));
+    EXPECT_TRUE(m_tokenRep.cleanExpired(now));
 
     EXPECT_TRUE(m_tokenRep.exists("future_1"));
     EXPECT_TRUE(m_tokenRep.exists("future_2"));

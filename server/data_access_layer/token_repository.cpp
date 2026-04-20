@@ -8,9 +8,9 @@
 TokenRepository::TokenRepository(DatabaseManager& db)
     : m_db(db) {}
 
-bool TokenRepository::addNewToken(const TokenRecord& token) const
+bool TokenRepository::add(const TokenRecord& record) const
 {
-    if (!token.isValid())
+    if (!record.isValid())
     {
         qCritical() << "token is not valid";
         return false;
@@ -20,10 +20,10 @@ bool TokenRepository::addNewToken(const TokenRecord& token) const
     query.prepare("INSERT INTO tokens (id, token_hash, user_id, expires_at) "
                   "VALUES (:id, :hash, :user_id, :expires_at)");
 
-    query.bindValue(":id", token.id());
-    query.bindValue(":hash", token.tokenHash());
-    query.bindValue(":user_id", token.userId());
-    query.bindValue(":expires_at", token.expiresAt());
+    query.bindValue(":id", record.id());
+    query.bindValue(":hash", record.tokenHash());
+    query.bindValue(":user_id", record.userId());
+    query.bindValue(":expires_at", record.expiresAt());
 
     if (!query.exec())
     {
@@ -50,7 +50,7 @@ bool TokenRepository::exists(const QString &id) const
     return query.next();
 }
 
-TokenRecord TokenRepository::getToken(const QString &id) const
+TokenRecord TokenRepository::findById(const QString &id) const
 {
     QSqlQuery query(m_db.database());
     query.prepare("SELECT id, token_hash, user_id, expires_at FROM tokens WHERE id = :id");
@@ -76,7 +76,7 @@ TokenRecord TokenRepository::getToken(const QString &id) const
     return TokenRecord();
 }
 
-bool TokenRepository::deleteToken(const QString &id) const
+bool TokenRepository::remove(const QString &id) const
 {
     QSqlQuery query(m_db.database());
     query.prepare("DELETE FROM tokens WHERE id = :id");
@@ -99,7 +99,7 @@ bool TokenRepository::deleteToken(const QString &id) const
     return true;
 }
 
-bool TokenRepository::cleanExpiredTokens(QDateTime currentDateTime) const
+bool TokenRepository::cleanExpired(QDateTime currentDateTime) const
 {
     QSqlQuery query(m_db.database());
     query.prepare("DELETE FROM tokens WHERE expires_at < :now");
@@ -119,7 +119,7 @@ bool TokenRepository::cleanExpiredTokens(QDateTime currentDateTime) const
     return true;
 }
 
-bool TokenRepository::deleteByUser(int userId) const
+bool TokenRepository::removeByUser(int userId) const
 {
     QSqlQuery query(m_db.database());
     query.prepare("DELETE FROM tokens WHERE user_id = :user_id");
