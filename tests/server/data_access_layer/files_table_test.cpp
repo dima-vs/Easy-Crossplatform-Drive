@@ -9,7 +9,7 @@
 #include "database_manager.h"
 #include "user_repository.h"
 #include "file_repository.h"
-#include "user.h"
+#include "user_record.h"
 #include "file_record.h"
 #include "domain/file_type.h"
 #include "converter/file_type_converter.h"
@@ -31,7 +31,7 @@ protected:
         m_userRep(m_DBManager),
         m_fileRep(m_DBManager)
     {
-        User user("testuser", "test@gmail.com", "12345");
+        UserRecord user("testuser", "test@gmail.com", "12345");
         m_userRep.addNewUser(user);
         m_testUserId = user.id();
     }
@@ -51,7 +51,7 @@ protected:
 
     QString generateServerName(int dirDepth, int fileIdx=-1)
     {
-        User user = m_userRep.getUser(m_testUserId);
+        UserRecord user = m_userRep.getUser(m_testUserId);
         if (!user.isValid())
             return QString();
 
@@ -67,7 +67,7 @@ protected:
 
     QString generateServerName(const QString& logicalName, QVariant parentId)
     {
-        User user = m_userRep.getUser(m_testUserId);
+        UserRecord user = m_userRep.getUser(m_testUserId);
         if (!user.isValid())
             return QString();
 
@@ -239,7 +239,7 @@ TEST_F(FileRepositoryTest, ForeignKeyConstraintFailsOnBadUser)
 
 TEST_F(FileRepositoryTest, DifferentUsersCanHaveSameFileNames)
 {
-    User user2("second_user", "second@gmail.com", "12345");
+    UserRecord user2("second_user", "second@gmail.com", "12345");
     ASSERT_TRUE(m_userRep.addNewUser(user2));
     int secondUserId = user2.id();
 

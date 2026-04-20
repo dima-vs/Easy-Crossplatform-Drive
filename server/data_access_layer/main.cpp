@@ -94,19 +94,19 @@ void testDatabase()
     DatabaseManager db;
     UserRepository userRep(db);
 
-    User u1("user1", "user1@gmail.com", "12345");
+    UserRecord u1("user1", "user1@gmail.com", "12345");
     userRep.addNewUser(u1);
 
-    User u2("user2", "user2@gmail.com", "11111111111");
+    UserRecord u2("user2", "user2@gmail.com", "11111111111");
     userRep.addNewUser(u2);
 
-    User u3("user3", "user3@gmail.com", "fffffffff");
+    UserRecord u3("user3", "user3@gmail.com", "fffffffff");
     userRep.addNewUser(u3);
 
-    User u4("user4", "user4@gmail.com", "34retww455y5");
+    UserRecord u4("user4", "user4@gmail.com", "34retww455y5");
     userRep.addNewUser(u4);
 
-    User user = userRep.getUser("user3");
+    UserRecord user = userRep.getUser("user3");
     qDebug() << user.id() <<
         user.username() <<
         user.email() <<
@@ -114,7 +114,7 @@ void testDatabase()
 
     userRep.deleteUser("user2");
 
-    User user3 = userRep.getUser("user3");
+    UserRecord user3 = userRep.getUser("user3");
     int uid = user3.id();
 
     FileRepository fileRep(db);

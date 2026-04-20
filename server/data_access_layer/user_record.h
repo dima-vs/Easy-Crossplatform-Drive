@@ -1,9 +1,9 @@
-#ifndef USER_H
-#define USER_H
+#ifndef USER_RECORD_H
+#define USER_RECORD_H
 
 #include <QString>
 
-struct User
+struct UserRecord
 {
 private:
     int m_id;
@@ -13,9 +13,9 @@ private:
     bool m_isIDSet;
     bool m_isValid;
 public:
-    User();
-    User(const QString &username, const QString &email, const QString &passwordHash);
-    User(
+    UserRecord();
+    UserRecord(const QString &username, const QString &email, const QString &passwordHash);
+    UserRecord(
       int id, const QString &username,
       const QString &email,
       const QString &passwordHash
@@ -31,4 +31,4 @@ public:
     void setId(int id);
 };
 
-#endif // USER_H
+#endif // USER_RECORD_H

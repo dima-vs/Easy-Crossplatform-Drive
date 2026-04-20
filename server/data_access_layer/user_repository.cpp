@@ -6,7 +6,7 @@
 UserRepository::UserRepository(DatabaseManager &db):
     m_db(db) {}
 
-bool UserRepository::addNewUser(User &user) const
+bool UserRepository::addNewUser(UserRecord &user) const
 {
     if (!user.isValid())
     {
@@ -43,7 +43,7 @@ bool UserRepository::addNewUser(User &user) const
     return qResult;
 }
 
-User UserRepository::getUser(int id) const
+UserRecord UserRepository::getUser(int id) const
 {
     QSqlQuery query(m_db.database());
     query.prepare("SELECT id, username, email, password_hash FROM users WHERE id = :id");
@@ -52,12 +52,12 @@ User UserRepository::getUser(int id) const
     if (!query.exec())
     {
         qCritical() << query.lastError().text();
-        return User();
+        return UserRecord();
     }
 
     if (query.next())
     {
-        return User(
+        return UserRecord(
             query.value("id").toInt(),
             query.value("username").toString(),
             query.value("email").toString(),
@@ -66,10 +66,10 @@ User UserRepository::getUser(int id) const
     }
 
     qWarning() << "user with id" << id << "not found";
-    return User();
+    return UserRecord();
 }
 
-User UserRepository::getUser(const QString &username) const
+UserRecord UserRepository::getUser(const QString &username) const
 {
     QSqlQuery query(m_db.database());
     query.prepare("SELECT id, username, email, password_hash FROM users WHERE username = :username");
@@ -78,12 +78,12 @@ User UserRepository::getUser(const QString &username) const
     if (!query.exec())
     {
         qCritical() << query.lastError().text();
-        return User();
+        return UserRecord();
     }
 
     if (query.next())
     {
-        return User(
+        return UserRecord(
             query.value("id").toInt(),
             query.value("username").toString(),
             query.value("email").toString(),
@@ -92,12 +92,12 @@ User UserRepository::getUser(const QString &username) const
     }
 
     qWarning() << "user" << username << "not found";
-    return User();
+    return UserRecord();
 }
 
-QList<User> UserRepository::getAllUsers() const
+QList<UserRecord> UserRepository::getAllUsers() const
 {
-    QList<User> users;
+    QList<UserRecord> users;
     QSqlQuery query(m_db.database());
     query.prepare("SELECT id, username, email, password_hash FROM users");
 
@@ -109,7 +109,7 @@ QList<User> UserRepository::getAllUsers() const
 
     while (query.next())
     {
-        users.append(User(
+        users.append(UserRecord(
             query.value("id").toInt(),
             query.value("username").toString(),
             query.value("email").toString(),

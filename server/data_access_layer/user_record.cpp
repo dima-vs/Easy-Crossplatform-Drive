@@ -1,8 +1,8 @@
-#include "user.h"
+#include "user_record.h"
 
-User::User() : m_id(0), m_isIDSet(false), m_isValid(false) {}
+UserRecord::UserRecord() : m_id(0), m_isIDSet(false), m_isValid(false) {}
 
-User::User(const QString &username, const QString &email, const QString &passwordHash)
+UserRecord::UserRecord(const QString &username, const QString &email, const QString &passwordHash)
     : m_id(0),
     m_username(username),
     m_email(email),
@@ -13,7 +13,7 @@ User::User(const QString &username, const QString &email, const QString &passwor
     m_isValid(true)
     {}
 
-User::User(
+UserRecord::UserRecord(
     int id,
     const QString &username,
     const QString &email,
@@ -26,7 +26,7 @@ User::User(
     m_isIDSet(true),
     m_isValid(true) {}
 
-void User::setId(int id)
+void UserRecord::setId(int id)
 {
     m_id = id;
     m_isIDSet = true;

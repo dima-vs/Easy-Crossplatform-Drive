@@ -4,7 +4,7 @@
 #include <QString>
 #include <QList>
 #include "database_manager.h"
-#include "user.h"
+#include "user_record.h"
 
 class UserRepository
 {
@@ -12,10 +12,10 @@ private:
     DatabaseManager& m_db;
 public:
     UserRepository(DatabaseManager& db);
-    bool addNewUser(User& user) const;
-    User getUser(int id) const;
-    User getUser(const QString& username) const;
-    QList<User> getAllUsers() const;
+    bool addNewUser(UserRecord& user) const;
+    UserRecord getUser(int id) const;
+    UserRecord getUser(const QString& username) const;
+    QList<UserRecord> getAllUsers() const;
     bool exists(int id) const;
     bool exists(const QString &username) const;
     bool existsByEmail(const QString &email) const;

@@ -7,7 +7,7 @@
 #include <QStringList>
 
 #include "service.h"
-#include "user.h"
+#include "user_record.h"
 #include "token.h"
 
 namespace Service::Auth
@@ -136,7 +136,7 @@ AuthResult AuthService::completeRegistration(
     if (passwordHash.isEmpty())
         return AuthResult::fail(ServiceError::PasswordHashingFailed);
 
-    User user(userName, regSession.email, passwordHash);
+    UserRecord user(userName, regSession.email, passwordHash);
     if (!m_userRep.addNewUser(user))
         return AuthResult::fail(ServiceError::CannotAddNewUser);
 
@@ -155,7 +155,7 @@ AuthResult AuthService::completeRegistration(
 
 AuthResult AuthService::login(const QString& userName, const QString& password)
 {
-    User user = m_userRep.getUser(userName);
+    UserRecord user = m_userRep.getUser(userName);
 
     if (!user.isValid())
         return AuthResult::fail(ServiceError::UserNotFound);
@@ -185,7 +185,7 @@ AuthResult AuthService::authenticateByToken(const QString& tokenString)
     if (hashTokenSecret(tokenSecret) != token.tokenHash())
         return AuthResult::fail(ServiceError::InvalidCredentials);
 
-    User user = m_userRep.getUser(token.userId());
+    UserRecord user = m_userRep.getUser(token.userId());
     if (!user.isValid())
         return AuthResult::fail(ServiceError::UserNotFound);
 

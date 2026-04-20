@@ -6,7 +6,7 @@
 #include "database_manager.h"
 #include "user_repository.h"
 #include "token_repository.h"
-#include "user.h"
+#include "user_record.h"
 #include "token.h"
 
 class TokenRepositoryTest : public testing::Test
@@ -23,7 +23,7 @@ protected:
         m_userRep(m_DBManager),
         m_tokenRep(m_DBManager)
     {
-        User user("testuser", "test@gmail.com", "12345");
+        UserRecord user("testuser", "test@gmail.com", "12345");
         m_userRep.addNewUser(user);
         m_testUserId = user.id();
     }
@@ -86,7 +86,7 @@ TEST_F(TokenRepositoryTest, DeleteTokenWorks)
 
 TEST_F(TokenRepositoryTest, DeleteByUserWorks)
 {
-    User user2("second_user", "second@gmail.com", "pass");
+    UserRecord user2("second_user", "second@gmail.com", "pass");
     ASSERT_TRUE(m_userRep.addNewUser(user2));
     int secondUserId = user2.id();
 

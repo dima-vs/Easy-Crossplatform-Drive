@@ -5,7 +5,7 @@
 #include <QList>
 #include "database_manager.h"
 #include "user_repository.h"
-#include "user.h"
+#include "user_record.h"
 
 class UserRepositoryTest : public testing::Test
 {
@@ -19,7 +19,7 @@ protected:
 
     bool addUser(int index)
     {
-        User user(
+        UserRecord user(
             QString("user%1").arg(index),
             QString("user%1@gmail.com").arg(index),
             QString("password%1").arg(index)
@@ -121,10 +121,10 @@ TEST_F(UserRepositoryTest, UniqueEmailAndUserNameConstraint)
 {
     ASSERT_TRUE(addUser(1)); // user1, user1@gmail.com
 
-    User duplicateEmail("user99", "user1@gmail.com", "psw");
+    UserRecord duplicateEmail("user99", "user1@gmail.com", "psw");
     EXPECT_FALSE(m_userRep.addNewUser(duplicateEmail));
 
-    User duplicateName("user1", "user99@gmail.com", "psw");
+    UserRecord duplicateName("user1", "user99@gmail.com", "psw");
     EXPECT_FALSE(m_userRep.addNewUser(duplicateName));
 
     EXPECT_EQ(m_userRep.getAllUsers().size(), 1);
