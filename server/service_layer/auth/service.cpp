@@ -8,7 +8,7 @@
 
 #include "service.h"
 #include "user_record.h"
-#include "token.h"
+#include "token_record.h"
 
 namespace Service::Auth
 {
@@ -175,7 +175,7 @@ AuthResult AuthService::authenticateByToken(const QString& tokenString)
     if (tokenId.isEmpty() || tokenSecret.isEmpty())
         return AuthResult::fail(ServiceError::InvalidCredentials);
 
-    Token token = m_tokenRep.getToken(tokenId);
+    TokenRecord token = m_tokenRep.getToken(tokenId);
     if (!token.isValid())
         return AuthResult::fail(ServiceError::TokenNotFound);
 
@@ -226,7 +226,7 @@ AuthResult AuthService::createUserSession(const QString& userName, int userId) c
     QDateTime now = m_timeProvider.currentDateTimeUtc();
     QDateTime expiresAt = now.addSecs(m_authConfig.security.userSessionsDurationSec);
 
-    Token token(tokenId, tokenHash, userId, expiresAt);
+    TokenRecord token(tokenId, tokenHash, userId, expiresAt);
     if (!m_tokenRep.addNewToken(token))
         return AuthResult::fail(ServiceError::CannotAddNewToken);
 

@@ -168,16 +168,16 @@ void testDatabase()
 
     TokenRepository tokenRep(db);
 
-    Token t1("id1", "token1", uid, QDateTime::currentDateTime().addDays(1));
+    TokenRecord t1("id1", "token1", uid, QDateTime::currentDateTime().addDays(1));
     tokenRep.addNewToken(t1);
 
-    Token t2("id2", "token2", uid, QDateTime::currentDateTime().addDays(1));
+    TokenRecord t2("id2", "token2", uid, QDateTime::currentDateTime().addDays(1));
     tokenRep.addNewToken(t2);
 
-    Token t3("id3", "token3", uid, QDateTime::currentDateTime().addYears(-1));
+    TokenRecord t3("id3", "token3", uid, QDateTime::currentDateTime().addYears(-1));
     tokenRep.addNewToken(t3);
 
-    Token t1_copy("id1", "token1", uid, QDateTime::currentDateTime().addDays(1));
+    TokenRecord t1_copy("id1", "token1", uid, QDateTime::currentDateTime().addDays(1));
     tokenRep.addNewToken(t1_copy);
 
     tokenRep.cleanExpiredTokens(QDateTime::currentDateTimeUtc());

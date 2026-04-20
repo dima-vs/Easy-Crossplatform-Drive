@@ -1,10 +1,10 @@
-#ifndef TOKEN_H
-#define TOKEN_H
+#ifndef TOKEN_RECORD_H
+#define TOKEN_RECORD_H
 
 #include <QString>
 #include <QDateTime>
 
-struct Token
+struct TokenRecord
 {
 private:
     QString m_id;
@@ -14,9 +14,9 @@ private:
 
     bool m_isValid;
 public:
-    Token();
+    TokenRecord();
 
-    Token(const QString &id, const QString &hash, int userId, const QDateTime &expiresAt);
+    TokenRecord(const QString &id, const QString &hash, int userId, const QDateTime &expiresAt);
 
     QString id() const { return m_id; }
     QString tokenHash() const { return m_tokenHash; }
@@ -29,4 +29,4 @@ public:
     }
 };
 
-#endif // TOKEN_H
+#endif // TOKEN_RECORD_H

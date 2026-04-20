@@ -14,7 +14,7 @@ add_library(DAL_Lib STATIC ${DAL_SOURCES}
     user_record.h user_record.cpp
     file_record.h file_record.cpp
     file_repository.h file_repository.cpp
-    token.h token.cpp
+    token_record.h token_record.cpp
     token_repository.h token_repository.cpp
     file_storage.h file_storage.cpp)
 

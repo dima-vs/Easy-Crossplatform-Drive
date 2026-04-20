@@ -7,7 +7,7 @@
 #include "user_repository.h"
 #include "token_repository.h"
 #include "user_record.h"
-#include "token.h"
+#include "token_record.h"
 
 class TokenRepositoryTest : public testing::Test
 {
@@ -34,7 +34,7 @@ protected:
             userId = m_testUserId;
 
         QDateTime expiresAt = QDateTime::currentDateTimeUtc().addSecs(offsetSecs);
-        Token token(tokenId, "hash_" + tokenId, userId, expiresAt);
+        TokenRecord token(tokenId, "hash_" + tokenId, userId, expiresAt);
 
         return m_tokenRep.addNewToken(token);
     }
@@ -45,12 +45,12 @@ TEST_F(TokenRepositoryTest, TokenStorageWorks)
     EXPECT_FALSE(m_tokenRep.exists("token_1"));
 
     QDateTime expires = QDateTime::currentDateTimeUtc().addDays(1);
-    Token t("token_1", "hash_abc", m_testUserId, expires);
+    TokenRecord t("token_1", "hash_abc", m_testUserId, expires);
 
     EXPECT_TRUE(m_tokenRep.addNewToken(t));
     EXPECT_TRUE(m_tokenRep.exists("token_1"));
 
-    Token fetched = m_tokenRep.getToken("token_1");
+    TokenRecord fetched = m_tokenRep.getToken("token_1");
     EXPECT_TRUE(fetched.isValid());
     EXPECT_FALSE(fetched.isExpired(expires.addDays(-1)));
     EXPECT_EQ(fetched.id(), QString("token_1"));
@@ -107,15 +107,15 @@ TEST_F(TokenRepositoryTest, CleanExpiredTokensWorks)
     QDateTime now = QDateTime::currentDateTimeUtc();
 
     // tokens from the future
-    Token future1("future_1", "h1", m_testUserId, now.addDays(1));
-    Token future2("future_2", "h2", m_testUserId, now.addSecs(60));
+    TokenRecord future1("future_1", "h1", m_testUserId, now.addDays(1));
+    TokenRecord future2("future_2", "h2", m_testUserId, now.addSecs(60));
 
     // tokens from the past
-    Token past1("past_1", "h3", m_testUserId, now.addDays(-1));
-    Token past2("past_2", "h4", m_testUserId, now.addSecs(-60));
+    TokenRecord past1("past_1", "h3", m_testUserId, now.addDays(-1));
+    TokenRecord past2("past_2", "h4", m_testUserId, now.addSecs(-60));
 
     // token from now
-    Token border("border", "h5", m_testUserId, now);
+    TokenRecord border("border", "h5", m_testUserId, now);
 
     ASSERT_TRUE(m_tokenRep.addNewToken(future1));
     ASSERT_TRUE(m_tokenRep.addNewToken(future2));

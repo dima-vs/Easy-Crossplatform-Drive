@@ -8,7 +8,7 @@
 TokenRepository::TokenRepository(DatabaseManager& db)
     : m_db(db) {}
 
-bool TokenRepository::addNewToken(const Token& token) const
+bool TokenRepository::addNewToken(const TokenRecord& token) const
 {
     if (!token.isValid())
     {
@@ -50,7 +50,7 @@ bool TokenRepository::exists(const QString &id) const
     return query.next();
 }
 
-Token TokenRepository::getToken(const QString &id) const
+TokenRecord TokenRepository::getToken(const QString &id) const
 {
     QSqlQuery query(m_db.database());
     query.prepare("SELECT id, token_hash, user_id, expires_at FROM tokens WHERE id = :id");
@@ -59,12 +59,12 @@ Token TokenRepository::getToken(const QString &id) const
     if (!query.exec())
     {
         qCritical() << query.lastError().text();
-        return Token();
+        return TokenRecord();
     }
 
     if (query.next())
     {
-        return Token(
+        return TokenRecord(
             query.value("id").toString(),
             query.value("token_hash").toString(),
             query.value("user_id").toInt(),
@@ -73,7 +73,7 @@ Token TokenRepository::getToken(const QString &id) const
     }
 
     qWarning() << "token with id" << id << "not found";
-    return Token();
+    return TokenRecord();
 }
 
 bool TokenRepository::deleteToken(const QString &id) const
