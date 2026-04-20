@@ -24,7 +24,7 @@ protected:
         m_tokenRep(m_DBManager)
     {
         UserRecord user("testuser", "test@gmail.com", "12345");
-        m_userRep.addNewUser(user);
+        m_userRep.add(user);
         m_testUserId = user.id();
     }
 
@@ -87,7 +87,7 @@ TEST_F(TokenRepositoryTest, DeleteTokenWorks)
 TEST_F(TokenRepositoryTest, DeleteByUserWorks)
 {
     UserRecord user2("second_user", "second@gmail.com", "pass");
-    ASSERT_TRUE(m_userRep.addNewUser(user2));
+    ASSERT_TRUE(m_userRep.add(user2));
     int secondUserId = user2.id();
 
     createToken("t_user1_a", 3600, m_testUserId);

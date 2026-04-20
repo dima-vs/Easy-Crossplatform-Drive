@@ -12,14 +12,17 @@ private:
     DatabaseManager& m_db;
 public:
     UserRepository(DatabaseManager& db);
-    bool addNewUser(UserRecord& user) const;
-    UserRecord getUser(int id) const;
-    UserRecord getUser(const QString& username) const;
-    QList<UserRecord> getAllUsers() const;
+
+    bool add(UserRecord& record) const;
+    UserRecord findById(int id) const;
+    UserRecord findByUsername(const QString& username) const;
+    QList<UserRecord> findAll() const;
+
     bool exists(int id) const;
     bool exists(const QString &username) const;
     bool existsByEmail(const QString &email) const;
-    bool deleteUser(const QString& username) const;
+
+    bool remove(const QString& username) const;
 };
 
 #endif // USER_REPOSITORY_H

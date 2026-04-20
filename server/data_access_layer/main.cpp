@@ -95,26 +95,26 @@ void testDatabase()
     UserRepository userRep(db);
 
     UserRecord u1("user1", "user1@gmail.com", "12345");
-    userRep.addNewUser(u1);
+    userRep.add(u1);
 
     UserRecord u2("user2", "user2@gmail.com", "11111111111");
-    userRep.addNewUser(u2);
+    userRep.add(u2);
 
     UserRecord u3("user3", "user3@gmail.com", "fffffffff");
-    userRep.addNewUser(u3);
+    userRep.add(u3);
 
     UserRecord u4("user4", "user4@gmail.com", "34retww455y5");
-    userRep.addNewUser(u4);
+    userRep.add(u4);
 
-    UserRecord user = userRep.getUser("user3");
+    UserRecord user = userRep.findByUsername("user3");
     qDebug() << user.id() <<
         user.username() <<
         user.email() <<
         user.passwordHash();
 
-    userRep.deleteUser("user2");
+    userRep.remove("user2");
 
-    UserRecord user3 = userRep.getUser("user3");
+    UserRecord user3 = userRep.findByUsername("user3");
     int uid = user3.id();
 
     FileRepository fileRep(db);

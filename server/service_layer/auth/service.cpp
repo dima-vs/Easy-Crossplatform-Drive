@@ -137,7 +137,7 @@ AuthResult AuthService::completeRegistration(
         return AuthResult::fail(ServiceError::PasswordHashingFailed);
 
     UserRecord user(userName, regSession.email, passwordHash);
-    if (!m_userRep.addNewUser(user))
+    if (!m_userRep.add(user))
         return AuthResult::fail(ServiceError::CannotAddNewUser);
 
     if (!user.isIDSet())
@@ -155,7 +155,7 @@ AuthResult AuthService::completeRegistration(
 
 AuthResult AuthService::login(const QString& userName, const QString& password)
 {
-    UserRecord user = m_userRep.getUser(userName);
+    UserRecord user = m_userRep.findByUsername(userName);
 
     if (!user.isValid())
         return AuthResult::fail(ServiceError::UserNotFound);
@@ -185,7 +185,7 @@ AuthResult AuthService::authenticateByToken(const QString& tokenString)
     if (hashTokenSecret(tokenSecret) != token.tokenHash())
         return AuthResult::fail(ServiceError::InvalidCredentials);
 
-    UserRecord user = m_userRep.getUser(token.userId());
+    UserRecord user = m_userRep.findById(token.userId());
     if (!user.isValid())
         return AuthResult::fail(ServiceError::UserNotFound);
 

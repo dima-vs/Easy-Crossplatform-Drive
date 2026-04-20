@@ -24,12 +24,12 @@ protected:
             QString("user%1@gmail.com").arg(index),
             QString("password%1").arg(index)
         );
-        return m_userRep.addNewUser(user);
+        return m_userRep.add(user);
     }
 
     bool deleteUser(int index)
     {
-        return m_userRep.deleteUser(QString("user%1").arg(index));
+        return m_userRep.remove(QString("user%1").arg(index));
     }
 
     bool addUsersRange(int start, int end)
@@ -64,17 +64,17 @@ protected:
 TEST_F(UserRepositoryTest, UserStorageWorks)
 {
     // at the beginning size has to be 0
-    EXPECT_EQ(m_userRep.getAllUsers().size(), 0);
-    EXPECT_FALSE(m_userRep.getUser(1).isValid());
+    EXPECT_EQ(m_userRep.findAll().size(), 0);
+    EXPECT_FALSE(m_userRep.findById(1).isValid());
     ASSERT_TRUE(addUsersRange(1, 10)); // add 10 users
 
-    EXPECT_EQ(m_userRep.getAllUsers().size(), 10); // size has to be 10
+    EXPECT_EQ(m_userRep.findAll().size(), 10); // size has to be 10
 
-    QString userName = m_userRep.getUser("user3").username();
+    QString userName = m_userRep.findByUsername("user3").username();
     EXPECT_STREQ(userName.toStdString().c_str(), "user3");
 
     EXPECT_TRUE(deleteUsersRange(8, 9)); // remove two users
-    EXPECT_EQ(m_userRep.getAllUsers().size(), 8); // now size is 8
+    EXPECT_EQ(m_userRep.findAll().size(), 8); // now size is 8
 
     EXPECT_TRUE(m_userRep.exists("user1"));
     EXPECT_TRUE(m_userRep.exists(5));
@@ -95,7 +95,7 @@ TEST_F(UserRepositoryTest, UniqueConstraintWork)
     EXPECT_TRUE(addUser(7));
     EXPECT_TRUE(addUsersRange(20, 30));
 
-    EXPECT_EQ(m_userRep.getAllUsers().size(), 17);
+    EXPECT_EQ(m_userRep.findAll().size(), 17);
 
     EXPECT_FALSE(addUsersRange(19, 33));
 }
@@ -103,18 +103,18 @@ TEST_F(UserRepositoryTest, UniqueConstraintWork)
 TEST_F(UserRepositoryTest, DeleteNotExisting)
 {
     ASSERT_TRUE(addUsersRange(1, 10));
-    EXPECT_EQ(m_userRep.getAllUsers().size(), 10);
+    EXPECT_EQ(m_userRep.findAll().size(), 10);
 
     EXPECT_FALSE(deleteUser(20));
     EXPECT_FALSE(deleteUsersRange(-1, 100));
-    EXPECT_EQ(m_userRep.getAllUsers().size(), 10);
+    EXPECT_EQ(m_userRep.findAll().size(), 10);
 
     EXPECT_TRUE(deleteUsersRange(1, 10));
-    EXPECT_EQ(m_userRep.getAllUsers().size(), 0);
+    EXPECT_EQ(m_userRep.findAll().size(), 0);
 
     EXPECT_FALSE(deleteUsersRange(1, 10));
     EXPECT_FALSE(deleteUser(4));
-    EXPECT_EQ(m_userRep.getAllUsers().size(), 0);
+    EXPECT_EQ(m_userRep.findAll().size(), 0);
 }
 
 TEST_F(UserRepositoryTest, UniqueEmailAndUserNameConstraint)
@@ -122,10 +122,10 @@ TEST_F(UserRepositoryTest, UniqueEmailAndUserNameConstraint)
     ASSERT_TRUE(addUser(1)); // user1, user1@gmail.com
 
     UserRecord duplicateEmail("user99", "user1@gmail.com", "psw");
-    EXPECT_FALSE(m_userRep.addNewUser(duplicateEmail));
+    EXPECT_FALSE(m_userRep.add(duplicateEmail));
 
     UserRecord duplicateName("user1", "user99@gmail.com", "psw");
-    EXPECT_FALSE(m_userRep.addNewUser(duplicateName));
+    EXPECT_FALSE(m_userRep.add(duplicateName));
 
-    EXPECT_EQ(m_userRep.getAllUsers().size(), 1);
+    EXPECT_EQ(m_userRep.findAll().size(), 1);
 }

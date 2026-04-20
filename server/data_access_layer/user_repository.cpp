@@ -6,9 +6,9 @@
 UserRepository::UserRepository(DatabaseManager &db):
     m_db(db) {}
 
-bool UserRepository::addNewUser(UserRecord &user) const
+bool UserRepository::add(UserRecord &record) const
 {
-    if (!user.isValid())
+    if (!record.isValid())
     {
         qCritical() << "could not add a new user:" <<
             "user is not valid";
@@ -18,9 +18,9 @@ bool UserRepository::addNewUser(UserRecord &user) const
     QSqlQuery query(m_db.database());
     query.prepare("INSERT INTO users(username, email, password_hash) "
                   "VALUES (:username, :email, :password_hash)");
-    query.bindValue(":username", user.username());
-    query.bindValue(":email", user.email());
-    query.bindValue(":password_hash", user.passwordHash());
+    query.bindValue(":username", record.username());
+    query.bindValue(":email", record.email());
+    query.bindValue(":password_hash", record.passwordHash());
 
     bool qResult = query.exec();
 
@@ -30,7 +30,7 @@ bool UserRepository::addNewUser(UserRecord &user) const
         QVariant id = query.lastInsertId();
         if (id.isValid()) {
             qDebug() << "inserted ID:" << id.toInt();
-            user.setId(id.toInt());
+            record.setId(id.toInt());
         } else {
             qDebug() << "lastInsertId is not supported by this driver";
         }
@@ -43,7 +43,7 @@ bool UserRepository::addNewUser(UserRecord &user) const
     return qResult;
 }
 
-UserRecord UserRepository::getUser(int id) const
+UserRecord UserRepository::findById(int id) const
 {
     QSqlQuery query(m_db.database());
     query.prepare("SELECT id, username, email, password_hash FROM users WHERE id = :id");
@@ -69,7 +69,7 @@ UserRecord UserRepository::getUser(int id) const
     return UserRecord();
 }
 
-UserRecord UserRepository::getUser(const QString &username) const
+UserRecord UserRepository::findByUsername(const QString &username) const
 {
     QSqlQuery query(m_db.database());
     query.prepare("SELECT id, username, email, password_hash FROM users WHERE username = :username");
@@ -95,7 +95,7 @@ UserRecord UserRepository::getUser(const QString &username) const
     return UserRecord();
 }
 
-QList<UserRecord> UserRepository::getAllUsers() const
+QList<UserRecord> UserRepository::findAll() const
 {
     QList<UserRecord> users;
     QSqlQuery query(m_db.database());
@@ -166,7 +166,7 @@ bool UserRepository::existsByEmail(const QString &email) const
     return query.next();
 }
 
-bool UserRepository::deleteUser(const QString &username) const
+bool UserRepository::remove(const QString &username) const
 {
     QSqlQuery query(m_db.database());
     query.prepare("DELETE FROM users WHERE username = :username");

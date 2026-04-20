@@ -32,7 +32,7 @@ protected:
         m_fileRep(m_DBManager)
     {
         UserRecord user("testuser", "test@gmail.com", "12345");
-        m_userRep.addNewUser(user);
+        m_userRep.add(user);
         m_testUserId = user.id();
     }
 
@@ -51,7 +51,7 @@ protected:
 
     QString generateServerName(int dirDepth, int fileIdx=-1)
     {
-        UserRecord user = m_userRep.getUser(m_testUserId);
+        UserRecord user = m_userRep.findById(m_testUserId);
         if (!user.isValid())
             return QString();
 
@@ -67,7 +67,7 @@ protected:
 
     QString generateServerName(const QString& logicalName, QVariant parentId)
     {
-        UserRecord user = m_userRep.getUser(m_testUserId);
+        UserRecord user = m_userRep.findById(m_testUserId);
         if (!user.isValid())
             return QString();
 
@@ -240,7 +240,7 @@ TEST_F(FileRepositoryTest, ForeignKeyConstraintFailsOnBadUser)
 TEST_F(FileRepositoryTest, DifferentUsersCanHaveSameFileNames)
 {
     UserRecord user2("second_user", "second@gmail.com", "12345");
-    ASSERT_TRUE(m_userRep.addNewUser(user2));
+    ASSERT_TRUE(m_userRep.add(user2));
     int secondUserId = user2.id();
 
     int rootDocsUser1 = createDir("Documents");
