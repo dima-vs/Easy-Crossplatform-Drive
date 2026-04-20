@@ -42,7 +42,7 @@ protected:
         )
     {
         FileRecord dir(m_testUserId, FileType::Directory, name, QVariant(), 0, parentId);
-        if (m_fileRep.addNewFile(dir))
+        if (m_fileRep.add(dir))
         {
             return dir.id();
         }
@@ -82,7 +82,7 @@ protected:
 
         while (currentParentId != 0)
         {
-            FileRecord dir = m_fileRep.getFile(currentParentId);
+            FileRecord dir = m_fileRep.findById(currentParentId);
 
             if (!dir.isValid())
                 return "";
@@ -105,7 +105,7 @@ protected:
     {
         QString serverName = generateServerName(name, parentId);
         FileRecord file(m_testUserId, FileType::File, name, serverName, size, parentId);
-        if (m_fileRep.addNewFile(file))
+        if (m_fileRep.add(file))
         {
             return file.id();
         }
@@ -157,7 +157,7 @@ protected:
 
 TEST_F(FileRepositoryTest, HierarchyStorageWorks)
 {
-    EXPECT_EQ(m_fileRep.getFilesByOwner(m_testUserId).size(), 0);
+    EXPECT_EQ(m_fileRep.findByOwner(m_testUserId).size(), 0);
 
     // /Images
     int imgDirId = createDir("Images");
@@ -178,9 +178,9 @@ TEST_F(FileRepositoryTest, HierarchyStorageWorks)
     int catFileId = createFile("black_cat.png", 5120, catsDirId);
     ASSERT_GT(catFileId, 0);
 
-    EXPECT_EQ(m_fileRep.getFilesByOwner(m_testUserId).size(), 5);
+    EXPECT_EQ(m_fileRep.findByOwner(m_testUserId).size(), 5);
 
-    FileRecord fetchedCat = m_fileRep.getFile(m_testUserId, { "Images", "Animals", "Cats", "black_cat.png" });
+    FileRecord fetchedCat = m_fileRep.findByPath(m_testUserId, { "Images", "Animals", "Cats", "black_cat.png" });
     EXPECT_EQ(fetchedCat.id(), catFileId);
 }
 
@@ -234,7 +234,7 @@ TEST_F(FileRepositoryTest, ForeignKeyConstraintFailsOnBadUser)
     int badUserId = 9999;
     FileRecord badFile(badUserId, FileType::File, "note.txt", QUuid::createUuid().toString(), 100);
 
-    EXPECT_FALSE(m_fileRep.addNewFile(badFile));
+    EXPECT_FALSE(m_fileRep.add(badFile));
 }
 
 TEST_F(FileRepositoryTest, DifferentUsersCanHaveSameFileNames)
@@ -251,7 +251,7 @@ TEST_F(FileRepositoryTest, DifferentUsersCanHaveSameFileNames)
         QVariant(), 0,
         QVariant(QMetaType::fromType<int>())
         );
-    EXPECT_TRUE(m_fileRep.addNewFile(rootDocsUser2Obj))
+    EXPECT_TRUE(m_fileRep.add(rootDocsUser2Obj))
         << "Should allow second user to create a root folder with the same name";
 
     int rootDocsUser2 = rootDocsUser2Obj.id();
@@ -267,11 +267,11 @@ TEST_F(FileRepositoryTest, DifferentUsersCanHaveSameFileNames)
     FileRecord fileUser2Obj(
         secondUserId, FileType::File, "report.pdf",
         serverName2, 2048, rootDocsUser2);
-    EXPECT_TRUE(m_fileRep.addNewFile(fileUser2Obj))
+    EXPECT_TRUE(m_fileRep.add(fileUser2Obj))
         << "Should allow second user to create a file with the same name in their own folder";
 
-    EXPECT_EQ(m_fileRep.getFilesByOwner(m_testUserId).size(), 2);
-    EXPECT_EQ(m_fileRep.getFilesByOwner(secondUserId).size(), 2);
+    EXPECT_EQ(m_fileRep.findByOwner(m_testUserId).size(), 2);
+    EXPECT_EQ(m_fileRep.findByOwner(secondUserId).size(), 2);
 }
 
 TEST_F(FileRepositoryTest, RecursiveSelectionWorks)
@@ -311,7 +311,7 @@ TEST_F(FileRepositoryTest, RecursiveSelectionWorks)
     // === TEST 1: null parent, maxDepth = inf ===
     result.first.clear();
     result.second.clear();
-    success = m_fileRep.getAllNestedObjects(
+    success = m_fileRep.getAllNested(
         m_testUserId, QVariant(), result);
     EXPECT_TRUE(success);
     // icon.png, report.pdf, black_cat.png
@@ -341,7 +341,7 @@ TEST_F(FileRepositoryTest, RecursiveSelectionWorks)
     // === TEST 2: null parent, maxDepth = 1 ===
     result.first.clear();
     result.second.clear();
-    success = m_fileRep.getAllNestedObjects(
+    success = m_fileRep.getAllNested(
         m_testUserId, QVariant(), result, 1);
     EXPECT_TRUE(success);
     // Files: [NULL]
@@ -352,7 +352,7 @@ TEST_F(FileRepositoryTest, RecursiveSelectionWorks)
     // === TEST 3: null parent, maxDepth = 2 ===
     result.first.clear();
     result.second.clear();
-    success = m_fileRep.getAllNestedObjects(
+    success = m_fileRep.getAllNested(
         m_testUserId, QVariant(), result, 2);
     EXPECT_TRUE(success);
     // Files: icon.png, report.pdf
@@ -363,7 +363,7 @@ TEST_F(FileRepositoryTest, RecursiveSelectionWorks)
     // === TEST 4: Images dir, maxDepth = 1 ===
     result.first.clear();
     result.second.clear();
-    success = m_fileRep.getAllNestedObjects(
+    success = m_fileRep.getAllNested(
         m_testUserId, QVariant(imgDirId), result, 1);
     EXPECT_TRUE(success);
     // Files: icon.png, report.pdf
@@ -377,7 +377,7 @@ TEST_F(FileRepositoryTest, RecursiveSelectionWorks)
     // Lvl 3: Cats, Dogs
     result.first.clear();
     result.second.clear();
-    success = m_fileRep.getAllNestedObjects(
+    success = m_fileRep.getAllNested(
         m_testUserId, QVariant(imgDirId), result, 3);
     EXPECT_TRUE(success);
     EXPECT_EQ(result.first.size(), 1);
@@ -385,7 +385,7 @@ TEST_F(FileRepositoryTest, RecursiveSelectionWorks)
 
     // === TEST 6: Empty directory WhiteDogs, maxDepth = inf ===
     result.first.clear(); result.second.clear();
-    success = m_fileRep.getAllNestedObjects(
+    success = m_fileRep.getAllNested(
         m_testUserId, QVariant(whiteDogsDirId), result);
     EXPECT_TRUE(success);
     EXPECT_EQ(result.first.size(), 0);
@@ -398,12 +398,12 @@ TEST_F(FileRepositoryTest, DeleteFileWorks)
     createFile("photo1.jpg", 1000, imgDirId);
     createFile("photo2.jpg", 2000, imgDirId);
 
-    EXPECT_EQ(m_fileRep.getFilesByOwner(m_testUserId).size(), 3);
+    EXPECT_EQ(m_fileRep.findByOwner(m_testUserId).size(), 3);
 
-    EXPECT_TRUE(m_fileRep.deleteFile(m_testUserId, {"Images", "photo1.jpg"}));
-    EXPECT_EQ(m_fileRep.getFilesByOwner(m_testUserId).size(), 2);
+    EXPECT_TRUE(m_fileRep.remove(m_testUserId, {"Images", "photo1.jpg"}));
+    EXPECT_EQ(m_fileRep.findByOwner(m_testUserId).size(), 2);
 
-    EXPECT_FALSE(m_fileRep.deleteFile(m_testUserId, {"Images", "not_exist.jpg"}));
+    EXPECT_FALSE(m_fileRep.remove(m_testUserId, {"Images", "not_exist.jpg"}));
 }
 
 TEST_F(FileRepositoryTest, RecursiveDeleteFileWorks)
@@ -411,7 +411,7 @@ TEST_F(FileRepositoryTest, RecursiveDeleteFileWorks)
     fillRecursive(5, 3);
     // === 5x3 files and 5 folders ===
     int currentObjCount = 5 * 3 + 5;
-    EXPECT_EQ(m_fileRep.getFilesByOwner(m_testUserId).size(), currentObjCount);
+    EXPECT_EQ(m_fileRep.findByOwner(m_testUserId).size(), currentObjCount);
 
     // === delete file inside a folder at depth 5 ===
     QList<QString> deepFilePath = getFolderPath(5);
@@ -419,7 +419,7 @@ TEST_F(FileRepositoryTest, RecursiveDeleteFileWorks)
 
     QList<QString> serverNamesToDeleteOut;
     int totalObjectsDeleted = -1;
-    bool lastOpSuccess = m_fileRep.deleteFile(
+    bool lastOpSuccess = m_fileRep.remove(
         m_testUserId,
         deepFilePath,
         serverNamesToDeleteOut,
@@ -438,13 +438,13 @@ TEST_F(FileRepositoryTest, RecursiveDeleteFileWorks)
         << "\n:Generated" << generatedServerName.toStdString();
 
     currentObjCount -= 1; // 1 file deleted
-    EXPECT_EQ(m_fileRep.getFilesByOwner(m_testUserId).size(), currentObjCount);
+    EXPECT_EQ(m_fileRep.findByOwner(m_testUserId).size(), currentObjCount);
 
     // === delete folder at depth 3 ===
     QList<QString> midFolderPath = getFolderPath(3);
 
     serverNamesToDeleteOut.clear();
-    lastOpSuccess = m_fileRep.deleteFile(
+    lastOpSuccess = m_fileRep.remove(
         m_testUserId,
         midFolderPath,
         serverNamesToDeleteOut,
@@ -458,7 +458,7 @@ TEST_F(FileRepositoryTest, RecursiveDeleteFileWorks)
     currentObjCount -= objectsMustBeDeleted;
     // count only files deleted
     ASSERT_EQ(serverNamesToDeleteOut.size(), 2 * 3 + 2);
-    EXPECT_EQ(m_fileRep.getFilesByOwner(m_testUserId).size(), currentObjCount);
+    EXPECT_EQ(m_fileRep.findByOwner(m_testUserId).size(), currentObjCount);
     EXPECT_EQ(totalObjectsDeleted, objectsMustBeDeleted);
 
     for (int i = 3; i <= 5; ++i)
@@ -475,7 +475,7 @@ TEST_F(FileRepositoryTest, RecursiveDeleteFileWorks)
     // === remove root folder ===
     QList<QString> rootFolderPath = getFolderPath(1);
     serverNamesToDeleteOut.clear();
-    lastOpSuccess = m_fileRep.deleteFile(
+    lastOpSuccess = m_fileRep.remove(
         m_testUserId,
         rootFolderPath,
         serverNamesToDeleteOut,
@@ -487,7 +487,7 @@ TEST_F(FileRepositoryTest, RecursiveDeleteFileWorks)
     EXPECT_EQ(totalObjectsDeleted, objectsMustBeDeleted);
 
     // user must not have any objects anymore
-    EXPECT_EQ(m_fileRep.getFilesByOwner(m_testUserId).size(), 0);
+    EXPECT_EQ(m_fileRep.findByOwner(m_testUserId).size(), 0);
 }
 
 
@@ -514,29 +514,29 @@ TEST_F(FileRepositoryTest, DeleteByIdWorks)
     ASSERT_GT(seaId, 0);
 
     // Photos + pic1 + pic2 + Vacation + sea = 5
-    EXPECT_EQ(m_fileRep.getFilesByOwner(m_testUserId).size(), 5);
+    EXPECT_EQ(m_fileRep.findByOwner(m_testUserId).size(), 5);
 
-    EXPECT_TRUE(m_fileRep.deleteFile(m_testUserId, pic1Id));
-    EXPECT_EQ(m_fileRep.getFilesByOwner(m_testUserId).size(), 4)
+    EXPECT_TRUE(m_fileRep.remove(m_testUserId, pic1Id));
+    EXPECT_EQ(m_fileRep.findByOwner(m_testUserId).size(), 4)
         << "Total count should decrease by 1";
 
     // security check
     int hackerUserId = 999;
-    EXPECT_FALSE(m_fileRep.deleteFile(hackerUserId, pic2Id))
+    EXPECT_FALSE(m_fileRep.remove(hackerUserId, pic2Id))
         << "Should fail if the user is not the owner of the file";
 
-    EXPECT_EQ(m_fileRep.getFilesByOwner(m_testUserId).size(), 4);
+    EXPECT_EQ(m_fileRep.findByOwner(m_testUserId).size(), 4);
 
     QList<QString> deletedPhysicalFiles;
     int deletedCount = 0;
 
-    EXPECT_TRUE(m_fileRep.deleteFile(m_testUserId, vacDirId, deletedPhysicalFiles, &deletedCount));
+    EXPECT_TRUE(m_fileRep.remove(m_testUserId, vacDirId, deletedPhysicalFiles, &deletedCount));
 
     EXPECT_EQ(deletedCount, 2);
     EXPECT_EQ(deletedPhysicalFiles.size(), 1);
 
-    EXPECT_EQ(m_fileRep.getFilesByOwner(m_testUserId).size(), 2);
+    EXPECT_EQ(m_fileRep.findByOwner(m_testUserId).size(), 2);
 
-    EXPECT_FALSE(m_fileRep.deleteFile(m_testUserId, 999999))
+    EXPECT_FALSE(m_fileRep.remove(m_testUserId, 999999))
         << "Should return false for non-existent ID";
 }

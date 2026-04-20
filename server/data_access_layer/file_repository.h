@@ -21,24 +21,28 @@ private:
     DatabaseManager& m_db;
 public:
     FileRepository(DatabaseManager& db);
-    bool addNewFile(FileRecord& file) const;
-    bool checkPermission(int ownerId, const FileRecord& file) const;
-    FileRecord getFile(int id) const;
-    FileRecord getFile(int ownerId, QVariant parentId, const QString fileName) const;
-    FileRecord getFile(int ownerId, const QList<QString>& fullPath) const;
-    QList<FileRecord> getFilesByOwner(int ownerId) const;
+    bool add(FileRecord& record) const;
+    bool checkPermission(int ownerId, const FileRecord& fileRecord) const;
+    FileRecord findById(int id) const;
+    FileRecord findByName(
+        int ownerId,
+        QVariant parentId,
+        const QString recordName
+        ) const;
+    FileRecord findByPath(int ownerId, const QList<QString>& fullPath) const;
+    QList<FileRecord> findByOwner(int ownerId) const;
 
-    bool deleteFile(int ownerId, int objId) const;
+    bool remove(int ownerId, int objId) const;
 
-    bool deleteFile(int ownerId,
+    bool remove(int ownerId,
                     int objId,
                     QList<QString>& physicalFilesToDeleteOut,
                     int* outObjectsDeleted = nullptr
                     ) const;
 
-    bool deleteFile(int ownerId, const QList<QString>& fullPath) const;
+    bool remove(int ownerId, const QList<QString>& fullPath) const;
     // delete any object
-    bool deleteFile(int ownerId,
+    bool remove(int ownerId,
                     const QList<QString>& fullPath,
                     QList<QString>& physicalFilesToDeleteOut,
                     int* outObjectsDeleted = nullptr
@@ -47,21 +51,21 @@ public:
     // Returns all nested files and directories, including the root.
     // Directories are ordered from root to deepest.
     // Use reverse order for deletion.
-    bool getAllNestedObjects(
+    bool getAllNested(
         int ownerId,
         const QList<QString>& fullPath,
         QPair<QList<FileRecord>, QList<FileRecord>>& outFilesAndDirs,
         QVariant maxDepth = QVariant(QMetaType::fromType<int>())
         ) const;
 
-    bool getAllNestedObjects(
+    bool getAllNested(
         int ownerId,
         QVariant parentId,
         QPair<QList<FileRecord>, QList<FileRecord>>& outFilesAndDirs,
         QVariant maxDepth = QVariant(QMetaType::fromType<int>())
         ) const;
 private:
-    FileRecord extractFileFromQuery(const QSqlQuery& query) const;
+    FileRecord extractRecord(const QSqlQuery& query) const;
 
     bool processBFSQueue(
         QQueue<QPair<int, int>>& dirsToProcess,
@@ -72,16 +76,20 @@ private:
     // If maxDepth==-1, depth is unlimited.
     // Depth includes root object, so if depth == 1,
     // only root object will be returned
-    bool getAllObjectsRecursive(
+    bool getAllRecordsRecursive(
         int ownerId,
         int id,
         QPair<QList<FileRecord>, QList<FileRecord>>& outFilesAndDirs,
         int maxDepth = -1
         ) const;
 
+    bool findRecordIdByPath(
+        int ownerId,
+        const QList<QString>& fullPath,
+        int& outId
+        ) const;
 
-    bool getFileId(int ownerId, const QList<QString>& fullPath, int& outId) const;
-    bool deleteObjects(const QList<int> &idListToDelete) const;
+    bool removeRecords(const QList<int> &idListToDelete) const;
 };
 
 #endif // FILE_REPOSITORY_H

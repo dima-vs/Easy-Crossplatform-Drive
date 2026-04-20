@@ -124,46 +124,46 @@ void testDatabase()
 
     // /Images/
     FileRecord fImages(uid, FileType::Directory, "Images", QVariant(), 0);
-    fileRep.addNewFile(fImages);
+    fileRep.add(fImages);
 
     // /Videos
     FileRecord fVideos(uid, FileType::Directory, "Videos", QVariant(), 0);
-    fileRep.addNewFile(fVideos);
+    fileRep.add(fVideos);
 
-    int imgDirId = fileRep.getFile(uid, { "Images" }).id();
+    int imgDirId = fileRep.findByPath(uid, { "Images" }).id();
 
     // /Images/icon.png
     FileRecord fIcon(uid, FileType::File, "icon.png", "fsdlkgjgerhg45j.bin", 2048, imgDirId);
-    fileRep.addNewFile(fIcon);
+    fileRep.add(fIcon);
 
     // /Images/Animals
     FileRecord fAnimals(uid, FileType::Directory, "Animals", QVariant(), 0, imgDirId);
-    fileRep.addNewFile(fAnimals);
+    fileRep.add(fAnimals);
 
-    int animalsDirId = fileRep.getFile(uid, { "Images", "Animals" }).id();
+    int animalsDirId = fileRep.findByPath(uid, { "Images", "Animals" }).id();
 
     // /Images/Animals/Cats
     FileRecord fCats(uid, FileType::Directory, "Cats", QVariant(), 0, animalsDirId);
-    fileRep.addNewFile(fCats);
+    fileRep.add(fCats);
 
-    int catsDirId = fileRep.getFile(uid, { "Images", "Animals", "Cats" }).id();
+    int catsDirId = fileRep.findByPath(uid, { "Images", "Animals", "Cats" }).id();
 
     // /Images/Animals/Cats/black_cat.png
     FileRecord fBlackCat(uid, FileType::File, "black_cat.png", "someservername1.bin", 5120, catsDirId);
-    fileRep.addNewFile(fBlackCat);
+    fileRep.add(fBlackCat);
 
     // /Images/Animals/Cats/white_cat.png
     FileRecord fWhiteCat(uid, FileType::File, "white_cat.jpg", "someservername2.bin", 43544, catsDirId);
-    fileRep.addNewFile(fWhiteCat);
+    fileRep.add(fWhiteCat);
 
     FileRecord fTemp(uid, FileType::Directory, "temp", QVariant(), 0, catsDirId);
-    fileRep.addNewFile(fTemp);
+    fileRep.add(fTemp);
 
     FileRecord fCache(uid, FileType::Directory, "cache", QVariant(), 0, catsDirId);
-    fileRep.addNewFile(fCache);
+    fileRep.add(fCache);
 
     // delete /Images/Animals/Cats/black_cat.png
-    fileRep.deleteFile(uid, { "Images", "Animals", "Cats", "black_cat.png" });
+    fileRep.remove(uid, { "Images", "Animals", "Cats", "black_cat.png" });
 
 
     TokenRepository tokenRep(db);
@@ -182,7 +182,7 @@ void testDatabase()
 
     tokenRep.cleanExpiredTokens(QDateTime::currentDateTimeUtc());
 
-    QList<FileRecord> fileList = fileRep.getFilesByOwner(uid);
+    QList<FileRecord> fileList = fileRep.findByOwner(uid);
     qDebug() << "File list size: " << fileList.size();
     for (FileRecord& fileObj : fileList)
     {

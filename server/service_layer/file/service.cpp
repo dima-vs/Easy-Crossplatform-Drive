@@ -31,7 +31,7 @@ TreeResult FileService::getTree(
     )
 {
     QPair<QList<FileRecord>, QList<FileRecord>> filesAndDirs;
-    bool success = m_fileRep.getAllNestedObjects(
+    bool success = m_fileRep.getAllNested(
         userId,
         parentId,
         filesAndDirs,
@@ -139,7 +139,7 @@ InitUploadSessionResult FileService::initUpload(
         return InitUploadSessionResult::fail(ServiceError::FileTooLarge);
     }
 
-    FileRecord existing = m_fileRep.getFile(userId, parentId, fileName);
+    FileRecord existing = m_fileRep.findByName(userId, parentId, fileName);
     bool fileEntryExist = existing.isValid();
 
     if (fileEntryExist && overwrite &&
@@ -352,7 +352,7 @@ CompleteUploadResult FileService::completeUpload(QString uploadId)
         uploadSession.fileSize,
         uploadSession.parentId
         );
-    bool fileRecordCreated = m_fileRep.addNewFile(fileRecord);
+    bool fileRecordCreated = m_fileRep.add(fileRecord);
     if (!fileRecordCreated)
     {
         return CompleteUploadResult::fail(
@@ -384,7 +384,7 @@ DownloadChunkResult FileService::download(
     QByteArray& chunkBytesOut
     )
 {
-    FileRecord fileRecord = m_fileRep.getFile(fileId);
+    FileRecord fileRecord = m_fileRep.findById(fileId);
 
     if (!fileRecord.isValid())
     {
@@ -483,7 +483,7 @@ CreatedFileObjectResult FileService::createEmpty(
         serverName = QVariant(serverNameStr);
     }
 
-    FileRecord existing = m_fileRep.getFile(
+    FileRecord existing = m_fileRep.findByName(
         userId,
         parentId,
         fileName
@@ -560,7 +560,7 @@ NoDataResult FileService::createEmpty(FileRecord& fileRecord)
         }
     }
 
-    bool fileRecordAdded = m_fileRep.addNewFile(fileRecord);
+    bool fileRecordAdded = m_fileRep.add(fileRecord);
     if (!fileRecordAdded)
     {
         if (fileRecord.type() == FileType::File)
@@ -576,7 +576,7 @@ NoDataResult FileService::createEmpty(FileRecord& fileRecord)
 
 NoDataResult FileService::removeEntry(int userId, int fileId)
 {
-    FileRecord toDelete = m_fileRep.getFile(fileId);
+    FileRecord toDelete = m_fileRep.findById(fileId);
     if (!toDelete.isValid())
     {
         return NoDataResult::fail(ServiceError::FileNotFound);
@@ -596,7 +596,7 @@ NoDataResult FileService::removeEntry(const FileRecord& toDelete)
     QList<QString> physicalFilesToDelete;
     int deletedCount = 0;
 
-    bool fileRecordDeleted = m_fileRep.deleteFile(
+    bool fileRecordDeleted = m_fileRep.remove(
         toDelete.ownerId(),
         toDelete.id(),
         physicalFilesToDelete,
