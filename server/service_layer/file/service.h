@@ -83,7 +83,21 @@ public:
         QByteArray& chunkBytesOut
         );
 
+    // create an empty file or directory
+    CreatedFileObjectResult CreateFileObject(
+        int userId,
+        QString userName,
+        QString fileName,
+        QVariant parentId,
+        FileType type,
+        bool overwrite
+        );
+
+    // delete file or directory
+    NoDataResult deleteFileObject(int userId, int fileId);
 private:
+    NoDataResult deleteFileObject(const ::File& fileToDelete);
+    NoDataResult createEmptyFileObj(::File &file);
 };
 
 }

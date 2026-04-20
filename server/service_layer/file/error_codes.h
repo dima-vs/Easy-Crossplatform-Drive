@@ -22,7 +22,8 @@ enum class ServiceError
     FileNotCreated,
     UploadSessionAlreadyCompleted,
     PermissionDenied,
-    InvalidFileObjType
+    InvalidFileObjType,
+    CannotOverwriteDirectory
 };
 
 }

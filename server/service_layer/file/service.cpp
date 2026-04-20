@@ -1,5 +1,6 @@
 #include <QHash>
 #include <QPair>
+#include <QList>
 #include <QUuid>
 #include <list>
 #include <vector>
@@ -320,28 +321,10 @@ CompleteUploadResult FileService::completeUpload(QString uploadId)
     if (uploadSession.wasOverwritten)
     {
         int fileToDeleteId = uploadSession.oldFileIdToDelete;
-        ::File fileToDelete = m_fileRep.getFile(fileToDeleteId);
-        if (!fileToDelete.isValid())
-            return CompleteUploadResult::fail(ServiceError::FileNotFound);
-
-        bool fileRecordDeleted = m_fileRep.deleteFile(
-            userId, fileToDeleteId);
-        if (!fileRecordDeleted)
+        NoDataResult res = deleteFileObject(userId, fileToDeleteId);
+        if (!res.isOk())
         {
-            qCritical() << "cannot delete db record about file" <<
-                "with id:" << fileToDeleteId;
-            return CompleteUploadResult::fail(
-                ServiceError::FailedToPerformDBOperation);
-        }
-
-        bool fileDeleted = m_fileStorage.removeFile(
-            fileToDelete.serverName().toString());
-        if (!fileDeleted)
-        {
-            qCritical() << "cannot delete file" <<
-                "with id:" << fileToDeleteId;
-            return CompleteUploadResult::fail(
-                ServiceError::FailedToPerformStorageOperation);
+            return CompleteUploadResult::fail(res.error());
         }
     }
 
@@ -463,6 +446,173 @@ DownloadChunkResult FileService::downloadChunk(
     result.endByte = (actualReadSize > 0) ?
                          (reqRange.startByte + actualReadSize - 1) : 0;
     return DownloadChunkResult::ok(result);
+}
+
+CreatedFileObjectResult FileService::CreateFileObject(
+    int userId,
+    QString userName,
+    QString fileName,
+    QVariant parentId,
+    FileType type,
+    bool overwrite
+    )
+{
+    if (type == FileType::Unknown)
+    {
+        return CreatedFileObjectResult::fail(
+            ServiceError::InvalidFileObjType);
+    }
+
+    int size = 0;
+    QVariant serverName;
+    // generate a server name for file
+    if (type == FileType::File)
+    {
+        QString uuidStr = QUuid::createUuid().toString(
+            QUuid::StringFormat::WithoutBraces);
+        QString serverNameStr = userName + "_" +
+                                 uuidStr;
+        serverName = QVariant(serverNameStr);
+    }
+
+    ::File fileFromDBIfExists = m_fileRep.getFile(
+        userId,
+        parentId,
+        fileName
+        );
+
+    bool alreadyExists = fileFromDBIfExists.isValid();
+
+    if (alreadyExists && !overwrite)
+    {
+        return CreatedFileObjectResult::fail(
+            ServiceError::FileAlreadyExist
+            );
+    }
+    else if (alreadyExists && overwrite &&
+               (fileFromDBIfExists.type() == FileType::Directory)
+               )
+    {
+        return CreatedFileObjectResult::fail(
+            ServiceError::CannotOverwriteDirectory
+            );
+    }
+    else if (alreadyExists && overwrite)
+    {
+        NoDataResult fileDeletedRes = deleteFileObject(fileFromDBIfExists);
+        if (!fileDeletedRes.isOk())
+        {
+            return CreatedFileObjectResult::fail(fileDeletedRes.error());
+        }
+
+    }
+
+    ::File fileObj(
+        userId,
+        type,
+        fileName,
+        serverName,
+        size,
+        parentId
+        );
+
+    NoDataResult fileCreatedRes = createEmptyFileObj(fileObj);
+    if (!fileCreatedRes.isOk())
+    {
+        return CreatedFileObjectResult::fail(fileCreatedRes.error());
+    }
+
+    if (!fileObj.isIDSet())
+    {
+        qCritical() << "database didn't set id after file insertion";
+        return CreatedFileObjectResult::fail(
+            ServiceError::FailedToPerformDBOperation);
+    }
+
+    Model::CreatedFileObjectResult result;
+    result.createdAt = m_timeProvider.currentDateTimeUtc();
+    result.fileId = fileObj.id();
+    result.fileName = fileObj.logicalName();
+    result.parentId = fileObj.parentId();
+
+    return CreatedFileObjectResult::ok(result);
+}
+
+NoDataResult FileService::createEmptyFileObj(::File& file)
+{
+    if (file.type() == FileType::File)
+    {
+        bool fileCreated = m_fileStorage.createEmptyFile(
+            file.serverName().toString()
+            );
+        if (!fileCreated)
+        {
+            return NoDataResult::fail(
+                ServiceError::FailedToPerformStorageOperation);
+        }
+    }
+
+    bool fileRecordAdded = m_fileRep.addNewFile(file);
+    if (!fileRecordAdded)
+    {
+        if (file.type() == FileType::File)
+        {
+            m_fileStorage.removeFile(file.serverName().toString());
+        }
+
+        return NoDataResult::fail(
+            ServiceError::FailedToPerformDBOperation);
+    }
+    return NoDataResult::ok(QVariant());
+}
+
+NoDataResult FileService::deleteFileObject(int userId, int fileId)
+{
+    ::File fileToDelete = m_fileRep.getFile(fileId);
+    if (!fileToDelete.isValid())
+    {
+        return NoDataResult::fail(ServiceError::FileNotFound);
+    }
+
+    if (!m_fileRep.checkPermission(userId, fileToDelete))
+    {
+        return NoDataResult::fail(
+            ServiceError::PermissionDenied);
+    }
+
+    return deleteFileObject(fileToDelete);
+}
+
+NoDataResult FileService::deleteFileObject(const ::File& fileToDelete)
+{
+    QList<QString> physicalFilesToDelete;
+    int deletedCount = 0;
+
+    bool fileRecordDeleted = m_fileRep.deleteFile(
+        fileToDelete.ownerId(),
+        fileToDelete.id(),
+        physicalFilesToDelete,
+        &deletedCount
+        );
+
+    if (!fileRecordDeleted)
+    {
+        qCritical() << "cannot delete db record about file with id:" <<
+            fileToDelete.id();
+        return NoDataResult::fail(
+            ServiceError::FailedToPerformDBOperation);
+    }
+
+    for (const QString& serverName : physicalFilesToDelete)
+    {
+        bool fileDeleted = m_fileStorage.removeFile(serverName);
+        if (!fileDeleted)
+        {
+            qWarning() << "cannot delete physical file:" << serverName;
+        }
+    }
+
+    return NoDataResult::ok(QVariant());
 }
 
 
