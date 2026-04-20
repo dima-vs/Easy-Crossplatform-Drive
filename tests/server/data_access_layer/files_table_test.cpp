@@ -10,7 +10,7 @@
 #include "user_repository.h"
 #include "file_repository.h"
 #include "user.h"
-#include "file.h"
+#include "file_record.h"
 #include "domain/file_type.h"
 #include "converter/file_type_converter.h"
 
@@ -41,7 +41,7 @@ protected:
         QVariant parentId = QVariant(QMetaType::fromType<int>())
         )
     {
-        File dir(m_testUserId, FileType::Directory, name, QVariant(), 0, parentId);
+        FileRecord dir(m_testUserId, FileType::Directory, name, QVariant(), 0, parentId);
         if (m_fileRep.addNewFile(dir))
         {
             return dir.id();
@@ -82,7 +82,7 @@ protected:
 
         while (currentParentId != 0)
         {
-            File dir = m_fileRep.getFile(currentParentId);
+            FileRecord dir = m_fileRep.getFile(currentParentId);
 
             if (!dir.isValid())
                 return "";
@@ -104,7 +104,7 @@ protected:
                    )
     {
         QString serverName = generateServerName(name, parentId);
-        File file(m_testUserId, FileType::File, name, serverName, size, parentId);
+        FileRecord file(m_testUserId, FileType::File, name, serverName, size, parentId);
         if (m_fileRep.addNewFile(file))
         {
             return file.id();
@@ -180,7 +180,7 @@ TEST_F(FileRepositoryTest, HierarchyStorageWorks)
 
     EXPECT_EQ(m_fileRep.getFilesByOwner(m_testUserId).size(), 5);
 
-    File fetchedCat = m_fileRep.getFile(m_testUserId, { "Images", "Animals", "Cats", "black_cat.png" });
+    FileRecord fetchedCat = m_fileRep.getFile(m_testUserId, { "Images", "Animals", "Cats", "black_cat.png" });
     EXPECT_EQ(fetchedCat.id(), catFileId);
 }
 
@@ -232,7 +232,7 @@ TEST_F(FileRepositoryTest, FileAndDirNamesUniqueConstraint)
 TEST_F(FileRepositoryTest, ForeignKeyConstraintFailsOnBadUser)
 {
     int badUserId = 9999;
-    File badFile(badUserId, FileType::File, "note.txt", QUuid::createUuid().toString(), 100);
+    FileRecord badFile(badUserId, FileType::File, "note.txt", QUuid::createUuid().toString(), 100);
 
     EXPECT_FALSE(m_fileRep.addNewFile(badFile));
 }
@@ -246,7 +246,7 @@ TEST_F(FileRepositoryTest, DifferentUsersCanHaveSameFileNames)
     int rootDocsUser1 = createDir("Documents");
     ASSERT_GT(rootDocsUser1, 0);
 
-    File rootDocsUser2Obj(
+    FileRecord rootDocsUser2Obj(
         secondUserId, FileType::Directory, "Documents",
         QVariant(), 0,
         QVariant(QMetaType::fromType<int>())
@@ -264,7 +264,7 @@ TEST_F(FileRepositoryTest, DifferentUsersCanHaveSameFileNames)
 
     // second user file
     QString serverName2 = QUuid::createUuid().toString() + ".bin";
-    File fileUser2Obj(
+    FileRecord fileUser2Obj(
         secondUserId, FileType::File, "report.pdf",
         serverName2, 2048, rootDocsUser2);
     EXPECT_TRUE(m_fileRep.addNewFile(fileUser2Obj))
@@ -305,7 +305,7 @@ TEST_F(FileRepositoryTest, RecursiveSelectionWorks)
     // /Images/Animals/Dogs/WhiteDogs
     int whiteDogsDirId = createDir("WhiteDogs", dogsDirId);
 
-    QPair<QList<File>, QList<File>> result;
+    QPair<QList<FileRecord>, QList<FileRecord>> result;
     bool success = false;
 
     // === TEST 1: null parent, maxDepth = inf ===

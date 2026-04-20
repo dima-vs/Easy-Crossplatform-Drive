@@ -10,7 +10,7 @@
 #include <QByteArray>
 #include "file_repository.h"
 #include "file_storage.h"
-#include "file.h"
+#include "file_record.h"
 #include "file/models.h"
 #include "file/error_codes.h"
 #include "service_result.h"
@@ -96,8 +96,8 @@ public:
     // delete file or directory
     NoDataResult deleteFileObject(int userId, int fileId);
 private:
-    NoDataResult deleteFileObject(const ::File& fileToDelete);
-    NoDataResult createEmptyFileObj(::File &file);
+    NoDataResult deleteFileObject(const ::FileRecord& fileToDelete);
+    NoDataResult createEmptyFileObj(::FileRecord &file);
 };
 
 }

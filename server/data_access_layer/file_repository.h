@@ -10,7 +10,7 @@
 #include "domain/file_type.h"
 #include "converter/file_type_converter.h"
 #include "database_manager.h"
-#include "file.h"
+#include "file_record.h"
 
 class FileRepository
 {
@@ -21,12 +21,12 @@ private:
     DatabaseManager& m_db;
 public:
     FileRepository(DatabaseManager& db);
-    bool addNewFile(File& file) const;
-    bool checkPermission(int ownerId, const File& file) const;
-    File getFile(int id) const;
-    File getFile(int ownerId, QVariant parentId, const QString fileName) const;
-    File getFile(int ownerId, const QList<QString>& fullPath) const;
-    QList<File> getFilesByOwner(int ownerId) const;
+    bool addNewFile(FileRecord& file) const;
+    bool checkPermission(int ownerId, const FileRecord& file) const;
+    FileRecord getFile(int id) const;
+    FileRecord getFile(int ownerId, QVariant parentId, const QString fileName) const;
+    FileRecord getFile(int ownerId, const QList<QString>& fullPath) const;
+    QList<FileRecord> getFilesByOwner(int ownerId) const;
 
     bool deleteFile(int ownerId, int objId) const;
 
@@ -50,22 +50,22 @@ public:
     bool getAllNestedObjects(
         int ownerId,
         const QList<QString>& fullPath,
-        QPair<QList<File>, QList<File>>& outFilesAndDirs,
+        QPair<QList<FileRecord>, QList<FileRecord>>& outFilesAndDirs,
         QVariant maxDepth = QVariant(QMetaType::fromType<int>())
         ) const;
 
     bool getAllNestedObjects(
         int ownerId,
         QVariant parentId,
-        QPair<QList<File>, QList<File>>& outFilesAndDirs,
+        QPair<QList<FileRecord>, QList<FileRecord>>& outFilesAndDirs,
         QVariant maxDepth = QVariant(QMetaType::fromType<int>())
         ) const;
 private:
-    File extractFileFromQuery(const QSqlQuery& query) const;
+    FileRecord extractFileFromQuery(const QSqlQuery& query) const;
 
     bool processBFSQueue(
         QQueue<QPair<int, int>>& dirsToProcess,
-        QPair<QList<File>, QList<File>>& outFilesAndDirs,
+        QPair<QList<FileRecord>, QList<FileRecord>>& outFilesAndDirs,
         int maxDepth
         ) const;
 
@@ -75,7 +75,7 @@ private:
     bool getAllObjectsRecursive(
         int ownerId,
         int id,
-        QPair<QList<File>, QList<File>>& outFilesAndDirs,
+        QPair<QList<FileRecord>, QList<FileRecord>>& outFilesAndDirs,
         int maxDepth = -1
         ) const;
 

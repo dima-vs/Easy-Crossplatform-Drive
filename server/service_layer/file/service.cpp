@@ -30,7 +30,7 @@ TreeResult FileService::getFileTree(
     QVariant maxDepth
     )
 {
-    QPair<QList<::File>, QList<::File>> filesAndDirs;
+    QPair<QList<::FileRecord>, QList<::FileRecord>> filesAndDirs;
     bool success = m_fileRep.getAllNestedObjects(
         userId,
         parentId,
@@ -49,12 +49,12 @@ TreeResult FileService::getFileTree(
     std::list<Model::FileNode> roots;
     QHash<int, Model::FileNode*> lookupTable;
 
-    QList<::File>& files = filesAndDirs.first;
-    QList<::File>& dirs = filesAndDirs.second;
+    QList<::FileRecord>& files = filesAndDirs.first;
+    QList<::FileRecord>& dirs = filesAndDirs.second;
 
     for (int i = 0; i < dirs.size(); ++i)
     {
-        ::File& fileObj = dirs[i];
+        ::FileRecord& fileObj = dirs[i];
         Model::FileNode fileNode;
 
         fileNode.id = fileObj.id();
@@ -85,7 +85,7 @@ TreeResult FileService::getFileTree(
 
     for (int i = 0; i < files.size(); ++i)
     {
-        ::File& fileObj = files[i];
+        ::FileRecord& fileObj = files[i];
         Model::FileNode fileNode;
 
         fileNode.id = fileObj.id();
@@ -139,7 +139,7 @@ InitUploadSessionResult FileService::initUploadSession(
         return InitUploadSessionResult::fail(ServiceError::FileTooLarge);
     }
 
-    ::File existingDbFile = m_fileRep.getFile(userId, parentId, fileName);
+    ::FileRecord existingDbFile = m_fileRep.getFile(userId, parentId, fileName);
     bool fileExist = existingDbFile.isValid();
 
     if (!overwrite && fileExist)
@@ -336,7 +336,7 @@ CompleteUploadResult FileService::completeUpload(QString uploadId)
             ServiceError::FileNotCreated);
     }
 
-    ::File createdFileRecord(
+    ::FileRecord createdFileRecord(
         userId,
         FileType::File,
         uploadSession.fileName,
@@ -376,7 +376,7 @@ DownloadChunkResult FileService::downloadChunk(
     QByteArray& chunkBytesOut
     )
 {
-    ::File file = m_fileRep.getFile(fileId);
+    ::FileRecord file = m_fileRep.getFile(fileId);
 
     if (!file.isValid())
     {
@@ -475,7 +475,7 @@ CreatedFileObjectResult FileService::CreateFileObject(
         serverName = QVariant(serverNameStr);
     }
 
-    ::File fileFromDBIfExists = m_fileRep.getFile(
+    ::FileRecord fileFromDBIfExists = m_fileRep.getFile(
         userId,
         parentId,
         fileName
@@ -507,7 +507,7 @@ CreatedFileObjectResult FileService::CreateFileObject(
 
     }
 
-    ::File fileObj(
+    ::FileRecord fileObj(
         userId,
         type,
         fileName,
@@ -538,7 +538,7 @@ CreatedFileObjectResult FileService::CreateFileObject(
     return CreatedFileObjectResult::ok(result);
 }
 
-NoDataResult FileService::createEmptyFileObj(::File& file)
+NoDataResult FileService::createEmptyFileObj(::FileRecord& file)
 {
     if (file.type() == FileType::File)
     {
@@ -568,7 +568,7 @@ NoDataResult FileService::createEmptyFileObj(::File& file)
 
 NoDataResult FileService::deleteFileObject(int userId, int fileId)
 {
-    ::File fileToDelete = m_fileRep.getFile(fileId);
+    ::FileRecord fileToDelete = m_fileRep.getFile(fileId);
     if (!fileToDelete.isValid())
     {
         return NoDataResult::fail(ServiceError::FileNotFound);
@@ -583,7 +583,7 @@ NoDataResult FileService::deleteFileObject(int userId, int fileId)
     return deleteFileObject(fileToDelete);
 }
 
-NoDataResult FileService::deleteFileObject(const ::File& fileToDelete)
+NoDataResult FileService::deleteFileObject(const ::FileRecord& fileToDelete)
 {
     QList<QString> physicalFilesToDelete;
     int deletedCount = 0;

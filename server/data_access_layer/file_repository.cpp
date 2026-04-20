@@ -5,7 +5,7 @@
 FileRepository::FileRepository(DatabaseManager& db):
     m_db(db) {}
 
-bool FileRepository::addNewFile(File &file) const
+bool FileRepository::addNewFile(FileRecord &file) const
 {
     if (!file.isValid())
     {
@@ -54,12 +54,12 @@ bool FileRepository::addNewFile(File &file) const
     return qResult;
 }
 
-bool FileRepository::checkPermission(int ownerId, const File& file) const
+bool FileRepository::checkPermission(int ownerId, const FileRecord& file) const
 {
     return file.ownerId() == ownerId;
 }
 
-File FileRepository::getFile(int id) const
+FileRecord FileRepository::getFile(int id) const
 {
     QSqlQuery query(m_db.database());
     query.prepare("SELECT id, owner_id, type, logical_name, server_name, size, upload_time, parent_id "
@@ -69,7 +69,7 @@ File FileRepository::getFile(int id) const
     if (!query.exec())
     {
         qCritical() << query.lastError().text();
-        return File();
+        return FileRecord();
     }
 
     if (query.next())
@@ -78,19 +78,19 @@ File FileRepository::getFile(int id) const
     }
 
     qWarning() << "file object with id" << id << "not found";
-    return File();
+    return FileRecord();
 }
 
-File FileRepository::getFile(int ownerId, const QList<QString> &fullPath) const
+FileRecord FileRepository::getFile(int ownerId, const QList<QString> &fullPath) const
 {
     int objId = 0;
     if (!getFileId(ownerId, fullPath, objId))
-        return File();
+        return FileRecord();
 
     return getFile(objId);
 }
 
-File FileRepository::getFile(int ownerId, QVariant parentId, const QString fileName) const
+FileRecord FileRepository::getFile(int ownerId, QVariant parentId, const QString fileName) const
 {
     QSqlQuery query(m_db.database());
 
@@ -118,7 +118,7 @@ File FileRepository::getFile(int ownerId, QVariant parentId, const QString fileN
     if (!query.exec())
     {
         qCritical() << query.lastError().text();
-        return File();
+        return FileRecord();
     }
 
     if (query.next())
@@ -127,10 +127,10 @@ File FileRepository::getFile(int ownerId, QVariant parentId, const QString fileN
     }
 
     qWarning() << "file object not found";
-    return File();
+    return FileRecord();
 }
 
-File FileRepository::extractFileFromQuery(const QSqlQuery& query) const
+FileRecord FileRepository::extractFileFromQuery(const QSqlQuery& query) const
 {
     int fileId = query.value("id").toInt();
     int ownerId = query.value("owner_id").toInt();
@@ -142,7 +142,7 @@ File FileRepository::extractFileFromQuery(const QSqlQuery& query) const
     QDateTime uploadTime = query.value("upload_time").toDateTime();
     QVariant parentId = query.value("parent_id");
 
-    return File(
+    return FileRecord(
         fileId,
         ownerId,
         type,
@@ -157,7 +157,7 @@ File FileRepository::extractFileFromQuery(const QSqlQuery& query) const
 bool FileRepository::getAllNestedObjects(
     int ownerId,
     const QList<QString>& fullPath,
-    QPair<QList<File>, QList<File>>& outFilesAndDirs,
+    QPair<QList<FileRecord>, QList<FileRecord>>& outFilesAndDirs,
     QVariant maxDepth
     ) const
 {
@@ -177,7 +177,7 @@ bool FileRepository::getAllNestedObjects(
 bool FileRepository::getAllNestedObjects(
     int ownerId,
     QVariant parentId,
-    QPair<QList<File>, QList<File>>& outFilesAndDirs,
+    QPair<QList<FileRecord>, QList<FileRecord>>& outFilesAndDirs,
     QVariant maxDepth
     ) const
 {
@@ -209,7 +209,7 @@ bool FileRepository::getAllNestedObjects(
 
     while (query.next())
     {
-        File child = extractFileFromQuery(query);
+        FileRecord child = extractFileFromQuery(query);
         if (child.type() == FileType::File)
         {
             // add to file list
@@ -229,14 +229,14 @@ bool FileRepository::getAllNestedObjects(
 bool FileRepository::getAllObjectsRecursive(
     int ownerId,
     int rootId,
-    QPair<QList<File>, QList<File>>& outFilesAndDirs,
+    QPair<QList<FileRecord>, QList<FileRecord>>& outFilesAndDirs,
     int maxDepth
     ) const
 {
     if (maxDepth <= 0 && maxDepth != -1)
         return false;
 
-    File rootObj = getFile(rootId);
+    FileRecord rootObj = getFile(rootId);
     if (!rootObj.isValid())
         return false;
 
@@ -265,7 +265,7 @@ bool FileRepository::getAllObjectsRecursive(
 
 bool FileRepository::processBFSQueue(
     QQueue<QPair<int, int>>& dirsToProcess, // <dirId, dirDepth>
-    QPair<QList<File>, QList<File>>& outFilesAndDirs,
+    QPair<QList<FileRecord>, QList<FileRecord>>& outFilesAndDirs,
     int maxDepth
     ) const
 {
@@ -294,7 +294,7 @@ bool FileRepository::processBFSQueue(
 
         while (query.next())
         {
-            File child = extractFileFromQuery(query);
+            FileRecord child = extractFileFromQuery(query);
             if (child.type() == FileType::File)
             {
                 // add to file list
@@ -325,7 +325,7 @@ bool FileRepository::deleteFile(
     int* outObjectsDeleted
     ) const
 {
-    QPair<QList<File>, QList<File>> filesAndDirs;
+    QPair<QList<FileRecord>, QList<FileRecord>> filesAndDirs;
 
     if (!getAllNestedObjects(ownerId, QVariant(objId), filesAndDirs))
         return false;
@@ -340,7 +340,7 @@ bool FileRepository::deleteFile(
 
     // collect file IDs and server names to delete
     QList<int> fileIdsToDelete;
-    for (const File& file : filesAndDirs.first)
+    for (const FileRecord& file : filesAndDirs.first)
     {
         fileIdsToDelete.append(file.id());
         physicalFilesToDeleteOut.append(file.serverName().toString());
@@ -472,7 +472,7 @@ bool FileRepository::getFileId(int ownerId, const QList<QString>& fullPath, int&
     return true;
 }
 
-QList<File> FileRepository::getFilesByOwner(int ownerId) const
+QList<FileRecord> FileRepository::getFilesByOwner(int ownerId) const
 {
     QSqlQuery query(m_db.database());
     query.prepare("SELECT id, owner_id, type, logical_name, server_name, "
@@ -482,10 +482,10 @@ QList<File> FileRepository::getFilesByOwner(int ownerId) const
     if (!query.exec())
     {
         qCritical() << query.lastError().text();
-        return QList<File>();
+        return QList<FileRecord>();
     }
 
-    QList<File> result;
+    QList<FileRecord> result;
     while (query.next())
     {
         result.append(extractFileFromQuery(query));

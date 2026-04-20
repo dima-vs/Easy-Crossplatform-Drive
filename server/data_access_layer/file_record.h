@@ -1,5 +1,5 @@
-#ifndef FILE_H
-#define FILE_H
+#ifndef FILE_RECORD_H
+#define FILE_RECORD_H
 
 #include <QString>
 #include <QDateTime>
@@ -8,7 +8,7 @@
 #include <QtTypes>
 #include "domain/file_type.h"
 
-struct File
+struct FileRecord
 {
 private:
     using FileType = Common::Domain::FileType;
@@ -26,9 +26,9 @@ private:
     bool m_isValid;
 
 public:
-    File();
+    FileRecord();
 
-    File(
+    FileRecord(
         int ownerId,
         FileType type,
         const QString &logicalName,
@@ -37,7 +37,7 @@ public:
         QVariant parentId = QVariant(QMetaType::fromType<int>())
         );
 
-    File(int id, int ownerId, FileType type, const QString &logicalName,
+    FileRecord(int id, int ownerId, FileType type, const QString &logicalName,
          QVariant serverName, qint64 size, QDateTime uploadTime, QVariant parentId);
 
     int id() const { return m_id; }
@@ -55,4 +55,4 @@ public:
     void setId(int id);
 };
 
-#endif // FILE_H
+#endif // FILE_RECORD_H

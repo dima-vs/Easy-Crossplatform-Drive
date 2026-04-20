@@ -18,7 +18,7 @@ using FileTypeConverter = Common::Converter::FileTypeConverter;
 void testDatabase();
 void testFileStorage();
 
-void printFileInfo(const File &file) {
+void printFileInfo(const FileRecord &file) {
     qDebug() << "--- File Info ---";
     qDebug() << "ID:         " << (file.isIDSet() ? QString::number(file.id()) : "Not set");
     qDebug() << "Name:       " << file.logicalName();
@@ -123,43 +123,43 @@ void testDatabase()
     // servername is empty (QVariant()) for directories
 
     // /Images/
-    File fImages(uid, FileType::Directory, "Images", QVariant(), 0);
+    FileRecord fImages(uid, FileType::Directory, "Images", QVariant(), 0);
     fileRep.addNewFile(fImages);
 
     // /Videos
-    File fVideos(uid, FileType::Directory, "Videos", QVariant(), 0);
+    FileRecord fVideos(uid, FileType::Directory, "Videos", QVariant(), 0);
     fileRep.addNewFile(fVideos);
 
     int imgDirId = fileRep.getFile(uid, { "Images" }).id();
 
     // /Images/icon.png
-    File fIcon(uid, FileType::File, "icon.png", "fsdlkgjgerhg45j.bin", 2048, imgDirId);
+    FileRecord fIcon(uid, FileType::File, "icon.png", "fsdlkgjgerhg45j.bin", 2048, imgDirId);
     fileRep.addNewFile(fIcon);
 
     // /Images/Animals
-    File fAnimals(uid, FileType::Directory, "Animals", QVariant(), 0, imgDirId);
+    FileRecord fAnimals(uid, FileType::Directory, "Animals", QVariant(), 0, imgDirId);
     fileRep.addNewFile(fAnimals);
 
     int animalsDirId = fileRep.getFile(uid, { "Images", "Animals" }).id();
 
     // /Images/Animals/Cats
-    File fCats(uid, FileType::Directory, "Cats", QVariant(), 0, animalsDirId);
+    FileRecord fCats(uid, FileType::Directory, "Cats", QVariant(), 0, animalsDirId);
     fileRep.addNewFile(fCats);
 
     int catsDirId = fileRep.getFile(uid, { "Images", "Animals", "Cats" }).id();
 
     // /Images/Animals/Cats/black_cat.png
-    File fBlackCat(uid, FileType::File, "black_cat.png", "someservername1.bin", 5120, catsDirId);
+    FileRecord fBlackCat(uid, FileType::File, "black_cat.png", "someservername1.bin", 5120, catsDirId);
     fileRep.addNewFile(fBlackCat);
 
     // /Images/Animals/Cats/white_cat.png
-    File fWhiteCat(uid, FileType::File, "white_cat.jpg", "someservername2.bin", 43544, catsDirId);
+    FileRecord fWhiteCat(uid, FileType::File, "white_cat.jpg", "someservername2.bin", 43544, catsDirId);
     fileRep.addNewFile(fWhiteCat);
 
-    File fTemp(uid, FileType::Directory, "temp", QVariant(), 0, catsDirId);
+    FileRecord fTemp(uid, FileType::Directory, "temp", QVariant(), 0, catsDirId);
     fileRep.addNewFile(fTemp);
 
-    File fCache(uid, FileType::Directory, "cache", QVariant(), 0, catsDirId);
+    FileRecord fCache(uid, FileType::Directory, "cache", QVariant(), 0, catsDirId);
     fileRep.addNewFile(fCache);
 
     // delete /Images/Animals/Cats/black_cat.png
@@ -182,9 +182,9 @@ void testDatabase()
 
     tokenRep.cleanExpiredTokens(QDateTime::currentDateTimeUtc());
 
-    QList<File> fileList = fileRep.getFilesByOwner(uid);
+    QList<FileRecord> fileList = fileRep.getFilesByOwner(uid);
     qDebug() << "File list size: " << fileList.size();
-    for (File& fileObj : fileList)
+    for (FileRecord& fileObj : fileList)
     {
         printFileInfo(fileObj);
     }
