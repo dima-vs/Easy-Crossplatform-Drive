@@ -24,13 +24,13 @@ FileService::FileService(
     m_fileConfig(fileConfig)
 {}
 
-TreeResult FileService::getFileTree(
+TreeResult FileService::getTree(
     int userId,
     QVariant parentId,
     QVariant maxDepth
     )
 {
-    QPair<QList<::FileRecord>, QList<::FileRecord>> filesAndDirs;
+    QPair<QList<FileRecord>, QList<FileRecord>> filesAndDirs;
     bool success = m_fileRep.getAllNestedObjects(
         userId,
         parentId,
@@ -49,22 +49,22 @@ TreeResult FileService::getFileTree(
     std::list<Model::FileNode> roots;
     QHash<int, Model::FileNode*> lookupTable;
 
-    QList<::FileRecord>& files = filesAndDirs.first;
-    QList<::FileRecord>& dirs = filesAndDirs.second;
+    QList<FileRecord>& files = filesAndDirs.first;
+    QList<FileRecord>& dirs = filesAndDirs.second;
 
     for (int i = 0; i < dirs.size(); ++i)
     {
-        ::FileRecord& fileObj = dirs[i];
+        FileRecord& fileRecord = dirs[i];
         Model::FileNode fileNode;
 
-        fileNode.id = fileObj.id();
-        fileNode.logicalName = fileObj.logicalName();
-        fileNode.size = fileObj.size();
-        fileNode.type = fileObj.type();
-        fileNode.uploadTime = fileObj.uploadTime();
+        fileNode.id = fileRecord.id();
+        fileNode.logicalName = fileRecord.logicalName();
+        fileNode.size = fileRecord.size();
+        fileNode.type = fileRecord.type();
+        fileNode.uploadTime = fileRecord.uploadTime();
 
-        bool isRoot = (!isRequestedRootFixed && fileObj.parentId().isNull()) ||
-                      (isRequestedRootFixed && (fileObj.id() == requestedRootId) );
+        bool isRoot = (!isRequestedRootFixed && fileRecord.parentId().isNull()) ||
+                      (isRequestedRootFixed && (fileRecord.id() == requestedRootId) );
 
         if (isRoot)
         {
@@ -73,7 +73,7 @@ TreeResult FileService::getFileTree(
         }
         else
         {
-            int pId = fileObj.parentId().toInt();
+            int pId = fileRecord.parentId().toInt();
             Model::FileNode* parentPtr = lookupTable.value(pId, nullptr);
             if (parentPtr)
             {
@@ -85,17 +85,17 @@ TreeResult FileService::getFileTree(
 
     for (int i = 0; i < files.size(); ++i)
     {
-        ::FileRecord& fileObj = files[i];
+        FileRecord& fileRecord = files[i];
         Model::FileNode fileNode;
 
-        fileNode.id = fileObj.id();
-        fileNode.logicalName = fileObj.logicalName();
-        fileNode.size = fileObj.size();
-        fileNode.type = fileObj.type();
-        fileNode.uploadTime = fileObj.uploadTime();
+        fileNode.id = fileRecord.id();
+        fileNode.logicalName = fileRecord.logicalName();
+        fileNode.size = fileRecord.size();
+        fileNode.type = fileRecord.type();
+        fileNode.uploadTime = fileRecord.uploadTime();
 
-        bool isRoot = (!isRequestedRootFixed && fileObj.parentId().isNull()) ||
-                      (isRequestedRootFixed && (fileObj.id() == requestedRootId) );
+        bool isRoot = (!isRequestedRootFixed && fileRecord.parentId().isNull()) ||
+                      (isRequestedRootFixed && (fileRecord.id() == requestedRootId) );
 
         if (isRoot)
         {
@@ -103,7 +103,7 @@ TreeResult FileService::getFileTree(
         }
         else
         {
-            int pId = fileObj.parentId().toInt();
+            int pId = fileRecord.parentId().toInt();
             Model::FileNode* parentPtr = lookupTable.value(pId, nullptr);
             if (parentPtr) {
                 parentPtr->children.push_back(fileNode);
@@ -120,7 +120,7 @@ TreeResult FileService::getFileTree(
     return TreeResult::ok(result);
 }
 
-InitUploadSessionResult FileService::initUploadSession(
+InitUploadSessionResult FileService::initUpload(
     int userId,
     QString userName,
     QString fileName,
@@ -139,10 +139,18 @@ InitUploadSessionResult FileService::initUploadSession(
         return InitUploadSessionResult::fail(ServiceError::FileTooLarge);
     }
 
-    ::FileRecord existingDbFile = m_fileRep.getFile(userId, parentId, fileName);
-    bool fileExist = existingDbFile.isValid();
+    FileRecord existing = m_fileRep.getFile(userId, parentId, fileName);
+    bool fileEntryExist = existing.isValid();
 
-    if (!overwrite && fileExist)
+    if (fileEntryExist && overwrite &&
+        (existing.type() == FileType::Directory)
+        )
+    {
+        return InitUploadSessionResult::fail(
+            ServiceError::CannotOverwriteDirectory);
+    }
+
+    if (fileEntryExist && !overwrite)
     {
         return InitUploadSessionResult::fail(
             ServiceError::FileAlreadyExist);
@@ -198,11 +206,11 @@ InitUploadSessionResult FileService::initUploadSession(
     uploadSession.chunksUploaded = std::vector<bool>(
         chunksCountNeeded, false);
 
-    if (overwrite && fileExist)
+    if (fileEntryExist && overwrite)
     {
         uploadSession.wasOverwritten = true;
-        uploadSession.oldFileIdToDelete =
-            existingDbFile.id();
+        uploadSession.replacedFileId =
+            existing.id();
     }
     else
     {
@@ -219,18 +227,18 @@ InitUploadSessionResult FileService::initUploadSession(
     return InitUploadSessionResult::ok(result);
 }
 
-NoDataResult FileService::uploadChunk(
+NoDataResult FileService::upload(
     QString uploadId,
     Model::ContentRange contentRange,
-    const QByteArray &chunkData)
+    const QByteArray &chunk)
 {
-    if (chunkData.size() > m_fileConfig.upload.maxChunkSize)
+    if (chunk.size() > m_fileConfig.upload.maxChunkSize)
         return NoDataResult::fail(ServiceError::ChunkTooLarge);
 
     int chunkSizeCalculated = contentRange.endByte -
                               contentRange.startByte + 1;
 
-    if (chunkSizeCalculated != chunkData.size())
+    if (chunkSizeCalculated != chunk.size())
         return NoDataResult::fail(ServiceError::InvalidContentRange);
 
     if (!m_uploadSessions.contains(uploadId))
@@ -255,7 +263,7 @@ NoDataResult FileService::uploadChunk(
     // if the chunk has already been written, skip it
     if (uploadSession.chunksUploaded[chunkIndex])
     {
-        return NoDataResult::ok(QVariant());
+        return NoDataResult::ok(Model::NoData());
     }
 
     qint64 lastChunkSize = uploadSession.fileSize %
@@ -285,7 +293,7 @@ NoDataResult FileService::uploadChunk(
     bool success = m_fileStorage.writeChunk(
         uploadSession.serverFileName,
         contentRange.startByte,
-        chunkData
+        chunk
         );
 
     if (!success)
@@ -300,7 +308,7 @@ NoDataResult FileService::uploadChunk(
         uploadSession.chunksUploaded.end(),
             [](bool uploaded) { return uploaded; }
         );
-    return NoDataResult::ok(QVariant());
+    return NoDataResult::ok(Model::NoData());
 }
 
 CompleteUploadResult FileService::completeUpload(QString uploadId)
@@ -320,8 +328,8 @@ CompleteUploadResult FileService::completeUpload(QString uploadId)
     // if file with the same name exists, first, delete it
     if (uploadSession.wasOverwritten)
     {
-        int fileToDeleteId = uploadSession.oldFileIdToDelete;
-        NoDataResult res = deleteFileObject(userId, fileToDeleteId);
+        int fileToDeleteId = uploadSession.replacedFileId;
+        NoDataResult res = removeEntry(userId, fileToDeleteId);
         if (!res.isOk())
         {
             return CompleteUploadResult::fail(res.error());
@@ -336,7 +344,7 @@ CompleteUploadResult FileService::completeUpload(QString uploadId)
             ServiceError::FileNotCreated);
     }
 
-    ::FileRecord createdFileRecord(
+    FileRecord fileRecord(
         userId,
         FileType::File,
         uploadSession.fileName,
@@ -344,13 +352,13 @@ CompleteUploadResult FileService::completeUpload(QString uploadId)
         uploadSession.fileSize,
         uploadSession.parentId
         );
-    bool fileRecordCreated = m_fileRep.addNewFile(createdFileRecord);
+    bool fileRecordCreated = m_fileRep.addNewFile(fileRecord);
     if (!fileRecordCreated)
     {
         return CompleteUploadResult::fail(
             ServiceError::FailedToPerformDBOperation);
     }
-    if (!createdFileRecord.isIDSet())
+    if (!fileRecord.isIDSet())
     {
         qCritical() << "database didn't set id after file insertion";
         return CompleteUploadResult::fail(
@@ -361,30 +369,30 @@ CompleteUploadResult FileService::completeUpload(QString uploadId)
 
     Model::CompleteUploadResult result;
     result.createdAt = m_timeProvider.currentDateTimeUtc();
-    result.fileId = createdFileRecord.id();
-    result.fileName = createdFileRecord.logicalName();
-    result.parentId = createdFileRecord.parentId();
-    result.size = createdFileRecord.size();
+    result.fileId = fileRecord.id();
+    result.fileName = fileRecord.logicalName();
+    result.parentId = fileRecord.parentId();
+    result.size = fileRecord.size();
 
     return CompleteUploadResult::ok(result);
 }
 
-DownloadChunkResult FileService::downloadChunk(
+DownloadChunkResult FileService::download(
     int userId,
     int fileId,
     Model::RequestedRange reqRange,
     QByteArray& chunkBytesOut
     )
 {
-    ::FileRecord file = m_fileRep.getFile(fileId);
+    FileRecord fileRecord = m_fileRep.getFile(fileId);
 
-    if (!file.isValid())
+    if (!fileRecord.isValid())
     {
         return DownloadChunkResult::fail(
             ServiceError::FileNotFound);
     }
 
-    if (!m_fileRep.checkPermission(userId, file))
+    if (!m_fileRep.checkPermission(userId, fileRecord))
     {
         return DownloadChunkResult::fail(
             ServiceError::PermissionDenied);
@@ -400,7 +408,7 @@ DownloadChunkResult FileService::downloadChunk(
             ServiceError::InvalidContentRange);
     }
 
-    if (file.size() > 0 && reqRange.startByte >= file.size())
+    if (fileRecord.size() > 0 && reqRange.startByte >= fileRecord.size())
     {
         return DownloadChunkResult::fail(
             ServiceError::InvalidContentRange);
@@ -415,7 +423,7 @@ DownloadChunkResult FileService::downloadChunk(
             ServiceError::InvalidContentRange);
     }
 
-    if (file.size() > m_fileConfig.download.maxFileSize)
+    if (fileRecord.size() > m_fileConfig.download.maxFileSize)
     {
         return DownloadChunkResult::fail(
             ServiceError::FileTooLarge);
@@ -428,12 +436,12 @@ DownloadChunkResult FileService::downloadChunk(
     }
 
     chunkBytesOut = std::move(m_fileStorage.readChunk(
-        file.serverName().toString(),
+        fileRecord.serverName().toString(),
         reqRange.startByte,
         requestedSize
         ));
 
-    if (chunkBytesOut.isEmpty() && (file.size() > 0))
+    if (chunkBytesOut.isEmpty() && (fileRecord.size() > 0))
     {
         return DownloadChunkResult::fail(
             ServiceError::FailedToPerformStorageOperation);
@@ -441,14 +449,14 @@ DownloadChunkResult FileService::downloadChunk(
 
     Model::ContentRange result;
     result.startByte = reqRange.startByte;
-    result.totalBytes = file.size();
+    result.totalBytes = fileRecord.size();
     int actualReadSize = chunkBytesOut.size();
     result.endByte = (actualReadSize > 0) ?
                          (reqRange.startByte + actualReadSize - 1) : 0;
     return DownloadChunkResult::ok(result);
 }
 
-CreatedFileObjectResult FileService::CreateFileObject(
+CreatedFileObjectResult FileService::createEmpty(
     int userId,
     QString userName,
     QString fileName,
@@ -475,31 +483,31 @@ CreatedFileObjectResult FileService::CreateFileObject(
         serverName = QVariant(serverNameStr);
     }
 
-    ::FileRecord fileFromDBIfExists = m_fileRep.getFile(
+    FileRecord existing = m_fileRep.getFile(
         userId,
         parentId,
         fileName
         );
 
-    bool alreadyExists = fileFromDBIfExists.isValid();
+    bool fileEntryExist = existing.isValid();
 
-    if (alreadyExists && !overwrite)
+    if (fileEntryExist && !overwrite)
     {
         return CreatedFileObjectResult::fail(
             ServiceError::FileAlreadyExist
             );
     }
-    else if (alreadyExists && overwrite &&
-               (fileFromDBIfExists.type() == FileType::Directory)
+    else if (fileEntryExist && overwrite &&
+               (existing.type() == FileType::Directory)
                )
     {
         return CreatedFileObjectResult::fail(
             ServiceError::CannotOverwriteDirectory
             );
     }
-    else if (alreadyExists && overwrite)
+    else if (fileEntryExist && overwrite)
     {
-        NoDataResult fileDeletedRes = deleteFileObject(fileFromDBIfExists);
+        NoDataResult fileDeletedRes = removeEntry(existing);
         if (!fileDeletedRes.isOk())
         {
             return CreatedFileObjectResult::fail(fileDeletedRes.error());
@@ -507,7 +515,7 @@ CreatedFileObjectResult FileService::CreateFileObject(
 
     }
 
-    ::FileRecord fileObj(
+    FileRecord fileRecord(
         userId,
         type,
         fileName,
@@ -516,13 +524,13 @@ CreatedFileObjectResult FileService::CreateFileObject(
         parentId
         );
 
-    NoDataResult fileCreatedRes = createEmptyFileObj(fileObj);
+    NoDataResult fileCreatedRes = createEmpty(fileRecord);
     if (!fileCreatedRes.isOk())
     {
         return CreatedFileObjectResult::fail(fileCreatedRes.error());
     }
 
-    if (!fileObj.isIDSet())
+    if (!fileRecord.isIDSet())
     {
         qCritical() << "database didn't set id after file insertion";
         return CreatedFileObjectResult::fail(
@@ -531,19 +539,19 @@ CreatedFileObjectResult FileService::CreateFileObject(
 
     Model::CreatedFileObjectResult result;
     result.createdAt = m_timeProvider.currentDateTimeUtc();
-    result.fileId = fileObj.id();
-    result.fileName = fileObj.logicalName();
-    result.parentId = fileObj.parentId();
+    result.fileId = fileRecord.id();
+    result.fileName = fileRecord.logicalName();
+    result.parentId = fileRecord.parentId();
 
     return CreatedFileObjectResult::ok(result);
 }
 
-NoDataResult FileService::createEmptyFileObj(::FileRecord& file)
+NoDataResult FileService::createEmpty(FileRecord& fileRecord)
 {
-    if (file.type() == FileType::File)
+    if (fileRecord.type() == FileType::File)
     {
         bool fileCreated = m_fileStorage.createEmptyFile(
-            file.serverName().toString()
+            fileRecord.serverName().toString()
             );
         if (!fileCreated)
         {
@@ -552,45 +560,45 @@ NoDataResult FileService::createEmptyFileObj(::FileRecord& file)
         }
     }
 
-    bool fileRecordAdded = m_fileRep.addNewFile(file);
+    bool fileRecordAdded = m_fileRep.addNewFile(fileRecord);
     if (!fileRecordAdded)
     {
-        if (file.type() == FileType::File)
+        if (fileRecord.type() == FileType::File)
         {
-            m_fileStorage.removeFile(file.serverName().toString());
+            m_fileStorage.removeFile(fileRecord.serverName().toString());
         }
 
         return NoDataResult::fail(
             ServiceError::FailedToPerformDBOperation);
     }
-    return NoDataResult::ok(QVariant());
+    return NoDataResult::ok(Model::NoData());
 }
 
-NoDataResult FileService::deleteFileObject(int userId, int fileId)
+NoDataResult FileService::removeEntry(int userId, int fileId)
 {
-    ::FileRecord fileToDelete = m_fileRep.getFile(fileId);
-    if (!fileToDelete.isValid())
+    FileRecord toDelete = m_fileRep.getFile(fileId);
+    if (!toDelete.isValid())
     {
         return NoDataResult::fail(ServiceError::FileNotFound);
     }
 
-    if (!m_fileRep.checkPermission(userId, fileToDelete))
+    if (!m_fileRep.checkPermission(userId, toDelete))
     {
         return NoDataResult::fail(
             ServiceError::PermissionDenied);
     }
 
-    return deleteFileObject(fileToDelete);
+    return removeEntry(toDelete);
 }
 
-NoDataResult FileService::deleteFileObject(const ::FileRecord& fileToDelete)
+NoDataResult FileService::removeEntry(const FileRecord& toDelete)
 {
     QList<QString> physicalFilesToDelete;
     int deletedCount = 0;
 
     bool fileRecordDeleted = m_fileRep.deleteFile(
-        fileToDelete.ownerId(),
-        fileToDelete.id(),
+        toDelete.ownerId(),
+        toDelete.id(),
         physicalFilesToDelete,
         &deletedCount
         );
@@ -598,21 +606,21 @@ NoDataResult FileService::deleteFileObject(const ::FileRecord& fileToDelete)
     if (!fileRecordDeleted)
     {
         qCritical() << "cannot delete db record about file with id:" <<
-            fileToDelete.id();
+            toDelete.id();
         return NoDataResult::fail(
             ServiceError::FailedToPerformDBOperation);
     }
 
     for (const QString& serverName : physicalFilesToDelete)
     {
-        bool fileDeleted = m_fileStorage.removeFile(serverName);
-        if (!fileDeleted)
+        bool physicalFileDeleted = m_fileStorage.removeFile(serverName);
+        if (!physicalFileDeleted)
         {
             qWarning() << "cannot delete physical file:" << serverName;
         }
     }
 
-    return NoDataResult::ok(QVariant());
+    return NoDataResult::ok(Model::NoData());
 }
 
 

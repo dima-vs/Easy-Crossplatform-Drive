@@ -35,7 +35,7 @@ struct UploadSession
     qint64 fileSize;
 
     bool wasOverwritten = false;
-    int oldFileIdToDelete = 0;
+    int replacedFileId = 0;
     QString serverFileName = "";
 
     std::vector<bool> chunksUploaded;
@@ -78,6 +78,8 @@ struct CreatedFileObjectResult
     QString fileName;
     QVariant parentId;
 };
+
+struct NoData {};
 
 }
 

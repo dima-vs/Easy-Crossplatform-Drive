@@ -27,7 +27,7 @@ using ServiceError = ::ErrorCode::File::ServiceError;
 using TreeResult = ServiceResult<QList<Model::FileNode>, ServiceError>;
 using InitUploadSessionResult = ServiceResult<Model::UploadSessionResult, ServiceError>;
 using FileConfig = Config::File::FileConfig;
-using NoDataResult = ServiceResult<QVariant, ServiceError>;
+using NoDataResult = ServiceResult<Model::NoData, ServiceError>;
 using CompleteUploadResult = ServiceResult<Model::CompleteUploadResult, ServiceError>;
 using DownloadChunkResult = ServiceResult<Model::ContentRange, ServiceError>;
 using CreatedFileObjectResult = ServiceResult<Model::CreatedFileObjectResult, ServiceError>;
@@ -53,13 +53,13 @@ public:
         const FileConfig& fileConfig
     );
 
-    TreeResult getFileTree(
+    TreeResult getTree(
         int userId,
         QVariant parentId = QVariant(QMetaType::fromType<int>()),
         QVariant maxDepth = QVariant(QMetaType::fromType<int>())
         );
 
-    InitUploadSessionResult initUploadSession(
+    InitUploadSessionResult initUpload(
         int userId,
         QString userName,
         QString fileName,
@@ -68,15 +68,15 @@ public:
         bool overwrite
         );
 
-    NoDataResult uploadChunk(
+    NoDataResult upload(
         QString uploadId,
         Model::ContentRange contentRange,
-        const QByteArray& chunkData
+        const QByteArray& chunk
         );
 
     CompleteUploadResult completeUpload(QString uploadId);
 
-    DownloadChunkResult downloadChunk(
+    DownloadChunkResult download(
         int userId,
         int fileId,
         Model::RequestedRange reqRange,
@@ -84,7 +84,7 @@ public:
         );
 
     // create an empty file or directory
-    CreatedFileObjectResult CreateFileObject(
+    CreatedFileObjectResult createEmpty(
         int userId,
         QString userName,
         QString fileName,
@@ -94,10 +94,10 @@ public:
         );
 
     // delete file or directory
-    NoDataResult deleteFileObject(int userId, int fileId);
+    NoDataResult removeEntry(int userId, int fileId);
 private:
-    NoDataResult deleteFileObject(const ::FileRecord& fileToDelete);
-    NoDataResult createEmptyFileObj(::FileRecord &file);
+    NoDataResult removeEntry(const FileRecord& toDelete);
+    NoDataResult createEmpty(FileRecord &fileRecord);
 };
 
 }
