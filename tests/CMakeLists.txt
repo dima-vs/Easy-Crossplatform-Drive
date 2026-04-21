@@ -13,6 +13,8 @@ add_subdirectory(server)
 add_executable(unit_tests
     server_test.cpp
     ${SERVER_TEST_SOURCES}
+    server/service_layer/file_service_test.cpp
+    server/service_layer/mock_time_provider.h
 )
 
 target_link_libraries(unit_tests

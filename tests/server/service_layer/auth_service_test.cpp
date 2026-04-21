@@ -13,6 +13,8 @@
 #include "auth/auth_config.h"
 #include "security/sodium_password_hasher.h"
 #include "security/security_config.h"
+#include "email/email_sender.h"
+#include "mock_time_provider.h"
 #include <sodium.h>
 
 class MailServiceSpy : public Service::Email::IEmailSender
@@ -22,14 +24,6 @@ public:
     QString m_lastEmail;
 
     MOCK_METHOD(void, sendAccessCode, (const QString& email, int code), (override));
-};
-
-class MockTimeProvider : public Service::Time::ITimeProvider
-{
-public:
-    QDateTime m_manualTime;
-
-    MOCK_METHOD(QDateTime, currentDateTimeUtc, (), (const, override));
 };
 
 namespace Model = ::ServiceModel::Auth;
@@ -45,7 +39,7 @@ protected:
     TokenRepository m_tokenRep;
 
     MailServiceSpy m_mailSpy;
-    testing::NiceMock<MockTimeProvider> m_timeProvider;
+    testing::NiceMock<Tests::Mocks::MockTimeProvider> m_timeProvider;
     Service::Security::SodiumPasswordHasher m_pswHasher;
     Service::Auth::AuthService m_authService;
 
