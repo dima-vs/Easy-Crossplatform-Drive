@@ -8,6 +8,8 @@
 #include <QHash>
 #include <QtTypes>
 #include <QByteArray>
+#include <optional>
+
 #include "file_repository.h"
 #include "file_storage.h"
 #include "file_record.h"
@@ -31,6 +33,7 @@ using NoDataResult = ServiceResult<Model::NoData, ServiceError>;
 using CompleteUploadResult = ServiceResult<Model::CompleteUploadResult, ServiceError>;
 using DownloadChunkResult = ServiceResult<Model::ContentRange, ServiceError>;
 using CreatedFileObjectResult = ServiceResult<Model::CreatedFileObjectResult, ServiceError>;
+using RenameResult = ServiceResult<Model::RenameResult, ServiceError>;
 
 class FileService
 {
@@ -95,6 +98,13 @@ public:
 
     // delete file or directory
     NoDataResult removeEntry(int userId, int fileId);
+
+    RenameResult renameAndMove(
+        int userId,
+        int fileRecordId,
+        std::optional<QVariant> newParentId,
+        std::optional<QString> newLogicalName
+        );
 private:
     NoDataResult removeEntry(const FileRecord& toDelete);
     NoDataResult createEmpty(FileRecord &fileRecord);

@@ -623,5 +623,57 @@ NoDataResult FileService::removeEntry(const FileRecord& toDelete)
     return NoDataResult::ok(Model::NoData());
 }
 
+RenameResult FileService::renameAndMove(
+    int userId,
+    int fileRecordId,
+    std::optional<QVariant> newParentId,
+    std::optional<QString> newLogicalName
+    )
+{
+    FileRecord existing = m_fileRep.findById(fileRecordId);
+    if (!existing.isValid())
+        return RenameResult::fail(ServiceError::FileNotFound);
+    if (!m_fileRep.checkPermission(userId, existing))
+        return RenameResult::fail(ServiceError::PermissionDenied);
+
+    QVariant targetParentId = newParentId.has_value() ?
+                                newParentId.value() :
+                                existing.parentId();
+    QString targetName = newLogicalName.has_value() ?
+                             newLogicalName.value() :
+                             existing.logicalName();
+
+    Model::RenameResult result;
+    result.fileRecordId = fileRecordId;
+    result.logicalName = targetName;
+    result.parentId = targetParentId;
+
+    if ((targetParentId == existing.parentId()) &&
+        (targetName == existing.logicalName())
+        )
+    {
+        return RenameResult::ok(result);
+    }
+
+    FileRecord collision = m_fileRep.findByName(
+        userId, targetParentId, targetName
+        );
+    if (collision.isValid())
+    {
+        return RenameResult::fail(ServiceError::FileAlreadyExist);
+    }
+
+    bool success = m_fileRep.updateLogicalData(
+        userId, fileRecordId, targetParentId, targetName
+        );
+
+    if (!success)
+    {
+        return RenameResult::fail(ServiceError::FailedToPerformDBOperation);
+    }
+
+    return RenameResult::ok(result);
+}
+
 
 }

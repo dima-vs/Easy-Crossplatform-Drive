@@ -10,6 +10,7 @@
 #include <QtTypes>
 #include <cmath>
 #include <utility>
+#include <optional>
 
 #include "database_manager.h"
 #include "user_repository.h"
@@ -676,7 +677,6 @@ TEST_F(FileServiceTest, RemoveSingleFileWorks)
     EXPECT_FALSE(m_fileStorage.exists(serverFileName));
 }
 
-
 TEST_F(FileServiceTest, RemoveDirectoryCascadesToPhysicalFilesInDeepHierarchy)
 {
     initDeepHierarchyList();
@@ -713,7 +713,6 @@ TEST_F(FileServiceTest, RemoveDirectoryCascadesToPhysicalFilesInDeepHierarchy)
     EXPECT_TRUE(m_fileRep.findById(imagesNode.id).isValid());
 }
 
-
 TEST_F(FileServiceTest, RemoveFailsOnPermissionDeniedAndNotFound)
 {
     // upload file as a "default_user"
@@ -736,4 +735,69 @@ TEST_F(FileServiceTest, RemoveFailsOnPermissionDeniedAndNotFound)
     auto res2 = m_fileService.removeEntry(m_currentUserId, 999999);
     EXPECT_FALSE(res2.isOk());
     EXPECT_EQ(res2.error(), ServiceError::FileNotFound);
+}
+
+TEST_F(FileServiceTest, RenameAndMoveWorks)
+{
+    auto dir1Res = m_fileService.createEmpty(
+        m_currentUserId, m_currentUsername, "FolderA",
+        QVariant(), FileType::Directory, false);
+    auto dir2Res = m_fileService.createEmpty(
+        m_currentUserId, m_currentUsername, "FolderB",
+        QVariant(), FileType::Directory, false);
+
+    int dir1Id = dir1Res.data().fileId;
+    int dir2Id = dir2Res.data().fileId;
+
+    uploadFile("document.txt", dir1Id, m_currentFileBytes);
+    int fileId = m_completedUpload.fileId;
+
+    // 1. rename
+    auto renameRes = m_fileService.renameAndMove(
+        m_currentUserId, fileId, std::nullopt, "secret_doc.txt"
+        );
+    ASSERT_TRUE(renameRes.isOk()) <<
+        toString(renameRes.error()).toStdString();
+    EXPECT_EQ(renameRes.data().logicalName, "secret_doc.txt");
+    EXPECT_EQ(renameRes.data().parentId.toInt(), dir1Id);
+
+    // 2. move
+    auto moveRes = m_fileService.renameAndMove(
+        m_currentUserId, fileId, QVariant(dir2Id), std::nullopt
+        );
+    ASSERT_TRUE(moveRes.isOk()) <<
+        toString(moveRes.error()).toStdString();
+    EXPECT_EQ(moveRes.data().parentId.toInt(), dir2Id);
+    EXPECT_EQ(moveRes.data().logicalName, "secret_doc.txt");
+
+    // 3. move to root
+    auto rootRes = m_fileService.renameAndMove(
+        m_currentUserId, fileId, QVariant(), "root_doc.txt"
+        );
+    ASSERT_TRUE(rootRes.isOk()) <<
+        toString(rootRes.error()).toStdString();
+    EXPECT_TRUE(rootRes.data().parentId.isNull());
+    EXPECT_EQ(rootRes.data().logicalName, "root_doc.txt");
+}
+
+TEST_F(FileServiceTest, RenameAndMoveFailsOnCollision)
+{
+    auto dirRes = m_fileService.createEmpty(
+        m_currentUserId, m_currentUsername, "Work",
+        QVariant(), FileType::Directory, false);
+    int dirId = dirRes.data().fileId;
+
+    uploadFile("file1.txt", dirId, m_currentFileBytes);
+    int file1Id = m_completedUpload.fileId;
+
+    uploadFile("file2.txt", dirId, m_currentFileBytes);
+    int file2Id = m_completedUpload.fileId;
+
+    // try to rename file2 to file1
+    auto collisionRes = m_fileService.renameAndMove(
+        m_currentUserId, file2Id, std::nullopt, "file1.txt"
+        );
+
+    EXPECT_FALSE(collisionRes.isOk());
+    EXPECT_EQ(collisionRes.error(), ServiceError::FileAlreadyExist);
 }

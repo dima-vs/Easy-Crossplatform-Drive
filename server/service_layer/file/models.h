@@ -53,7 +53,7 @@ struct ContentRange
 {
     int startByte;
     int endByte; // included
-    int totalBytes;
+    qint64 totalBytes;
 };
 
 struct RequestedRange
@@ -76,6 +76,14 @@ struct CreatedFileObjectResult
     QDateTime createdAt;
     int fileId;
     QString fileName;
+    QVariant parentId;
+};
+
+
+struct RenameResult
+{
+    int fileRecordId;
+    QString logicalName;
     QVariant parentId;
 };
 
