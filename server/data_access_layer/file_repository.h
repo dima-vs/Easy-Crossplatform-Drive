@@ -32,21 +32,30 @@ public:
     FileRecord findByPath(int ownerId, const QList<QString>& fullPath) const;
     QList<FileRecord> findByOwner(int ownerId) const;
 
-    bool remove(int ownerId, int objId) const;
+    bool remove(int ownerId, int recordId) const;
 
-    bool remove(int ownerId,
-                    int objId,
-                    QList<QString>& physicalFilesToDeleteOut,
-                    int* outObjectsDeleted = nullptr
-                    ) const;
+    bool remove(
+        int ownerId,
+        int recordId,
+        QList<QString>& physicalFilesToDeleteOut,
+        int* outObjectsDeleted = nullptr
+    ) const;
 
     bool remove(int ownerId, const QList<QString>& fullPath) const;
     // delete any object
-    bool remove(int ownerId,
-                    const QList<QString>& fullPath,
-                    QList<QString>& physicalFilesToDeleteOut,
-                    int* outObjectsDeleted = nullptr
-                    ) const;
+    bool remove(
+        int ownerId,
+        const QList<QString>& fullPath,
+        QList<QString>& physicalFilesToDeleteOut,
+        int* outObjectsDeleted = nullptr
+    ) const;
+
+    bool updateLogicalData(
+        int ownerId,
+        int recordId,
+        QVariant newParentId,
+        QString newFileName
+        ) const;
 
     // Returns all nested files and directories, including the root.
     // Directories are ordered from root to deepest.

@@ -180,7 +180,9 @@ TEST_F(FileRepositoryTest, HierarchyStorageWorks)
 
     EXPECT_EQ(m_fileRep.findByOwner(m_testUserId).size(), 5);
 
-    FileRecord fetchedCat = m_fileRep.findByPath(m_testUserId, { "Images", "Animals", "Cats", "black_cat.png" });
+    FileRecord fetchedCat = m_fileRep.findByPath(m_testUserId, {
+        "Images", "Animals", "Cats", "black_cat.png"
+        });
     EXPECT_EQ(fetchedCat.id(), catFileId);
 }
 
@@ -539,4 +541,96 @@ TEST_F(FileRepositoryTest, DeleteByIdWorks)
 
     EXPECT_FALSE(m_fileRep.remove(m_testUserId, 999999))
         << "Should return false for non-existent ID";
+}
+
+
+TEST_F(FileRepositoryTest, UpdateLogicalData_RenameWorks)
+{
+    int dirId = createDir("Documents");
+    int fileId = createFile("report.pdf", 1024, dirId);
+    ASSERT_GT(fileId, 0);
+
+    QString newName = "annual_report.pdf";
+    bool success = m_fileRep.updateLogicalData(
+        m_testUserId, fileId, QVariant(dirId), newName);
+
+    EXPECT_TRUE(success);
+
+    FileRecord updatedFile = m_fileRep.findById(fileId);
+    EXPECT_TRUE(updatedFile.isValid());
+    EXPECT_EQ(updatedFile.logicalName(), newName);
+    EXPECT_EQ(updatedFile.parentId().toInt(), dirId);
+
+    // serverName must remain the same
+    QString expectedServerName = generateServerName("report.pdf", dirId);
+    EXPECT_EQ(updatedFile.serverName().toString(), expectedServerName);
+}
+
+TEST_F(FileRepositoryTest, UpdateLogicalData_MoveToDifferentFolder)
+{
+    int srcDirId = createDir("SourceFolder");
+    int destDirId = createDir("DestFolder");
+
+    QString fileName = "moving_file.txt";
+    int fileId = createFile(fileName, 512, srcDirId);
+    ASSERT_GT(fileId, 0);
+
+    // move to DestFolder
+    bool success = m_fileRep.updateLogicalData(
+        m_testUserId, fileId, QVariant(destDirId), fileName);
+    EXPECT_TRUE(success);
+
+    FileRecord movedFile = m_fileRep.findById(fileId);
+    EXPECT_EQ(movedFile.parentId().toInt(), destDirId);
+    EXPECT_EQ(movedFile.logicalName(), fileName);
+}
+
+TEST_F(FileRepositoryTest, UpdateLogicalData_MoveToRoot)
+{
+    int dirId = createDir("SomeFolder");
+    QString fileName = "to_root.txt";
+    int fileId = createFile(fileName, 256, dirId);
+    ASSERT_GT(fileId, 0);
+
+    // move to root directory
+    bool success = m_fileRep.updateLogicalData(
+        m_testUserId, fileId, QVariant(), fileName);
+    EXPECT_TRUE(success);
+
+    FileRecord movedFile = m_fileRep.findById(fileId);
+    EXPECT_TRUE(movedFile.parentId().isNull());
+    EXPECT_EQ(movedFile.logicalName(), fileName);
+}
+
+TEST_F(FileRepositoryTest, UpdateLogicalData_FailsOnUniqueConstraintViolation)
+{
+    int dirId = createDir("CommonFolder");
+    int file1Id = createFile("doc_A.txt", 100, dirId);
+    int file2Id = createFile("doc_B.txt", 100, dirId);
+
+    ASSERT_GT(file1Id, 0);
+    ASSERT_GT(file2Id, 0);
+
+    bool success = m_fileRep.updateLogicalData(
+        m_testUserId, file2Id, QVariant(dirId), "doc_A.txt");
+
+    EXPECT_FALSE(success);
+
+    FileRecord unmodifedFile = m_fileRep.findById(file2Id);
+    EXPECT_EQ(unmodifedFile.logicalName(), "doc_B.txt");
+}
+
+TEST_F(FileRepositoryTest, UpdateLogicalData_FailsOnPermissionDenied)
+{
+    int dirId = createDir("SecretFolder");
+    int fileId = createFile("secret.txt", 100, dirId);
+
+    int hackerUserId = 999;
+
+    bool success = m_fileRep.updateLogicalData(
+        hackerUserId, fileId, QVariant(dirId), "hacked.txt");
+    EXPECT_FALSE(success);
+
+    FileRecord unmodifedFile = m_fileRep.findById(fileId);
+    EXPECT_EQ(unmodifedFile.logicalName(), "secret.txt");
 }

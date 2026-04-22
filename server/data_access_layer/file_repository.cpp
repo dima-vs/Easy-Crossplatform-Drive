@@ -316,22 +316,22 @@ bool FileRepository::processBFSQueue(
     return true;
 }
 
-bool FileRepository::remove(int ownerId, int objId) const
+bool FileRepository::remove(int ownerId, int recordId) const
 {
     QList<QString> notUsed;
-    return remove(ownerId, objId, notUsed);
+    return remove(ownerId, recordId, notUsed);
 }
 
 bool FileRepository::remove(
     int ownerId,
-    int objId,
+    int recordId,
     QList<QString>& physicalFilesToDeleteOut,
     int* outObjectsDeleted
     ) const
 {
     QPair<QList<FileRecord>, QList<FileRecord>> filesAndDirs;
 
-    if (!getAllNested(ownerId, QVariant(objId), filesAndDirs))
+    if (!getAllNested(ownerId, QVariant(recordId), filesAndDirs))
         return false;
 
     QSqlDatabase db = m_db.database();
@@ -384,7 +384,7 @@ bool FileRepository::remove(
                              filesAndDirs.second.size();
     }
 
-    qInfo() << "file object with id" << objId << "deleted";
+    qInfo() << "file object with id" << recordId << "deleted";
     return true;
 }
 
@@ -425,6 +425,33 @@ bool FileRepository::removeRecords(const QList<int>& idListToDelete) const
     }
 
     return true;
+}
+
+bool FileRepository::updateLogicalData(
+    int ownerId,
+    int recordId,
+    QVariant newParentId,
+    QString newFileName
+    ) const
+{
+    QSqlQuery query(m_db.database());
+
+    query.prepare("UPDATE files SET parent_id = :parentId, logical_name = :logicalName "
+                  "WHERE id = :id AND owner_id = :ownerId");
+
+    query.bindValue(":parentId", newParentId);
+    query.bindValue(":logicalName", newFileName);
+    query.bindValue(":id", recordId);
+    query.bindValue(":ownerId", ownerId);
+
+    if (!query.exec())
+    {
+        qCritical() << "failed to update logical data for file ID" <<
+            recordId << ":" << query.lastError().text();
+        return false;
+    }
+
+    return query.numRowsAffected() > 0;
 }
 
 bool FileRepository::findRecordIdByPath(int ownerId, const QList<QString>& fullPath, int& outId) const
