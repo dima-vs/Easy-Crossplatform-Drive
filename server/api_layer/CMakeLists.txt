@@ -14,6 +14,10 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core HttpServer)
 set(API_SOURCES
     auth/auth_controller.h
     auth/auth_controller.cpp
+    file/file_controller.h
+    file/file_controller.cpp
+    file/file_models_converter.h
+    file/file_models_converter.cpp
 )
 add_library(API_Lib STATIC ${API_SOURCES})
 target_link_libraries(API_Lib PUBLIC Qt${QT_VERSION_MAJOR}::HttpServer PUBLIC Service_Lib)

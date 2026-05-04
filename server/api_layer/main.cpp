@@ -9,6 +9,7 @@
 #include "database_manager.h"
 #include "user_repository.h"
 #include "token_repository.h"
+#include "file_repository.h"
 
 // services
 #include "email/email_sender.h"
@@ -20,8 +21,14 @@
 #include "auth/service.h"
 #include "auth/auth_config.h"
 
+// file
+#include "file/service.h"
+#include "file/file_config.h"
+
 // controllers
 #include "auth/auth_controller.h"
+#include "file/file_controller.h"
+
 
 
 namespace Service::Mock
@@ -53,6 +60,8 @@ int main(int argc, char *argv[])
 
     UserRepository userRepository(dbManager);
     TokenRepository tokenRepository(dbManager);
+    FileRepository fileRepository(dbManager);
+    FileStorage fileStorage("storage");
 
     Service::Time::SystemTimeProvider timeProvider;
     Service::Mock::MockEmailSender mockEmailSender;
@@ -61,6 +70,7 @@ int main(int argc, char *argv[])
     Service::Security::SodiumPasswordHasher passwordHasher(pswConfig);
 
     Config::Auth::AuthConfig authConfig;
+    Config::File::FileConfig fileConfig;
 
     Service::Auth::AuthService authService(
         userRepository,
@@ -71,10 +81,24 @@ int main(int argc, char *argv[])
         authConfig
         );
 
+    Service::File::FileService fileService(
+        fileStorage,
+        fileRepository,
+        timeProvider,
+        fileConfig
+        );
+
     QHttpServer httpServer;
 
     Api::Controllers::AuthController authController(httpServer, authService);
     authController.registerEndpoints();
+
+    Api::Controllers::FileController fileController(
+        httpServer,
+        fileService,
+        authService
+        );
+    fileController.registerEndpoints();
 
     httpServer.route("/", [] () {
         return "EasyCrossplatformDrive server is running!";
