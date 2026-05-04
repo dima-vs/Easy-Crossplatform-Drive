@@ -384,23 +384,41 @@ std::optional<DTO::File::RenameRequest> fromJsonRenameRequest(const QJsonObject&
 {
     DTO::File::RenameRequest dto;
 
-    if (!json.contains("newFileName") || !json["newFileName"].isString())
+    if (!json.contains("newFileName") && !json.contains("newParentId"))
     {
-        qWarning() << "invalid or missing 'newFileName' field in JSON";
+        qWarning() << "RenameRequest must contain at least newFileName or newParentId";
         return std::nullopt;
     }
 
-    if (!json.contains("newParentId") || !json["newParentId"].isDouble() ||
-        !json["newParentId"].isNull())
+    if (json.contains("newFileName"))
     {
-        qWarning() << "invalid or missing 'newParentId' field in JSON";
-        return std::nullopt;
+        if (!json["newFileName"].isString()) return std::nullopt;
+        dto.newFileName = json["newFileName"].toString();
+    }
+    else
+    {
+        dto.newFileName = std::nullopt;
     }
 
-    dto.newFileName = json["newFileName"].toString();
-    dto.newParentId = json["newParentId"].isNull() ?
-                          std::optional<int>(std::nullopt) :
-                          json["newParentId"].toInt();
+    if (json.contains("newParentId"))
+    {
+        if (json["newParentId"].isNull())
+        {
+            dto.newParentId = QVariant();
+        }
+        else if (json["newParentId"].isDouble())
+        {
+            dto.newParentId = json["newParentId"].toInt();
+        }
+        else
+        {
+            return std::nullopt;
+        }
+    }
+    else
+    {
+        dto.newParentId = std::nullopt;
+    }
 
     return dto;
 }
@@ -409,12 +427,25 @@ QJsonObject toJson(const DTO::File::RenameRequest& dto)
 {
     QJsonObject obj;
 
-    if (dto.newFileName.isEmpty())
-        qDebug() << "serializing empty newFileName";
+    if (dto.newFileName.has_value())
+    {
+        obj["newFileName"] = dto.newFileName.value();
+    }
 
-    obj["newFileName"] = dto.newFileName;
-    obj["newParentId"] = dto.newParentId.has_value()?
-                          dto.newParentId.value() : QJsonValue();
+    if (dto.newParentId.has_value())
+    {
+        QVariant val = dto.newParentId.value();
+
+        if (val.isNull())
+        {
+            obj["newParentId"] = QJsonValue(QJsonValue::Null);
+        }
+        else
+        {
+            obj["newParentId"] = val.toInt();
+        }
+    }
+
     return obj;
 }
 
