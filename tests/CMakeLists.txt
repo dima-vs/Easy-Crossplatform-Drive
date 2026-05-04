@@ -9,15 +9,14 @@ find_package(GTest CONFIG REQUIRED)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 
 add_subdirectory(server)
+add_subdirectory(common)
 
-add_executable(unit_tests
+add_executable(server_tests
     server_test.cpp
     ${SERVER_TEST_SOURCES}
-    server/service_layer/file_service_test.cpp
-    server/service_layer/mock_time_provider.h
 )
 
-target_link_libraries(unit_tests
+target_link_libraries(server_tests
     PRIVATE
         GTest::gtest
         GTest::gmock
@@ -28,5 +27,20 @@ target_link_libraries(unit_tests
         Qt6::Core
 )
 
+add_executable(common_tests
+    common_test.cpp
+    ${COMMON_TEST_SOURCES}
+)
+
+target_link_libraries(common_tests
+    PRIVATE
+        GTest::gtest
+        GTest::gmock
+        # GTest::gtest_main
+        Domain_Lib
+        Common_Lib
+        Qt6::Core
+)
+
 include(GoogleTest)
-gtest_add_tests(TARGET unit_tests)
+gtest_add_tests(TARGET server_tests)
