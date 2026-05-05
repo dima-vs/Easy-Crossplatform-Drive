@@ -26,7 +26,7 @@ std::optional<DTO::File::CreateEmptyRequest> fromJsonCreateEmptyRequest(const QJ
     if (!JsonHelper::requireString(json, Keys::Name, dto.fileName) ||
         !JsonHelper::requireNullableInt(json, Keys::ParentId, dto.parentId) ||
         !JsonHelper::requireString(json, Keys::Type, typeStr) ||
-        !JsonHelper::requireBool(json, Keys::Upload::Overwrite, dto.overwrite))
+        !JsonHelper::requireBool(json, Keys::Overwrite, dto.overwrite))
     {
         return std::nullopt;
     }
@@ -63,7 +63,7 @@ QJsonObject toJson(const DTO::File::CreateEmptyRequest& dto)
     obj[Keys::Name] = dto.fileName;
     obj[Keys::ParentId] = JsonHelper::getNullableInt(dto.parentId);
     obj[Keys::Type] = Common::Converter::FileTypeConverter::toString(dto.type);
-    obj[Keys::Upload::Overwrite] = dto.overwrite;
+    obj[Keys::Overwrite] = dto.overwrite;
 
     return obj;
 }
@@ -392,7 +392,7 @@ std::optional<DTO::File::UploadInitRequest> fromJsonUploadInitRequest(const QJso
 
     if (!JsonHelper::requireString(json, Keys::Name, dto.fileName) ||
         !JsonHelper::requireInt64(json, Keys::Size, dto.fileSize) ||
-        !JsonHelper::requireBool(json, Keys::Upload::Overwrite, dto.overwrite) ||
+        !JsonHelper::requireBool(json, Keys::Overwrite, dto.overwrite) ||
         !JsonHelper::requireNullableInt(json, Keys::ParentId, dto.parentId))
     {
         return std::nullopt;
@@ -410,7 +410,7 @@ QJsonObject toJson(const DTO::File::UploadInitRequest& dto)
 
     obj[Keys::Name] = dto.fileName;
     obj[Keys::Size] = dto.fileSize;
-    obj[Keys::Upload::Overwrite] = dto.overwrite;
+    obj[Keys::Overwrite] = dto.overwrite;
     obj[Keys::ParentId] = JsonHelper::getNullableInt(dto.parentId);
 
     return obj;

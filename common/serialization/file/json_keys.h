@@ -11,6 +11,7 @@ static constexpr auto ParentId = "parentId";
 static constexpr auto Size = "size";
 static constexpr auto CreatedAt = "createdAt";
 static constexpr auto Type = "type";
+static constexpr auto Overwrite = "overwrite";
 
 struct Tree
 {
@@ -20,7 +21,6 @@ struct Tree
 
 struct Upload
 {
-    static constexpr auto Overwrite = "overwrite";
     static constexpr auto ChunkSize = "chunkSize";
     static constexpr auto UploadId = "uploadId";
     static constexpr auto ExpiresAt = "expiresAt";
