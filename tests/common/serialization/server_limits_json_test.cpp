@@ -14,6 +14,7 @@ TEST(ServerLimitsJsonTest, TransferResponse_RoundTrip)
     original.upload.maxFileSize = 1024 * 1024 * 1024;
 
     original.download.maxChunkSize = 10 * 1024 * 1024;
+    original.download.maxFileSize = 5 * 1024 * 1024 * 1024;
 
     original.storage.maxTotalPerUser = 15 * 1024 * 1024 * 1024;
 
@@ -34,6 +35,7 @@ TEST(ServerLimitsJsonTest, TransferResponse_RoundTrip)
 
     // check Download
     EXPECT_EQ(restored.download.maxChunkSize, original.download.maxChunkSize);
+    EXPECT_EQ(restored.download.maxFileSize, original.download.maxFileSize);
 
     // check Storage
     EXPECT_EQ(restored.storage.maxTotalPerUser, original.storage.maxTotalPerUser);
