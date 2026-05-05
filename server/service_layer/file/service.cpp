@@ -139,6 +139,24 @@ InitUploadSessionResult FileService::initUpload(
         return InitUploadSessionResult::fail(ServiceError::FileTooLarge);
     }
 
+    if (!parentId.isNull())
+    {
+        FileRecord parentRecord = m_fileRep.findById(parentId.toInt());
+
+        if (!parentRecord.isValid())
+        {
+            return InitUploadSessionResult::fail(ServiceError::FileNotFound);
+        }
+        if (parentRecord.type() != FileType::Directory)
+        {
+            return InitUploadSessionResult::fail(ServiceError::InvalidFileObjType);
+        }
+        if (!m_fileRep.checkPermission(userId, parentRecord))
+        {
+            return InitUploadSessionResult::fail(ServiceError::PermissionDenied);
+        }
+    }
+
     FileRecord existing = m_fileRep.findByName(userId, parentId, fileName);
     bool fileEntryExist = existing.isValid();
 
@@ -471,6 +489,24 @@ CreatedFileObjectResult FileService::createEmpty(
             ServiceError::InvalidFileObjType);
     }
 
+    if (!parentId.isNull())
+    {
+        FileRecord parentRecord = m_fileRep.findById(parentId.toInt());
+
+        if (!parentRecord.isValid())
+        {
+            return CreatedFileObjectResult::fail(ServiceError::FileNotFound);
+        }
+        if (parentRecord.type() != FileType::Directory)
+        {
+            return CreatedFileObjectResult::fail(ServiceError::InvalidFileObjType);
+        }
+        if (!m_fileRep.checkPermission(userId, parentRecord))
+        {
+            return CreatedFileObjectResult::fail(ServiceError::PermissionDenied);
+        }
+    }
+
     int size = 0;
     QVariant serverName;
     // generate a server name for file
@@ -639,6 +675,26 @@ RenameResult FileService::renameAndMove(
     QVariant targetParentId = newParentId.has_value() ?
                                 newParentId.value() :
                                 existing.parentId();
+
+    if (newParentId.has_value() && !targetParentId.isNull())
+    {
+        FileRecord targetParentRecord = m_fileRep.findById(
+            targetParentId.toInt());
+
+        if (!targetParentRecord.isValid())
+        {
+            return RenameResult::fail(ServiceError::FileNotFound);
+        }
+        if (targetParentRecord.type() != FileType::Directory)
+        {
+            return RenameResult::fail(ServiceError::InvalidFileObjType);
+        }
+        if (!m_fileRep.checkPermission(userId, targetParentRecord))
+        {
+            return RenameResult::fail(ServiceError::PermissionDenied);
+        }
+    }
+
     QString targetName = newLogicalName.has_value() ?
                              newLogicalName.value() :
                              existing.logicalName();
