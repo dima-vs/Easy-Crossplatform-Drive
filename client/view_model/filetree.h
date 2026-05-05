@@ -11,16 +11,13 @@ class FileTree : public QTreeWidget
 public:
     FileTree(QList<DTO::File::TreeNodeResponse> &tree);
     QList<QTreeWidgetItem*> createTree(const QList<DTO::File::TreeNodeResponse>& nodes);
-    void onLoad();
+    void onLoad(QList<DTO::File::TreeNodeResponse> &tree);
 
 private:
     QList<DTO::File::TreeNodeResponse> &fileTree;
 
 signals:
     void initializedProgram(QTreeWidget *treeWidget);
-
-public slots:
-
 };
 
 #endif // FILETREE_H

@@ -26,27 +26,27 @@ QList<QTreeWidgetItem*> FileTree::createTree(const QList<DTO::File::TreeNodeResp
     return itemList;
 }
 
-void FileTree::onLoad()
+void FileTree::onLoad(QList<DTO::File::TreeNodeResponse> &tree)
 {
-    QList<DTO::File::TreeNodeResponse> result;
+    // QList<DTO::File::TreeNodeResponse> result;
 
-    DTO::File::TreeNodeResponse rootdir;
-    rootdir.fileId = 1;
-    rootdir.isDirectory = true;
-    rootdir.name = "ROOT";
+    // DTO::File::TreeNodeResponse rootdir;
+    // rootdir.fileId = 1;
+    // rootdir.isDirectory = true;
+    // rootdir.name = "ROOT";
 
-    DTO::File::TreeNodeResponse child;
-    child.fileId = 2;
-    child.isDirectory = false;
-    child.name = "file.doc";
-    child.size = 123;
+    // DTO::File::TreeNodeResponse child;
+    // child.fileId = 2;
+    // child.isDirectory = false;
+    // child.name = "file.doc";
+    // child.size = 123;
 
-    rootdir.children = QList<DTO::File::TreeNodeResponse>();
-    rootdir.children->append(child);
+    // rootdir.children = QList<DTO::File::TreeNodeResponse>();
+    // rootdir.children->append(child);
 
-    result.append(rootdir);
+    // result.append(rootdir);
 
-    QList<QTreeWidgetItem*> list = createTree(result);
+    QList<QTreeWidgetItem*> list = createTree(tree);
 
     QTreeWidget* treeWidget = new QTreeWidget();
 

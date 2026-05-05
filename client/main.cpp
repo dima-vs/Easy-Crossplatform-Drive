@@ -124,14 +124,14 @@ int main(int argc, char *argv[])
 
     a.setStyleSheet(styleSheet);
 
-    Model m;
-    QList<DTO::File::TreeNodeResponse> l = m.requestFileTree();
-    FileTree f(l);
+    // Model m;
+    // QList<DTO::File::TreeNodeResponse> l = m.requestFileTree();
+    // FileTree f(l);
 
     MainWindow w;
 
-    QObject::connect(&f, &FileTree::initializedProgram, &w, &MainWindow::treeLoaded);
-    f.onLoad();
+    // QObject::connect(&f, &FileTree::initializedProgram, &w, &MainWindow::treeLoaded);
+    // f.onLoad();
     w.show();
     return a.exec();
 }

@@ -15,35 +15,68 @@
 #include "dto/auth/general_response.h"
 #include <optional>
 
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QNetworkRequest>
+#include <QUrl>
+#include <QUrlQuery>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonParseError>
+#include <QJsonArray>
+#include "serialization/auth/json.h"
+#include "serialization/file/json.h"
+#include "serialization/file/json_keys.h"
+#include "nodata.h"
+
 class Model : public QObject
 {
     Q_OBJECT
 
 private:
-    QString authorize(QString accessToken);
+    bool authorize(QHttpHeaders &headersOut);
     QString token;
 
-    DTO::File::UploadCompleteResponse completeUpload(QString uploadId);
+    QHostAddress host = QHostAddress(QHostAddress::SpecialAddress::LocalHost); // join room goes here
+    QString baseUrl;
+
+    QNetworkAccessManager manager = QNetworkAccessManager(this);
 
 public slots:
 
-    int uploadData(QString uploadId);
-    DTO::File::UploadInitResponse uploadInit(QString fileName,
-                                             std::optional<int> parentId,
-                                             qint64 fileSize,
-                                             bool overwrite);
-    QByteArray downloadData(int fileId);
+    void uploadData(QString uploadId, QByteArray chunkData, qint64 startByte, qint64 endByte, qint64 totalBytes);
+    void uploadInit(QString fileName,
+                    std::optional<int> parentId,
+                    qint64 fileSize,
+                    bool overwrite);
+    void downloadData(int fileId, qint64 startByte, qint64 endByte);
+    void completeUpload(QString uploadId);
     void requestDeletion(int fileId);
     //void changeProperties(QString name, QStringList access);
-    DTO::File::RenameResponse renameFile(std::optional<int> parentId, QString name);
-    QList<DTO::File::TreeNodeResponse> requestFileTree();
-    DTO::Auth::GeneralResponse login(QString username,
-                                     QString password);
-    DTO::Auth::GeneralResponse signup(QString verificationId,
-                                           int accessCode,
-                                           QString username,
-                                           QString password);
-    DTO::Auth::RegisterInitResponse sendEmail(QString email);
+    void renameFile(int fileId, std::optional<int> parentId, std::optional<QString> name);
+    void requestFileTree();
+    void login(QString username,
+               QString password);
+    void signup(QString verificationId,
+                int accessCode,
+                QString username,
+                QString password);
+    void sendEmail(QString email);
+
+
+signals:
+    void sendEmailFinished(std::optional<DTO::Auth::RegisterInitResponse>);
+    void signupFinished(std::optional<DTO::Auth::GeneralResponse>);
+    void loginFinished(std::optional<DTO::Auth::GeneralResponse>);
+    void treeRequestFinished(std::optional<QList<DTO::File::TreeNodeResponse>>);
+    void renameFinished(std::optional<DTO::File::RenameResponse>);
+    void deletionFinished(std::optional<CommonTypes::NoData>);
+    void uploadInitFinished(std::optional<DTO::File::UploadInitResponse>);
+    void uploadCompleteFinished(std::optional<DTO::File::UploadCompleteResponse>);
+    void uploadFinished(std::optional<CommonTypes::NoData>);
+    void downloadChunkFinished(std::optional<QByteArray>);
+
+    void saveToken(QString accessToken);
 };
 
 #endif // MODEL_H

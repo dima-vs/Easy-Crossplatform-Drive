@@ -24,6 +24,7 @@ target_link_libraries(ViewModel_Lib
    PUBLIC Qt${QT_VERSION_MAJOR}::Core
    Qt${QT_VERSION_MAJOR}::Widgets
    PUBLIC Model_Lib
+   Common_Types_Lib
 )
 
 target_include_directories(ViewModel_Lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

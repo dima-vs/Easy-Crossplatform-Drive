@@ -52,7 +52,14 @@ void MainWindow::openPropertiesDialog()
 
 void MainWindow::treeLoaded(QTreeWidget *treeWidget)
 {
-    treeWidget->setParent(ui->treeView);
+    treeWidget->setMinimumSize(ui->treePlaceholder->minimumSize());
+    treeWidget->setSizePolicy(ui->treePlaceholder->sizePolicy());
+
+    ui->bottomLayout->insertWidget(0, treeWidget);
+    ui->bottomLayout->removeWidget(ui->treePlaceholder);
+
+    treeWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    treeWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 }
 
 void MainWindow::on_actionTest1_triggered()
