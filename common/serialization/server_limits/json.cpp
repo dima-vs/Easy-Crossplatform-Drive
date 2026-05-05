@@ -1,7 +1,13 @@
+#include <QDebug>
 #include "serialization/server_limits/json.h"
+#include "serialization/server_limits/json_keys.h"
+#include "serialization/json_helpers.h"
+
 
 namespace Serialization::ServerLimits
 {
+
+namespace Keys = JsonKeys::ServerLimits;
 
 // ==========================================
 // [DTO::ServerLimits::TransferResponse]
@@ -10,53 +16,33 @@ std::optional<DTO::ServerLimits::TransferResponse> fromJsonTransferResponse(cons
 {
     DTO::ServerLimits::TransferResponse dto;
 
-    if (!json.contains("upload") || !json["upload"].isObject())
+    QJsonObject uploadObj;
+    QJsonObject downloadObj;
+    QJsonObject storageObj;
+
+    if (!JsonHelper::requireObject(json, Keys::Upload, uploadObj) ||
+        !JsonHelper::requireObject(json, Keys::Download, downloadObj) ||
+        !JsonHelper::requireObject(json, Keys::Storage, storageObj))
     {
-        qWarning() << "invalid or missing 'upload' field in JSON";
         return std::nullopt;
     }
 
-    if (!json.contains("download") || !json["download"].isObject())
+    if (!JsonHelper::requireInt64(uploadObj, Keys::MaxChunkSize, dto.upload.maxChunkSize) ||
+        !JsonHelper::requireInt64(uploadObj, Keys::MaxFileSize, dto.upload.maxFileSize))
     {
-        qWarning() << "invalid or missing 'download' field in JSON";
         return std::nullopt;
     }
 
-    if (!json.contains("storage") || !json["storage"].isObject())
+    if (!JsonHelper::requireInt64(downloadObj, Keys::MaxChunkSize, dto.download.maxChunkSize) ||
+        !JsonHelper::requireInt64(downloadObj, Keys::MaxFileSize, dto.download.maxFileSize))
     {
-        qWarning() << "invalid or missing 'storage' field in JSON";
         return std::nullopt;
     }
 
-    QJsonObject uploadObj = json["upload"].toObject();
-    QJsonObject downloadObj = json["download"].toObject();
-    QJsonObject storageObj = json["storage"].toObject();
-
-    if (!uploadObj.contains("maxChunkSize") || !uploadObj["maxChunkSize"].isDouble() ||
-        !uploadObj.contains("maxFileSize") || !uploadObj["maxFileSize"].isDouble())
+    if (!JsonHelper::requireInt64(storageObj, Keys::MaxTotalPerUser, dto.storage.maxTotalPerUser))
     {
-        qWarning() << "invalid or missing numeric fields in 'upload' object";
         return std::nullopt;
     }
-
-    if (!downloadObj.contains("maxChunkSize") || !downloadObj["maxChunkSize"].isDouble())
-    {
-        qWarning() << "invalid or missing 'maxChunkSize' numeric field in 'download' object";
-        return std::nullopt;
-    }
-
-    if (!storageObj.contains("maxTotalPerUser") || !storageObj["maxTotalPerUser"].isDouble())
-    {
-        qWarning() << "invalid or missing 'maxTotalPerUser' numeric field in 'storage' object";
-        return std::nullopt;
-    }
-
-    dto.upload.maxChunkSize = uploadObj["maxChunkSize"].toInteger();
-    dto.upload.maxFileSize = uploadObj["maxFileSize"].toInteger();
-
-    dto.download.maxChunkSize = downloadObj["maxChunkSize"].toInteger();
-
-    dto.storage.maxTotalPerUser = storageObj["maxTotalPerUser"].toInteger();
 
     return dto;
 }
@@ -67,20 +53,21 @@ QJsonObject toJson(const DTO::ServerLimits::TransferResponse& dto)
 
     // upload
     QJsonObject uploadObj;
-    uploadObj["maxChunkSize"] = dto.upload.maxChunkSize;
-    uploadObj["maxFileSize"] = dto.upload.maxFileSize;
+    uploadObj[Keys::MaxChunkSize] = dto.upload.maxChunkSize;
+    uploadObj[Keys::MaxFileSize] = dto.upload.maxFileSize;
 
     // download
     QJsonObject downloadObj;
-    downloadObj["maxChunkSize"] = dto.download.maxChunkSize;
+    downloadObj[Keys::MaxChunkSize] = dto.download.maxChunkSize;
+    downloadObj[Keys::MaxFileSize] = dto.download.maxFileSize;
 
     // storage
     QJsonObject storageObj;
-    storageObj["maxTotalPerUser"] = dto.storage.maxTotalPerUser;
+    storageObj[Keys::MaxTotalPerUser] = dto.storage.maxTotalPerUser;
 
-    root["upload"] = uploadObj;
-    root["download"] = downloadObj;
-    root["storage"] = storageObj;
+    root[Keys::Upload] = uploadObj;
+    root[Keys::Download] = downloadObj;
+    root[Keys::Storage] = storageObj;
 
     return root;
 }

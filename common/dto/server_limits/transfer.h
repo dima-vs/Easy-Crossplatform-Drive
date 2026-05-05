@@ -6,15 +6,10 @@
 namespace DTO::ServerLimits
 {
 
-struct Upload
+struct FileTransferLimits
 {
     qint64 maxChunkSize;
     qint64 maxFileSize;
-};
-
-struct Download
-{
-    qint64 maxChunkSize;
 };
 
 struct Storage
@@ -24,8 +19,8 @@ struct Storage
 
 struct TransferResponse
 {
-    Upload upload;
-    Download download;
+    FileTransferLimits upload;
+    FileTransferLimits download;
     Storage storage;
 };
 

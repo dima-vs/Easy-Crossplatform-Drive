@@ -44,6 +44,10 @@ add_library(Common_Lib STATIC
     serialization/file/json.cpp
     serialization/server_limits/json.h
     serialization/server_limits/json.cpp
+    serialization/auth/json_keys.h
+    serialization/file/json_keys.h
+    serialization/server_limits/json_keys.h
+    serialization/json_helpers.h
 )
 target_link_libraries(Common_Lib PUBLIC Qt${QT_VERSION_MAJOR}::Core)
 target_include_directories(Common_Lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

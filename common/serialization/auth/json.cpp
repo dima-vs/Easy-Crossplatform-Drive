@@ -2,6 +2,8 @@
 #include <QDateTime>
 #include <QString>
 #include "serialization/auth/json.h"
+#include "serialization/auth/json_keys.h"
+#include "serialization/json_helpers.h"
 
 namespace Serialization::Auth
 {
@@ -11,20 +13,18 @@ namespace Serialization::Auth
 // ==========================================
 std::optional<DTO::Auth::RegisterInitRequest> fromJsonRegisterInitRequest(const QJsonObject& json)
 {
+    using Keys = JsonKeys::Auth::RegisterInit;
     DTO::Auth::RegisterInitRequest dto;
 
-    if (json.contains("email") && json["email"].isString())
-    {
-        dto.email = json["email"].toString();
-        return dto;
-    } else {
-        qWarning() << "invalid or missing 'email' field in JSON";
+    if (!JsonHelper::requireString(json, Keys::Email, dto.email))
         return std::nullopt;
-    }
+
+    return dto;
 }
 
 QJsonObject toJson(const DTO::Auth::RegisterInitRequest& dto)
 {
+    using Keys = JsonKeys::Auth::RegisterInit;
     QJsonObject obj;
 
     if (dto.email.isEmpty())
@@ -32,7 +32,7 @@ QJsonObject toJson(const DTO::Auth::RegisterInitRequest& dto)
         qDebug() << "serializing empty email";
     }
 
-    obj["email"] = dto.email;
+    obj[Keys::Email] = dto.email;
     return obj;
 }
 
@@ -42,34 +42,19 @@ QJsonObject toJson(const DTO::Auth::RegisterInitRequest& dto)
 // ==========================================
 std::optional<DTO::Auth::RegisterInitResponse> fromJsonRegisterInitResponse(const QJsonObject& json)
 {
+    using Keys = JsonKeys::Auth::RegisterInit;
     DTO::Auth::RegisterInitResponse dto;
 
-    if (!json.contains("verificationId") || !json["verificationId"].isString())
-    {
-        qWarning() << "invalid or missing 'verificationId' field in JSON";
+    if (!JsonHelper::requireString(json, Keys::VerificationId, dto.verificationId) ||
+        !JsonHelper::requireDateTime(json, Keys::ExpiresAt, dto.expiresAt))
         return std::nullopt;
-    }
-
-    if (!json.contains("expiresAt") || !json["expiresAt"].isString())
-    {
-        qWarning() << "invalid or missing 'expiresAt' field in JSON";
-        return std::nullopt;
-    }
-
-    dto.verificationId = json["verificationId"].toString();
-    dto.expiresAt = QDateTime::fromString(json["expiresAt"].toString(), Qt::ISODate);
-
-    if (!dto.expiresAt.isValid())
-    {
-        qWarning() << "invalid 'expiresAt' date format (expected ISO 8601)";
-        return std::nullopt;
-    }
 
     return dto;
 }
 
 QJsonObject toJson(const DTO::Auth::RegisterInitResponse& dto)
 {
+    using Keys = JsonKeys::Auth::RegisterInit;
     QJsonObject obj;
 
     if (dto.verificationId.isEmpty())
@@ -81,8 +66,8 @@ QJsonObject toJson(const DTO::Auth::RegisterInitResponse& dto)
         qDebug() << "serializing invalid expiresAt date";
     }
 
-    obj["verificationId"] = dto.verificationId;
-    obj["expiresAt"] = dto.expiresAt.toString(Qt::ISODate);
+    obj[Keys::VerificationId] = dto.verificationId;
+    obj[Keys::ExpiresAt] = dto.expiresAt.toString(Qt::ISODate);
 
     return obj;
 }
@@ -93,27 +78,19 @@ QJsonObject toJson(const DTO::Auth::RegisterInitResponse& dto)
 // ==========================================
 std::optional<DTO::Auth::LoginRequest> fromJsonLoginRequest(const QJsonObject& json)
 {
+    using Keys = JsonKeys::Auth::Login;
     DTO::Auth::LoginRequest dto;
 
-    if (!json.contains("login") || !json["login"].isString())
-    {
-        qWarning() << "invalid or missing 'login' field in JSON";
+    if (!JsonHelper::requireString(json, Keys::LoginField, dto.login) ||
+        !JsonHelper::requireString(json, Keys::Password, dto.password))
         return std::nullopt;
-    }
-    if (!json.contains("password") || !json["password"].isString())
-    {
-        qWarning() << "invalid or missing 'password' field in JSON";
-        return std::nullopt;
-    }
-
-    dto.login = json["login"].toString();
-    dto.password = json["password"].toString();
 
     return dto;
 }
 
 QJsonObject toJson(const DTO::Auth::LoginRequest& dto)
 {
+    using Keys = JsonKeys::Auth::Login;
     QJsonObject obj;
 
     if (dto.login.isEmpty())
@@ -125,8 +102,8 @@ QJsonObject toJson(const DTO::Auth::LoginRequest& dto)
         qDebug() << "serializing empty password";
     }
 
-    obj["login"] = dto.login;
-    obj["password"] = dto.password;
+    obj[Keys::LoginField] = dto.login;
+    obj[Keys::Password] = dto.password;
 
     return obj;
 }
@@ -137,40 +114,21 @@ QJsonObject toJson(const DTO::Auth::LoginRequest& dto)
 // ==========================================
 std::optional<DTO::Auth::ConfirmRegisterRequest> fromJsonConfirmRegisterRequest(const QJsonObject& json)
 {
+    using Keys = JsonKeys::Auth::ConfirmRegister;
     DTO::Auth::ConfirmRegisterRequest dto;
 
-    if (!json.contains("verificationId") || !json["verificationId"].isString())
-    {
-        qWarning() << "invalid or missing 'verificationId' field in JSON";
+    if (!JsonHelper::requireString(json, Keys::VerificationId, dto.verificationId) ||
+        !JsonHelper::requireInt(json, Keys::AccessCode, dto.accessCode) ||
+        !JsonHelper::requireString(json, Keys::Username, dto.username) ||
+        !JsonHelper::requireString(json, Keys::Password, dto.password))
         return std::nullopt;
-    }
-
-    if (!json.contains("accessCode") || !json["accessCode"].isDouble())
-    {
-        qWarning() << "invalid or missing 'accessCode' field in JSON";
-        return std::nullopt;
-    }
-    if (!json.contains("username") || !json["username"].isString())
-    {
-        qWarning() << "invalid or missing 'username' field in JSON";
-        return std::nullopt;
-    }
-    if (!json.contains("password") || !json["password"].isString())
-    {
-        qWarning() << "invalid or missing 'password' field in JSON";
-        return std::nullopt;
-    }
-
-    dto.verificationId = json["verificationId"].toString();
-    dto.accessCode = json["accessCode"].toInt();
-    dto.username = json["username"].toString();
-    dto.password = json["password"].toString();
 
     return dto;
 }
 
 QJsonObject toJson(const DTO::Auth::ConfirmRegisterRequest& dto)
 {
+    using Keys = JsonKeys::Auth::ConfirmRegister;
     QJsonObject obj;
 
     if (dto.verificationId.isEmpty())
@@ -186,10 +144,10 @@ QJsonObject toJson(const DTO::Auth::ConfirmRegisterRequest& dto)
         qDebug() << "serializing empty password";
     }
 
-    obj["verificationId"] = dto.verificationId;
-    obj["accessCode"] = dto.accessCode;
-    obj["username"] = dto.username;
-    obj["password"] = dto.password;
+    obj[Keys::VerificationId] = dto.verificationId;
+    obj[Keys::AccessCode] = dto.accessCode;
+    obj[Keys::Username] = dto.username;
+    obj[Keys::Password] = dto.password;
 
     return obj;
 }
@@ -200,33 +158,19 @@ QJsonObject toJson(const DTO::Auth::ConfirmRegisterRequest& dto)
 // ==========================================
 std::optional<DTO::Auth::GeneralResponse> fromJsonGeneralResponse(const QJsonObject& json)
 {
+    using Keys = JsonKeys::Auth::General;
     DTO::Auth::GeneralResponse dto;
 
-    if (!json.contains("accessToken") || !json["accessToken"].isString())
-    {
-        qWarning() << "invalid or missing 'accessToken' field in JSON";
+    if (!JsonHelper::requireString(json, Keys::AccessToken, dto.accessToken) ||
+        !JsonHelper::requireDateTime(json, Keys::ExpiresAt, dto.expiresAt))
         return std::nullopt;
-    }
-    if (!json.contains("expiresAt") || !json["expiresAt"].isString())
-    {
-        qWarning() << "invalid or missing 'expiresAt' field in JSON";
-        return std::nullopt;
-    }
-
-    dto.accessToken = json["accessToken"].toString();
-    dto.expiresAt = QDateTime::fromString(json["expiresAt"].toString(), Qt::ISODate);
-
-    if (!dto.expiresAt.isValid())
-    {
-        qWarning() << "invalid 'expiresAt' date format (expected ISO 8601)";
-        return std::nullopt;
-    }
 
     return dto;
 }
 
 QJsonObject toJson(const DTO::Auth::GeneralResponse& dto)
 {
+    using Keys = JsonKeys::Auth::General;
     QJsonObject obj;
 
     if (dto.accessToken.isEmpty())
@@ -238,8 +182,8 @@ QJsonObject toJson(const DTO::Auth::GeneralResponse& dto)
         qDebug() << "serializing invalid expiresAt date";
     }
 
-    obj["accessToken"] = dto.accessToken;
-    obj["expiresAt"] = dto.expiresAt.toString(Qt::ISODate);
+    obj[Keys::AccessToken] = dto.accessToken;
+    obj[Keys::ExpiresAt] = dto.expiresAt.toString(Qt::ISODate);
 
     return obj;
 }
