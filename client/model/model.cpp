@@ -1,4 +1,5 @@
 #include "model.h"
+#include <QDebug>
 
 bool Model::authorize(QHttpHeaders &headersOut)
 {
@@ -10,6 +11,7 @@ bool Model::authorize(QHttpHeaders &headersOut)
 
 void Model::uploadData(QString uploadId, QByteArray chunkData, qint64 startByte, qint64 endByte, qint64 totalBytes)
 {
+    qDebug() << "Enter uploadData";
     baseUrl = "http://" + host.toString() + ":8080";
     QUrl url(baseUrl + "/uploads/" + uploadId);
     QNetworkRequest httprequest(url);
@@ -40,6 +42,7 @@ void Model::uploadData(QString uploadId, QByteArray chunkData, qint64 startByte,
 
 void Model::uploadInit(QString fileName, std::optional<int> parentId, qint64 fileSize, bool overwrite)
 {
+    qDebug() << "Enter uploadInit";
     DTO::File::UploadInitRequest request;
     request.fileName = fileName;
     request.fileSize = fileSize;
@@ -116,6 +119,7 @@ void Model::downloadData(int fileId, qint64 startByte, qint64 endByte)
 
 void Model::completeUpload(QString uploadId)
 {
+    qDebug() << "Enter completeUpload";
     baseUrl = "http://" + host.toString() + ":8080";
     QUrl url(baseUrl + "/uploads/" + uploadId + "/complete");
 
@@ -144,6 +148,47 @@ void Model::completeUpload(QString uploadId)
         {
             qDebug() << "Error:" << reply->errorString();
             emit uploadCompleteFinished(std::nullopt);
+        }
+        reply->deleteLater();
+    });
+}
+
+void Model::createFolder(QString fileName, std::optional<int> parentId, bool overwrite)
+{
+    DTO::File::CreateEmptyRequest request;
+    request.fileName = fileName;
+    request.overwrite = overwrite;
+    request.parentId = parentId;
+    request.type = Common::Domain::FileType::Directory;
+    QJsonObject jsonreq = Serialization::File::toJson(request);
+    QByteArray data = QJsonDocument(jsonreq).toJson();
+
+    baseUrl = "http://" + host.toString() + ":8080";
+    QUrl url(baseUrl + "/files");
+    QNetworkRequest httprequest(url);
+    QHttpHeaders headers;
+    headers.append(QHttpHeaders::WellKnownHeader::ContentType, "application/json");
+    authorize(headers);
+    httprequest.setHeaders(headers);
+
+    QNetworkReply *reply = manager.post(httprequest, data);
+    QObject::connect(reply, &QNetworkReply::finished, [reply, this]()
+    {
+        baseUrl.clear();
+        if (reply->error() == QNetworkReply::NoError)
+        {
+            std::optional<DTO::File::CreateEmptyResponse> response;
+            QByteArray responseData = reply->readAll();
+
+            QJsonObject jsonresp = QJsonDocument::fromJson(responseData).object();
+            response = Serialization::File::fromJsonCreateEmptyResponse(jsonresp);
+
+            emit createFolderFinished(response);
+        }
+        else
+        {
+            qDebug() << "Error:" << reply->errorString();
+            emit createFolderFinished(std::nullopt);
         }
         reply->deleteLater();
     });

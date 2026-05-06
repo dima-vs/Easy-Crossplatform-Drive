@@ -14,6 +14,11 @@ logindialog::logindialog(QWidget *parent)
     QRegularExpressionValidator *validator = new QRegularExpressionValidator(rx, this);
 
     ui->loginEdit->setValidator(validator);
+
+    QObject::connect(ui->loginEdit, &QLineEdit::textChanged, [this]()
+                     {login = ui->loginEdit->text();});
+    QObject::connect(ui->passwordEdit, &QLineEdit::textChanged, [this]()
+                     {password = ui->passwordEdit->text();});
 }
 
 logindialog::~logindialog()

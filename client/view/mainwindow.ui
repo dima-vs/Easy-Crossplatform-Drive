@@ -303,7 +303,7 @@
     <property name="title">
      <string>Edit</string>
     </property>
-    <addaction name="actionNew_folder"/>
+    <addaction name="actionNewFolder"/>
     <addaction name="actionCopy"/>
     <addaction name="actionPaste"/>
     <addaction name="actionProperties"/>
@@ -349,7 +349,7 @@
     <string>Quit</string>
    </property>
   </action>
-  <action name="actionNew_folder">
+  <action name="actionNewFolder">
    <property name="text">
     <string>New folder</string>
    </property>

@@ -15,6 +15,10 @@ public:
     explicit signupdialog(QWidget *parent = nullptr);
     ~signupdialog();
 
+    QString email;
+    QString password;
+    QString username;
+
 private:
     Ui::signupdialog *ui;
 };

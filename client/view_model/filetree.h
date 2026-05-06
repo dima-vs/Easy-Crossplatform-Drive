@@ -9,15 +9,15 @@ class FileTree : public QTreeWidget
 {
     Q_OBJECT
 public:
-    FileTree(QList<DTO::File::TreeNodeResponse> &tree);
+    FileTree();
     QList<QTreeWidgetItem*> createTree(const QList<DTO::File::TreeNodeResponse>& nodes);
     void onLoad(QList<DTO::File::TreeNodeResponse> &tree);
 
 private:
-    QList<DTO::File::TreeNodeResponse> &fileTree;
+    //QList<DTO::File::TreeNodeResponse> &fileTree;
 
 signals:
-    void initializedProgram(QTreeWidget *treeWidget);
+    void updateTree(QTreeWidget *treeWidget);
 };
 
 #endif // FILETREE_H

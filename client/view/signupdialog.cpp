@@ -14,6 +14,12 @@ signupdialog::signupdialog(QWidget *parent)
     QRegularExpressionValidator *validator = new QRegularExpressionValidator(rx, this);
 
     ui->loginEdit->setValidator(validator);
+    QObject::connect(ui->loginEdit, &QLineEdit::textChanged, [this]()
+                     {email = ui->loginEdit->text();});
+    QObject::connect(ui->passwordEdit, &QLineEdit::textChanged, [this]()
+                     {password = ui->passwordEdit->text();});
+    QObject::connect(ui->usernameEdit, &QLineEdit::textChanged, [this]()
+                     {username = ui->usernameEdit->text();});
 }
 
 signupdialog::~signupdialog()

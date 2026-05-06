@@ -1,8 +1,9 @@
-#include "mainwindow.h"
 #include <QApplication>
 
-#include "filetree.h"
+//#include "filetree.h"
 #include "model.h"
+#include "viewmodel.h"
+#include "mainwindow.h"
 #include <QObject>
 
 int main(int argc, char *argv[])
@@ -124,14 +125,45 @@ int main(int argc, char *argv[])
 
     a.setStyleSheet(styleSheet);
 
-    // Model m;
-    // QList<DTO::File::TreeNodeResponse> l = m.requestFileTree();
-    // FileTree f(l);
-
+    Model m;
+    viewmodel vm;
     MainWindow w;
+    // model -> viewmodel
+    QObject::connect(&m, &Model::saveToken, &vm, &viewmodel::on_saveToken);
+    QObject::connect(&m, &Model::treeRequestFinished, &vm, &viewmodel::on_treeRequestFinished);
+    QObject::connect(&m, &Model::loginFinished, &vm, &viewmodel::on_loginFinished);
+    QObject::connect(&m, &Model::signupFinished, &vm, &viewmodel::on_signupFinished);
+    QObject::connect(&m, &Model::sendEmailFinished, &vm, &viewmodel::on_sendEmailFinished);
+    QObject::connect(&m, &Model::uploadInitFinished, &vm, &viewmodel::on_uploadInitFinished);
+    QObject::connect(&m, &Model::uploadFinished, &vm, &viewmodel::on_uploadFinished);
+    QObject::connect(&m, &Model::uploadCompleteFinished, &vm, &viewmodel::on_uploadCompleteFinished);
+    // QObject::connect(&m, &Model::downloadChunkFinished, &vm, &viewmodel::on_downloadChunkFinished);
+    // QObject::connect(&m, &Model::renameFinished, &vm, &viewmodel::on_renameFinished);
+    // QObject::connect(&m, &Model::deletionFinished, &vm, &viewmodel::on_deletionFinished);
+    QObject::connect(&m, &Model::createFolderFinished, &vm, &viewmodel::on_createFolderFinished);
 
-    // QObject::connect(&f, &FileTree::initializedProgram, &w, &MainWindow::treeLoaded);
-    // f.onLoad();
+    //viewmodel -> model
+    QObject::connect(&vm, &viewmodel::initUpload, &m, &Model::uploadInit);
+    QObject::connect(&vm, &viewmodel::uploadData, &m, &Model::uploadData);
+    QObject::connect(&vm, &viewmodel::completeUpload, &m, &Model::completeUpload);
+    QObject::connect(&vm, &viewmodel::userSendEmail, &m, &Model::sendEmail);
+    QObject::connect(&vm, &viewmodel::userSignUp, &m, &Model::signup);
+    QObject::connect(&vm, &viewmodel::userLogin, &m, &Model::login);
+    QObject::connect(&vm, &viewmodel::requestTree, &m, &Model::requestFileTree);
+    QObject::connect(&vm, &viewmodel::createFolder, &m, &Model::createFolder);
+
+    // view -> viewmodel
+    QObject::connect(&w, &MainWindow::userUpload, &vm, &viewmodel::on_userUpload);
+    QObject::connect(&w, &MainWindow::userSignUp, &vm, &viewmodel::on_userSignup);
+    QObject::connect(&w, &MainWindow::userEmail, &vm, &viewmodel::on_userEmail);
+    QObject::connect(&w, &MainWindow::userLogin, &vm, &viewmodel::on_userLogin);
+    QObject::connect(&w, &MainWindow::requestTree, &vm, &viewmodel::on_requestTree);
+    QObject::connect(&w, &MainWindow::userCreateFolder, &vm, &viewmodel::on_userCreateFolder);
+
+    // viewmodel -> view
+    QObject::connect(&vm, &viewmodel::showMessageBox, &w, &MainWindow::on_showMessageBox);
+    QObject::connect(&vm, &viewmodel::showVerificationDialog, &w, &MainWindow::on_showVerificationDialog);
+    QObject::connect(&vm, &viewmodel::updateTree, &w, &MainWindow::treeLoaded);
     w.show();
     return a.exec();
 }

@@ -15,13 +15,13 @@ class verificationdialog : public QDialog
 public:
     explicit verificationdialog(QWidget *parent = nullptr);
     ~verificationdialog();
+    QList<QLineEdit*> codeEditList;
 
 protected:
     bool eventFilter(QObject *obj, QEvent *event) override;
 
 private:
     Ui::verificationdialog *ui;
-    QList<QLineEdit*> codeEditList;
     int activeIndex = 0;
 
 private slots:

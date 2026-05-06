@@ -27,6 +27,7 @@
 #include "serialization/auth/json.h"
 #include "serialization/file/json.h"
 #include "serialization/file/json_keys.h"
+#include "domain/file_type.h"
 #include "nodata.h"
 
 class Model : public QObject
@@ -43,7 +44,6 @@ private:
     QNetworkAccessManager manager = QNetworkAccessManager(this);
 
 public slots:
-
     void uploadData(QString uploadId, QByteArray chunkData, qint64 startByte, qint64 endByte, qint64 totalBytes);
     void uploadInit(QString fileName,
                     std::optional<int> parentId,
@@ -62,6 +62,7 @@ public slots:
                 QString username,
                 QString password);
     void sendEmail(QString email);
+    void createFolder(QString fileName, std::optional<int> parentId, bool overwrite);
 
 
 signals:
@@ -75,7 +76,7 @@ signals:
     void uploadCompleteFinished(std::optional<DTO::File::UploadCompleteResponse>);
     void uploadFinished(std::optional<CommonTypes::NoData>);
     void downloadChunkFinished(std::optional<QByteArray>);
-
+    void createFolderFinished(std::optional<DTO::File::CreateEmptyResponse>);
     void saveToken(QString accessToken);
 };
 

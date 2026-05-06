@@ -15,6 +15,9 @@ public:
     explicit logindialog(QWidget *parent = nullptr);
     ~logindialog();
 
+    QString login;
+    QString password;
+
 private:
     Ui::logindialog *ui;
 };

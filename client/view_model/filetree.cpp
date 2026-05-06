@@ -1,6 +1,6 @@
 #include "filetree.h"
 
-FileTree::FileTree(QList<DTO::File::TreeNodeResponse> &tree) : fileTree(tree)
+FileTree::FileTree()
 {
 
 }
@@ -13,7 +13,7 @@ QList<QTreeWidgetItem*> FileTree::createTree(const QList<DTO::File::TreeNodeResp
     {
         QTreeWidgetItem* item = new QTreeWidgetItem();
         item->setText(0, node.name);
-
+        item->setData(0, Qt::ItemDataRole::UserRole, node.fileId);
         if (node.isDirectory && node.children.has_value())
         {
             auto childrenItems = createTree(node.children.value());
@@ -55,7 +55,7 @@ void FileTree::onLoad(QList<DTO::File::TreeNodeResponse> &tree)
         treeWidget->insertTopLevelItem(i, list[i]);
     }
 
-    emit initializedProgram(treeWidget);
+    emit updateTree(treeWidget);
 }
 
 
