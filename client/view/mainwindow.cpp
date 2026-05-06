@@ -20,6 +20,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->uploadButton, &QPushButton::clicked, this, &MainWindow::uploadFile);
     connect(ui->refreshButton, &QPushButton::clicked, this, &MainWindow::requestFileTree);
     connect(ui->addfolderButton, &QPushButton::clicked, this, &MainWindow::on_actionNewFolder_triggered);
+    currentIndex = std::nullopt;
 }
 
 MainWindow::~MainWindow()
@@ -34,7 +35,7 @@ void MainWindow::requestFileTree()
 
 void MainWindow::uploadFile()
 {
-    emit userUpload();
+    emit userUpload(currentIndex);
 }
 
 void MainWindow::on_actionLogin_triggered()

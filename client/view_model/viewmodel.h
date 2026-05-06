@@ -61,7 +61,7 @@ public slots:
     void on_saveToken(QString accessToken);
     void on_createFolderFinished(std::optional<DTO::File::CreateEmptyResponse> response);
     //from view
-    void on_userUpload();
+    void on_userUpload(std::optional<int> id);
     void on_userEmail(QString email);
     void on_userSignup(QString username, int code, QString password);
     void on_userLogin(QString login, QString password);

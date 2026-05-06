@@ -103,30 +103,40 @@ void viewmodel::on_uploadCompleteFinished(std::optional<DTO::File::UploadComplet
         emit showMessageBox("Upload failed!");
         return;
     }
+    emit requestTree();
 }
 
 void viewmodel::on_uploadFinished(std::optional<CommonTypes::NoData> nd)
 {
-    if (uc.isEnd)
+    //uc.startByte = 0;
+
+    if (!nd.has_value())
     {
-        qDebug() << "upload end";
+        emit showMessageBox("Chunk upload failed!");
+        file.close();
+        return;
+    }
+
+    if (uc.startByte >= uc.total)
+    {
+        qDebug() << "All chunks sent, completing...";
         completeUploadSession();
         return;
     }
-    qDebug() << "start " << uc.startByte << " end " << uc.endByte << " total " << uc.total;
-    QByteArray chunk;
+
     if (file.seek(uc.startByte))
     {
-        chunk = file.read(uc.chunkSize);
-        uc.startByte += uc.chunkSize;
-        uc.endByte += std::min(uc.chunkSize, chunk.size());
-    }
-    if (uc.endByte >= uc.total)
-    {
-        uc.isEnd = true;
-    }
+        QByteArray chunk = file.read(uc.chunkSize);
+        if (chunk.isEmpty()) return;
 
-    emit uploadData(uc.uploadId, chunk, uc.startByte, uc.endByte, uc.total);
+        qint64 currentChunkEnd = uc.startByte + chunk.size() - 1;
+
+        qDebug() << "Sending chunk:" << uc.startByte << "-" << currentChunkEnd << "/" << uc.total;
+
+        emit uploadData(uc.uploadId, chunk, uc.startByte, currentChunkEnd, uc.total);
+
+        uc.startByte += chunk.size();
+    }
 }
 
 void viewmodel::on_saveToken(QString accessToken)
@@ -143,7 +153,7 @@ void viewmodel::on_createFolderFinished(std::optional<DTO::File::CreateEmptyResp
     emit requestTree();
 }
 
-void viewmodel::on_userUpload()
+void viewmodel::on_userUpload(std::optional<int> id)
 {
     QString fileName = QFileDialog::getOpenFileName(
         NULL,
@@ -151,9 +161,8 @@ void viewmodel::on_userUpload()
         "",
         tr("All (*.*)")
         );
-    uc.name = fileName;
     bool overwrite = false;
-    std::optional<int> parentId = std::nullopt;
+    std::optional<int> parentId = id;
     if (true)
     {
         overwrite = true;
@@ -177,6 +186,7 @@ void viewmodel::on_userUpload()
 
     QFileInfo fileInfo(fileName);
     qint64 sizeInBytes = fileInfo.size();
+    uc.name = fileInfo.fileName();
     uc.total = fileInfo.size();
     uc.startByte = 0;
     uc.endByte = 0;

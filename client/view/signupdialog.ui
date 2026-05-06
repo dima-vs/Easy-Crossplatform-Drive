@@ -35,7 +35,7 @@
      <x>10</x>
      <y>10</y>
      <width>281</width>
-     <height>151</height>
+     <height>152</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -52,7 +52,7 @@
     <item>
      <widget class="QLabel" name="label">
       <property name="text">
-       <string>Login</string>
+       <string>Email</string>
       </property>
      </widget>
     </item>

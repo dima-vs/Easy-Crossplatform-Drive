@@ -33,7 +33,7 @@ private:
     void signup(QString email, QString pword);
     QSize size;
     QSizePolicy sizePolicy;
-    int currentIndex;
+    std::optional<int> currentIndex;
 
 public slots:
     //from viewmodel
@@ -59,7 +59,7 @@ signals:
 
     void userRenameFile(int fileId, int parentId, QString name);
     void userDownload(int fileId);
-    void userUpload();
+    void userUpload(std::optional<int> id);
     void userCreateFolder(QString name, std::optional<int> id);
 
     void requestTree();

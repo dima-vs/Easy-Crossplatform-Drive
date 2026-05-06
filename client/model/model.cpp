@@ -17,7 +17,7 @@ void Model::uploadData(QString uploadId, QByteArray chunkData, qint64 startByte,
     QNetworkRequest httprequest(url);
     QHttpHeaders headers;
     headers.append(QHttpHeaders::WellKnownHeader::ContentType, "application/octet-stream");
-    headers.append(QHttpHeaders::WellKnownHeader::ContentRange, QString("Bytes %1-%2/%3").arg(startByte).arg(endByte).arg(totalBytes));
+    headers.append(QHttpHeaders::WellKnownHeader::ContentRange, QString("bytes %1-%2/%3").arg(startByte).arg(endByte).arg(totalBytes));
     authorize(headers);
     httprequest.setHeaders(headers);
     QNetworkReply *reply = manager.post(httprequest, chunkData);
