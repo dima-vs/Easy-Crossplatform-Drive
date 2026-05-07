@@ -160,8 +160,8 @@ void viewmodel::on_downloadChunkFinished(std::optional<QByteArray> data)
 {
     if (!data.has_value())
     {
-        emit showMessageBox("Failed to download the file!");
         file.close();
+        emit showMessageBox("Failed to download the file!");
         return;
     }
 
@@ -350,8 +350,8 @@ void viewmodel::on_userDownload(int fileId, QString name, qint64 size)
     dc.fileId = fileId;
     dc.chunkSize = 5*1024*1024;
     dc.startByte = 0;
-    dc.endByte = std::min(dc.total, dc.chunkSize)-1;
-    dc.isEnd = false;
+    dc.endByte = std::min(dc.total, dc.chunkSize) - 1;
+    dc.isEnd = (dc.endByte >= dc.total - 1);
 
     emit downloadFile(dc.fileId, dc.startByte, dc.endByte);
     //file.close();
