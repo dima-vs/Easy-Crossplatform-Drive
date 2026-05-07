@@ -12,7 +12,7 @@ class logindialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit logindialog(QWidget *parent = nullptr);
+    explicit logindialog(QWidget *parent = nullptr, std::optional<QString> lastLogin = "");
     ~logindialog();
 
     QString login;

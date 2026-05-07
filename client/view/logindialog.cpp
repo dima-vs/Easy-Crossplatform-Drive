@@ -3,7 +3,7 @@
 #include <qregularexpression.h>
 #include <qvalidator.h>
 
-logindialog::logindialog(QWidget *parent)
+logindialog::logindialog(QWidget *parent, std::optional<QString> lastLogin)
     : QDialog(parent)
     , ui(new Ui::logindialog)
 {
@@ -14,6 +14,8 @@ logindialog::logindialog(QWidget *parent)
     QRegularExpressionValidator *validator = new QRegularExpressionValidator(rx, this);
 
     ui->loginEdit->setValidator(validator);
+    ui->loginEdit->setText(lastLogin.value());
+    login = lastLogin.value();
 
     QObject::connect(ui->loginEdit, &QLineEdit::textChanged, [this]()
                      {login = ui->loginEdit->text();});

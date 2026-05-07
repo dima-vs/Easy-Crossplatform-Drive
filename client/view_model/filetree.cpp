@@ -13,7 +13,11 @@ QList<QTreeWidgetItem*> FileTree::createTree(const QList<DTO::File::TreeNodeResp
     {
         QTreeWidgetItem* item = new QTreeWidgetItem();
         item->setText(0, node.name);
-        item->setData(0, Qt::ItemDataRole::UserRole, node.fileId);
+        CommonTypes::TreeNodeData td;
+        td.fileId = node.fileId;
+        td.isDirectory = node.isDirectory;
+        td.size = node.size.has_value()? node.size.value() : 0;
+        item->setData(0, Qt::ItemDataRole::UserRole, QVariant::fromValue(td));
         if (node.isDirectory && node.children.has_value())
         {
             auto childrenItems = createTree(node.children.value());

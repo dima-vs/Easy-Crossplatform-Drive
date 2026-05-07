@@ -194,6 +194,11 @@ void Model::createFolder(QString fileName, std::optional<int> parentId, bool ove
     });
 }
 
+void Model::getSavedToken(QString accessToken)
+{
+    token = accessToken;
+}
+
 void Model::requestDeletion(int fileId)
 {
     baseUrl = "http://" + host.toString() + ":8080";

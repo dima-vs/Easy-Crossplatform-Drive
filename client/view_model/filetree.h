@@ -4,6 +4,7 @@
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
 #include "dto/file/tree_response.h"
+#include "TreeNodeData.h"
 
 class FileTree : public QTreeWidget
 {

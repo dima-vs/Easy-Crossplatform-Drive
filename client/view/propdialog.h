@@ -2,6 +2,7 @@
 #define PROPDIALOG_H
 
 #include <QDialog>
+#include <optional>
 
 namespace Ui {
 class propdialog;
@@ -15,11 +16,12 @@ public:
     explicit propdialog(QWidget *parent = nullptr);
     ~propdialog();
 
+    std::optional<QString> parentName;
+    std::optional<QString> name;
+
 private:
     Ui::propdialog *ui;
-    QString parentBackup;
 private slots:
-    void checkBoxChanged();
 };
 
 #endif // PROPDIALOG_H

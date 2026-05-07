@@ -52,7 +52,6 @@ public slots:
     void downloadData(int fileId, qint64 startByte, qint64 endByte);
     void completeUpload(QString uploadId);
     void requestDeletion(int fileId);
-    //void changeProperties(QString name, QStringList access);
     void renameFile(int fileId, std::optional<int> parentId, std::optional<QString> name);
     void requestFileTree();
     void login(QString username,
@@ -63,6 +62,7 @@ public slots:
                 QString password);
     void sendEmail(QString email);
     void createFolder(QString fileName, std::optional<int> parentId, bool overwrite);
+    void getSavedToken(QString accessToken);
 
 
 signals:

@@ -65,6 +65,23 @@ void viewmodel::on_treeRequestFinished(std::optional<QList<DTO::File::TreeNodeRe
     }
 }
 
+void viewmodel::on_renameFinished(std::optional<DTO::File::RenameResponse> response)
+{
+    if (!response.has_value())
+    {
+        emit showMessageBox("Failed to rename!");
+    }
+    else
+    {
+        emit requestTree();
+    }
+}
+
+void viewmodel::on_deletionFinished(std::optional<CommonTypes::NoData> nd)
+{
+    emit requestTree();
+}
+
 QString getToken()
 {
     QString configPath = QCoreApplication::applicationDirPath() + "/config.cfg";
@@ -139,6 +156,49 @@ void viewmodel::on_uploadFinished(std::optional<CommonTypes::NoData> nd)
     }
 }
 
+void viewmodel::on_downloadChunkFinished(std::optional<QByteArray> data)
+{
+    if (!data.has_value())
+    {
+        emit showMessageBox("Failed to download the file!");
+        file.close();
+        return;
+    }
+
+    if (file.seek(dc.startByte))
+    {
+        if (file.write(data.value()) == -1)
+        {
+            file.close();
+            emit showMessageBox("Failed to write the file!");
+            return;
+        }
+
+        if (dc.isEnd)
+        {
+            file.close();
+            emit showMessageBox("Download finished");
+            return;
+        }
+
+        dc.startByte += data.value().size();
+        dc.endByte = dc.startByte + dc.chunkSize - 1;
+
+        if (dc.endByte >= dc.total - 1)
+        {
+            dc.endByte = dc.total - 1;
+            dc.isEnd = true;
+        }
+
+        emit downloadFile(dc.fileId, dc.startByte, dc.endByte);
+    }
+    else
+    {
+        emit showMessageBox("Seek failed!");
+        file.close();
+    }
+}
+
 void viewmodel::on_saveToken(QString accessToken)
 {
     QSettings settings("config.cfg", QSettings::IniFormat);
@@ -151,6 +211,71 @@ void viewmodel::on_saveToken(QString accessToken)
 void viewmodel::on_createFolderFinished(std::optional<DTO::File::CreateEmptyResponse> response)
 {
     emit requestTree();
+}
+
+void viewmodel::on_loadSettings()
+{
+    QString configPath = QCoreApplication::applicationDirPath() + "/config.cfg";
+    CommonTypes::ViewConfig cfg;
+
+    if (!QFile::exists(configPath))
+    {
+        qWarning() << "No config found:" << configPath;
+    }
+
+    QSettings settings(configPath, QSettings::IniFormat);
+
+    if (!settings.childGroups().contains("User"))
+    {
+        qWarning() << "No [User] group found.";
+    }
+
+    settings.beginGroup("User");
+
+    if (settings.contains("accessToken"))
+    {
+        QString token = settings.value("accessToken").toString();
+
+        if (!token.isEmpty())
+        {
+            qDebug() << "Success: " << token;
+            emit sendToken(token);
+            emit requestTree();
+        }
+    }
+
+    if (settings.contains("lastLogin"))
+    {
+        cfg.lastLogin = settings.value("lastLogin").toString();
+    }
+    else
+    {
+        cfg.lastLogin = "";
+    }
+
+    settings.endGroup();
+
+    // Other settings
+
+    settings.beginGroup("Ui");
+
+    if (!settings.contains("expandTreeOnLoad"))
+    {
+        settings.setValue("expandTreeOnLoad", false);
+    }
+    cfg.expandTreeOnLoad = settings.value("expandTreeOnLoad").toBool();
+
+    if (!settings.contains("rememberLastLogin"))
+    {
+        settings.setValue("rememberLastLogin", false);
+    }
+    cfg.rememberLastLogin = settings.value("rememberLastLogin").toBool();
+
+    //other ui settings
+    settings.endGroup();
+
+    settings.sync();
+    emit applySettings(cfg);
 }
 
 void viewmodel::on_userUpload(std::optional<int> id)
@@ -174,7 +299,7 @@ void viewmodel::on_userUpload(std::optional<int> id)
 
     if (fileName.isEmpty())
     {
-        emit showMessageBox("Filename is empty!");
+        //emit showMessageBox("Filename is empty!");
         return;
     }
     file.setFileName(fileName);
@@ -192,6 +317,43 @@ void viewmodel::on_userUpload(std::optional<int> id)
     uc.endByte = 0;
     uc.isEnd = false;
     emit initUpload(uc.name, parentId, sizeInBytes, overwrite);
+    //file.close();
+}
+
+void viewmodel::on_userDownload(int fileId, QString name, qint64 size)
+{
+    filePath.clear();
+
+    QString defaultPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation) + "/" + name;
+
+    filePath = QFileDialog::getSaveFileName(
+        nullptr,
+        tr("Save as"),
+        defaultPath,
+        tr("All (*.*)")
+        );
+
+    if (filePath.isEmpty())
+    {
+        return;
+    }
+
+    file.setFileName(filePath);
+    if (!file.open(QIODevice::WriteOnly))
+    {
+        emit showMessageBox("Can't open file!");
+        return;
+    }
+
+    dc.name = name;
+    dc.total = size;
+    dc.fileId = fileId;
+    dc.chunkSize = 5*1024*1024;
+    dc.startByte = 0;
+    dc.endByte = std::min(dc.total, dc.chunkSize)-1;
+    dc.isEnd = false;
+
+    emit downloadFile(dc.fileId, dc.startByte, dc.endByte);
     //file.close();
 }
 
@@ -218,6 +380,45 @@ void viewmodel::on_requestTree()
 void viewmodel::on_userCreateFolder(QString name, std::optional<int> id)
 {
     emit createFolder(name, id, true);
+}
+
+void viewmodel::on_userRequestDeletion(std::optional<int> id)
+{
+    if (id == std::nullopt)
+    {
+        emit showMessageBox("No items selected!");
+    }
+    else
+    {
+        emit deleteFile(id.value());
+    }
+}
+
+void viewmodel::on_userUpdateConfig(CommonTypes::ViewConfig cfg)
+{
+    QString configPath = QCoreApplication::applicationDirPath() + "/config.cfg";
+
+    QSettings settings(configPath, QSettings::IniFormat);
+
+    settings.beginGroup("User");
+
+    settings.setValue("lastLogin", cfg.lastLogin);
+
+    settings.endGroup();
+
+    settings.beginGroup("Ui");
+
+    settings.setValue("expandTreeOnLoad", cfg.expandTreeOnLoad);
+    settings.setValue("rememberLastLogin", cfg.rememberLastLogin);
+
+    settings.endGroup();
+
+    settings.sync();
+}
+
+void viewmodel::on_userRequestRename(int fileId, std::optional<int> parentId, std::optional<QString> name)
+{
+    emit renameFile(fileId, parentId, name);
 }
 
 void viewmodel::on_updateTree(QTreeWidget *treeWidget)

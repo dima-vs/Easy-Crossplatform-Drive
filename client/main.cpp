@@ -1,6 +1,5 @@
 #include <QApplication>
 
-//#include "filetree.h"
 #include "model.h"
 #include "viewmodel.h"
 #include "mainwindow.h"
@@ -87,8 +86,8 @@ int main(int argc, char *argv[])
     {
         border: none;
         background: #e6ffff;
-        width: 10px;
-        margin: 0px;
+        width: 8px;
+        margin: 1px;
     }
 
     QScrollBar::handle:vertical
@@ -137,9 +136,9 @@ int main(int argc, char *argv[])
     QObject::connect(&m, &Model::uploadInitFinished, &vm, &viewmodel::on_uploadInitFinished);
     QObject::connect(&m, &Model::uploadFinished, &vm, &viewmodel::on_uploadFinished);
     QObject::connect(&m, &Model::uploadCompleteFinished, &vm, &viewmodel::on_uploadCompleteFinished);
-    // QObject::connect(&m, &Model::downloadChunkFinished, &vm, &viewmodel::on_downloadChunkFinished);
-    // QObject::connect(&m, &Model::renameFinished, &vm, &viewmodel::on_renameFinished);
-    // QObject::connect(&m, &Model::deletionFinished, &vm, &viewmodel::on_deletionFinished);
+    QObject::connect(&m, &Model::downloadChunkFinished, &vm, &viewmodel::on_downloadChunkFinished);
+    QObject::connect(&m, &Model::renameFinished, &vm, &viewmodel::on_renameFinished);
+    QObject::connect(&m, &Model::deletionFinished, &vm, &viewmodel::on_deletionFinished);
     QObject::connect(&m, &Model::createFolderFinished, &vm, &viewmodel::on_createFolderFinished);
 
     //viewmodel -> model
@@ -151,6 +150,10 @@ int main(int argc, char *argv[])
     QObject::connect(&vm, &viewmodel::userLogin, &m, &Model::login);
     QObject::connect(&vm, &viewmodel::requestTree, &m, &Model::requestFileTree);
     QObject::connect(&vm, &viewmodel::createFolder, &m, &Model::createFolder);
+    QObject::connect(&vm, &viewmodel::deleteFile, &m, &Model::requestDeletion);
+    QObject::connect(&vm, &viewmodel::sendToken, &m, &Model::getSavedToken);
+    QObject::connect(&vm, &viewmodel::downloadFile, &m, &Model::downloadData);
+    QObject::connect(&vm, &viewmodel::renameFile, &m, &Model::renameFile);
 
     // view -> viewmodel
     QObject::connect(&w, &MainWindow::userUpload, &vm, &viewmodel::on_userUpload);
@@ -159,11 +162,18 @@ int main(int argc, char *argv[])
     QObject::connect(&w, &MainWindow::userLogin, &vm, &viewmodel::on_userLogin);
     QObject::connect(&w, &MainWindow::requestTree, &vm, &viewmodel::on_requestTree);
     QObject::connect(&w, &MainWindow::userCreateFolder, &vm, &viewmodel::on_userCreateFolder);
+    QObject::connect(&w, &MainWindow::userRequestDeletion, &vm, &viewmodel::on_userRequestDeletion);
+    QObject::connect(&w, &MainWindow::loadSettings, &vm, &viewmodel::on_loadSettings);
+    QObject::connect(&w, &MainWindow::userUpdateConfig, &vm, &viewmodel::on_userUpdateConfig);
+    QObject::connect(&w, &MainWindow::userDownload, &vm, &viewmodel::on_userDownload);
+    QObject::connect(&w, &MainWindow::userRequestRename, &vm, &viewmodel::on_userRequestRename);
 
     // viewmodel -> view
     QObject::connect(&vm, &viewmodel::showMessageBox, &w, &MainWindow::on_showMessageBox);
     QObject::connect(&vm, &viewmodel::showVerificationDialog, &w, &MainWindow::on_showVerificationDialog);
     QObject::connect(&vm, &viewmodel::updateTree, &w, &MainWindow::treeLoaded);
+    QObject::connect(&vm, &viewmodel::applySettings, &w, &MainWindow::on_applySettings);
     w.show();
+    w.loadApp();
     return a.exec();
 }

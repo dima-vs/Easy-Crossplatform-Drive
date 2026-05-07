@@ -7,26 +7,31 @@ propdialog::propdialog(QWidget *parent)
 {
     ui->setupUi(this);
 
-    connect(ui->checkBox, &QCheckBox::checkStateChanged, this, &propdialog::checkBoxChanged);
+    connect(ui->filenameEdit, &QLineEdit::textChanged, [this]()
+            {
+                if (ui->filenameEdit->text().isEmpty())
+                {
+                    name = std::nullopt;
+                }
+                else
+                {
+                    name = ui->filenameEdit->text();
+                }
+            });
+    connect(ui->parentnameEdit, &QLineEdit::textChanged, [this]()
+            {
+                if (ui->parentnameEdit->text().isEmpty())
+                {
+                    parentName = std::nullopt;
+                }
+                else
+                {
+                    parentName = ui->parentnameEdit->text();
+                }
+            });
 }
 
 propdialog::~propdialog()
 {
     delete ui;
-}
-
-void propdialog::checkBoxChanged()
-{
-    if(ui->checkBox->isChecked() == true)
-    {
-        parentBackup = ui->parentnameEdit->text();
-        ui->parentnameEdit->clear();
-        ui->parentnameEdit->setReadOnly(true);
-    }
-    else
-    {
-        ui->parentnameEdit->setReadOnly(false);
-        ui->parentnameEdit->setText(parentBackup);
-        parentBackup.clear();
-    }
 }
