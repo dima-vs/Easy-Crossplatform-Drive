@@ -28,7 +28,7 @@ set(VIEW_SOURCES
     verificationdialog.h
     verificationdialog.cpp
     verificationdialog.ui
-    res.qrc
+
 )
 
 add_library(View_Lib STATIC ${VIEW_SOURCES})

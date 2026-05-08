@@ -17,7 +17,8 @@ add_subdirectory(model)
 add_subdirectory(view_model)
 add_subdirectory(view)
 
-add_executable(${PROJECT_NAME} main.cpp)
+add_executable(${PROJECT_NAME} main.cpp
+    res.qrc)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE 
     Qt${QT_VERSION_MAJOR}::Core 

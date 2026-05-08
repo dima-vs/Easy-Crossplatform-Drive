@@ -8,6 +8,8 @@ FileTree::FileTree()
 QList<QTreeWidgetItem*> FileTree::createTree(const QList<DTO::File::TreeNodeResponse>& nodes)
 {
     QList<QTreeWidgetItem*> itemList;
+    QIcon folderIcon = style()->standardIcon(QStyle::SP_DirIcon);
+    QIcon fileIcon = style()->standardIcon(QStyle::SP_FileIcon);
 
     for (const auto& node : nodes)
     {
@@ -18,6 +20,14 @@ QList<QTreeWidgetItem*> FileTree::createTree(const QList<DTO::File::TreeNodeResp
         td.isDirectory = node.isDirectory;
         td.size = node.size.has_value()? node.size.value() : 0;
         item->setData(0, Qt::ItemDataRole::UserRole, QVariant::fromValue(td));
+        if (node.isDirectory == true)
+        {
+            item->setIcon(0, folderIcon);
+        }
+        else
+        {
+            item->setIcon(0, fileIcon);
+        }
         if (node.isDirectory && node.children.has_value())
         {
             auto childrenItems = createTree(node.children.value());

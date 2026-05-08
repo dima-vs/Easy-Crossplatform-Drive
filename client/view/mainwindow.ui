@@ -13,10 +13,6 @@
   <property name="windowTitle">
    <string>Easy Cross-platform Drive</string>
   </property>
-  <property name="windowIcon">
-   <iconset resource="res.qrc">
-    <normaloff>:/icons/ECD icon.png</normaloff>:/icons/ECD icon.png</iconset>
-  </property>
   <property name="iconSize">
    <size>
     <width>48</width>
@@ -99,7 +95,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset theme="QIcon::ThemeIcon::FolderOpen"/>
+            <iconset theme="QIcon::ThemeIcon::UserAvailable"/>
            </property>
           </widget>
          </item>
@@ -433,8 +429,6 @@
    </property>
   </action>
  </widget>
- <resources>
-  <include location="res.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

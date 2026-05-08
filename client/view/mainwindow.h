@@ -5,6 +5,7 @@
 #include <QWidget>
 #include <QTreeWidget>
 #include <QMessageBox>
+#include <QPainter>
 #include "ViewConfig.h"
 #include "TreeNodeData.h"
 
@@ -25,6 +26,9 @@ public:
 
 private:
     Ui::MainWindow *ui;
+    QPixmap bg;
+    QPixmap scaledBg;
+    void paintEvent(QPaintEvent *event);
     QString username; // configurable
     QString password;
     void requestFileTree();
@@ -34,7 +38,7 @@ private:
     void deleteFile(int fileId);
     void login(QString email, QString pword);
     void signup(QString email, QString pword);
-    QSize size;
+    QSize treeSize;
     QSizePolicy sizePolicy;
     std::optional<int> currentIndex;
     QString currentName;

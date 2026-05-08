@@ -16,33 +16,109 @@ int main(int argc, char *argv[])
                                     stop:0 #00b3b3, stop:1 #ffffff);
     }
 
+    QMenu
+    {
+        font-family: "Sans Serif";
+        font-size: 12px;
+        color: #003333;
+        background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                    stop:0 #00b3b3, stop:1 #ffffff);
+    }
+
+    QMenu::item::selected
+    {
+        background-color: #00cccc;
+        color: #66ffff;
+    }
+
+    QMenu::item:disabled
+    {
+        color: #00b3b3;
+    }
+
+    QMenu::separator
+    {
+        height: 1px;
+        background: qlineargradient(x1:0, y1:0, x2:1, y2:0
+                                    stop:0      #00b3b3,
+                                    stop:0.33   #80FFFF,
+                                    stop:0.5    #FFFFFF,
+                                    stop:0.66   #80FFFF,
+                                    stop:1      #00b3b3);
+        margin: 4px 10px;
+    }
+
+    QLabel
+    {
+        font-family: "Sans Serif";
+        font-weight: bold;
+        font-size: 12px;
+        color: #003333
+    }
+
     QPushButton
     {
-        background-color: #ffffff;
-        border: 2px solid #66ffff;
+        background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                          stop:0    #78BCC2,
+                                          stop:0.1  #9DEBEB,
+                                          stop:0.3  #E6FFFF,
+                                          stop:0.5  #FFFFFF,
+                                          stop:0.7  #E6FFFF,
+                                          stop:0.90 #9DEBEB,
+                                          stop:1    #FFFFFF);
+
+        border: 2px solid qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                          stop:0    #80FFFF,
+                                          stop:1    #78BCC2);
         border-radius: 4px;
+        border-bottom: 2px solid #00b3b3;
         padding: 5px 15px;
         color: #004d4d;
+        font-family: "Sans Serif";
         font-weight: bold;
     }
 
     QPushButton:hover
     {
-        background-color: #e6ffff;
+        background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                          stop:0    #5FA9AF,
+                                          stop:0.1  #89D9D9,
+                                          stop:0.3  #D1F5F5,
+                                          stop:0.5  #E6FFFF,
+                                          stop:0.7  #D1F5F5,
+                                          stop:0.90 #89D9D9,
+                                          stop:1    #E6FFFF);
     }
 
     QPushButton:pressed
     {
-        background-color: #66ffff;
-        color: white;
+        background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                          stop:0    #66FFFF,
+                                          stop:0.4  #E6FFFF,
+                                          stop:0.6  #E6FFFF,
+                                          stop:1  #66FFFF,);
+        border: 2px solid qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                          stop:0    #B3FFFF,
+                                          stop:1    #78BCC2);
+        padding-bottom: 1px;
     }
 
     QLineEdit, QTextEdit
     {
-        border: 1px solid #66ffff;
+        border: 2px solid qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                          stop:0    #B3FFFF,
+                                          stop:1    #78BCC2);
         border-radius: 4px;
-        background: white;
-        selection-background-color: #66ffff;
+        background: qlineargradient(x1:0, y1:0, x2:1, y2:0
+                                    stop:0      #78BCC2,
+                                    stop:0.01   #9DEBEB,
+                                    stop:0.5    #E6FFFF,
+                                    stop:0.99   #FFFFFF,
+                                    stop:1      #78BCC2);
+        selection-background-color: #00cccc;
+        selection-color: #66ffff;
+
+        font-family: "Sans Serif";
     }
 
     QFrame#ShadowFrame
@@ -54,11 +130,17 @@ int main(int argc, char *argv[])
     QTreeView
     {
         background-color: transparent;
-        border: 1px solid #66ffff;
+        border: 1px solid qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                          stop:0    #80FFFF,
+                                          stop:1    #78BCC2);
         border-radius: 4px;
         alternate-background-color: rgba(102, 255, 255, 0.1);
         show-decoration-selected: 1;
         color: #004d4d;
+
+        font-family: "Sans Serif";
+        font-size: 14;
+        font-weight: bold;
     }
 
     QHeaderView::section
@@ -84,17 +166,19 @@ int main(int argc, char *argv[])
 
     QScrollBar:vertical
     {
-        border: none;
+        border: 1px solid qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                          stop:0    #ffffff,
+                                          stop:1    #78BCC2);
         background: #e6ffff;
-        width: 8px;
-        margin: 1px;
+        width: 10px;
+        margin: 2px;
     }
 
     QScrollBar::handle:vertical
     {
-        background: #66ffff;
+        background: #66FFFF;
         min-height: 20px;
-        border-radius: 5px;
+        border-radius: 2px;
     }
 
     QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical
@@ -105,8 +189,12 @@ int main(int argc, char *argv[])
     QFrame[frameShape="4"],
     QFrame[frameShape="5"]
     {
-        background-color: #66ffff;
-        border: none;
+        background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                          stop:0    #66ffff,
+                                          stop:1    #78BCC2);
+        border: 1px solid qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                          stop:0    #78BCC2,
+                                          stop:1    #e6ffff);
     }
 
     QFrame[frameShape="4"]
@@ -123,6 +211,7 @@ int main(int argc, char *argv[])
 )";
 
     a.setStyleSheet(styleSheet);
+    a.setWindowIcon(QIcon(":/icon/view/icon.png"));
 
     Model m;
     viewmodel vm;

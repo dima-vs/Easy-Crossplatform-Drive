@@ -15,7 +15,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     ui->centralwidget->setLayout(ui->mainLayout);
     setCentralWidget(ui->centralwidget);
-    size = ui->treePlaceholder->minimumSize();
+    treeSize = ui->treePlaceholder->minimumSize();
     sizePolicy = ui->treePlaceholder->sizePolicy();
     connect(ui->propertiesButton, &QPushButton::clicked, this, &MainWindow::on_actionProperties_triggered);
     connect(ui->uploadButton, &QPushButton::clicked, this, &MainWindow::uploadFile);
@@ -26,12 +26,30 @@ MainWindow::MainWindow(QWidget *parent)
     currentIndex = std::nullopt;
     currentName = "";
     currentSize = 0;
-    //expandTreeOnLoad = false; //add initialization from cfg later
+    bg = QPixmap(":/image/view/background.png");
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::paintEvent(QPaintEvent *event)
+{
+    QMainWindow::paintEvent(event);
+
+    QPainter p(this);
+
+    p.setOpacity(1);
+    p.setRenderHint(QPainter::SmoothPixmapTransform);
+
+    scaledBg = bg.scaled(
+        size(),
+        Qt::KeepAspectRatioByExpanding,
+        Qt::SmoothTransformation
+        );
+
+    p.drawPixmap(0, 0, scaledBg);
 }
 
 void MainWindow::loadApp()
@@ -324,8 +342,9 @@ void MainWindow::treeLoaded(QTreeWidget *treeWidget)
     currentIndex = std::nullopt;
     currentName = "";
     currentSize = 0;
-    treeWidget->setMinimumSize(size);
+    treeWidget->setMinimumSize(treeSize);
     treeWidget->setSizePolicy(sizePolicy);
+    treeWidget->setHeaderHidden(true);
 
     if (QLayoutItem *item = ui->bottomLayout->takeAt(0))
     {
