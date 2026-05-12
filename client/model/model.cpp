@@ -105,7 +105,7 @@ void Model::downloadData(int fileId, qint64 startByte, qint64 endByte)
 
             response = reply->readAll();
 
-            qDebug() << "Succ ass";
+            qDebug() << "Success";
             emit downloadChunkFinished(response);
         }
         else

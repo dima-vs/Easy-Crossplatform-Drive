@@ -1,8 +1,0 @@
-<RCC>
-    <qresource prefix="/icons">
-        <file>ECD icon.png</file>
-    </qresource>
-    <qresource prefix="/images">
-        <file>ecdbackground.png</file>
-    </qresource>
-</RCC>
