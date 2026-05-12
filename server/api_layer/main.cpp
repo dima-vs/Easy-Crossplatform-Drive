@@ -15,21 +15,22 @@
 #include "email/email_sender.h"
 #include "datetime/system_time_provider.h"
 #include "security/sodium_password_hasher.h"
-#include "security/security_config.h"
+#include "config/security_config.h"
 
 // auth
 #include "auth/service.h"
-#include "auth/auth_config.h"
+#include "config/auth_config.h"
 
 // file
 #include "file/service.h"
-#include "file/file_config.h"
+#include "config/file_config.h"
+
+// config
+#include "config/service.h"
 
 // controllers
 #include "auth/auth_controller.h"
 #include "file/file_controller.h"
-
-
 
 namespace Service::Mock
 {
@@ -56,21 +57,28 @@ int main(int argc, char *argv[])
 
     qDebug() << "APILayer";
 
+    Service::Config::ConfigService cfgService("server_config.json");
+    cfgService.saveDefaultsIfNotExist();
+
+    if (!cfgService.load())
+    {
+        qCritical() << "failed to load configuration file! Exiting.";
+        return -1;
+    }
+
     DatabaseManager dbManager;
 
     UserRepository userRepository(dbManager);
     TokenRepository tokenRepository(dbManager);
     FileRepository fileRepository(dbManager);
-    FileStorage fileStorage("storage");
+    FileStorage fileStorage(cfgService.file().storage.baseStoragePath);
 
     Service::Time::SystemTimeProvider timeProvider;
     Service::Mock::MockEmailSender mockEmailSender;
 
-    Config::Security::PasswordHashing pswConfig;
-    Service::Security::SodiumPasswordHasher passwordHasher(pswConfig);
-
-    Config::Auth::AuthConfig authConfig;
-    Config::File::FileConfig fileConfig;
+    Service::Security::SodiumPasswordHasher passwordHasher(
+        cfgService.security().passwordHashing
+        );
 
     Service::Auth::AuthService authService(
         userRepository,
@@ -78,14 +86,14 @@ int main(int argc, char *argv[])
         mockEmailSender,
         timeProvider,
         passwordHasher,
-        authConfig
+        cfgService.auth()
         );
 
     Service::File::FileService fileService(
         fileStorage,
         fileRepository,
         timeProvider,
-        fileConfig
+        cfgService.file()
         );
 
     QHttpServer httpServer;
@@ -104,18 +112,22 @@ int main(int argc, char *argv[])
         return "EasyCrossplatformDrive server is running!";
     });
 
-    const int port = 8080;
+    Config::App::AppConfig appCfg = cfgService.app();
+    const int port = appCfg.port;
     QTcpServer* tcpServer = new QTcpServer();
 
-    if (!tcpServer->listen(QHostAddress::LocalHost, port) ||
+    if (!tcpServer->listen(QHostAddress(appCfg.host), port) ||
         !httpServer.bind(tcpServer))
     {
-        qCritical() << "Failed to start HTTP server or bind to port" << port;
+        qCritical() << "failed to start HTTP server or bind to port" << port;
         delete tcpServer;
         return -1;
     }
-    qDebug().noquote().nospace() << "HTTP Server successfully started " <<
-                tcpServer->serverAddress().toString() << ":" << port;
+
+    qDebug().noquote().nospace() << "HTTP Server successfully started at "
+                                 << appCfg.protocol << "://"
+                                 << tcpServer->serverAddress().toString()
+                                 << ":" << port;
 
     return a.exec();
 }

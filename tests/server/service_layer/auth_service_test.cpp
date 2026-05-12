@@ -10,9 +10,9 @@
 #include "user_repository.h"
 #include "token_repository.h"
 #include "auth/service.h"
-#include "auth/auth_config.h"
+#include "config/auth_config.h"
 #include "security/sodium_password_hasher.h"
-#include "security/security_config.h"
+#include "config/security_config.h"
 #include "email/email_sender.h"
 #include "mock_time_provider.h"
 #include <sodium.h>
@@ -53,7 +53,8 @@ protected:
         m_userRep(m_DBManager),
         m_tokenRep(m_DBManager),
         m_pswHasher(Service::Security::SodiumPasswordHasher(
-              Config::Security::PasswordHashing { crypto_pwhash_OPSLIMIT_MIN, crypto_pwhash_MEMLIMIT_MIN,  }
+              Config::Security::SecurityConfig::PasswordHashing {
+                  crypto_pwhash_OPSLIMIT_MIN, crypto_pwhash_MEMLIMIT_MIN }
               )),
         m_authService(
               m_userRep, m_tokenRep,

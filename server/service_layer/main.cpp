@@ -15,7 +15,7 @@
 #include "datetime/time_provider_interface.h"
 #include "security/password_hasher_interface.h"
 #include "security/sodium_password_hasher.h"
-#include "security/security_config.h"
+#include "config/security_config.h"
 
 
 class MailServiceSpy : public Service::Email::IEmailSender
@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
     MailServiceSpy mailSpy;
     MockTimeProvider timeProvider;
     Service::Security::SodiumPasswordHasher pswHasher(
-        Config::Security::PasswordHashing {}
+        Config::Security::SecurityConfig::PasswordHashing {}
         );
 
     Service::Auth::AuthService authService(

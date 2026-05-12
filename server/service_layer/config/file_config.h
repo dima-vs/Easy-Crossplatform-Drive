@@ -10,8 +10,8 @@ namespace Config::File
 struct FileTransferLimits
 {
     // Default: 5 MB chunk, 1 GB file
-    qint64 maxChunkSize = 5 * 1024 * 1024;
-    qint64 maxFileSize = 1024 * 1024 * 1024;
+    qint64 maxChunkSize = 5LL * 1024LL * 1024LL;
+    qint64 maxFileSize = 1024LL * 1024LL * 1024LL;
 };
 
 struct FileConfig
@@ -22,8 +22,8 @@ struct FileConfig
     struct Storage
     {
         // 10 GB per user
-        qint64 maxTotalStoragePerUser = 10 * 1024 * 1024 * 1024;
-        QString baseStoragePath = "storage_data";
+        qint64 maxTotalStoragePerUser = 10LL * 1024LL * 1024LL * 1024LL;
+        QString baseStoragePath = "storage";
     } storage;
 
     struct Session

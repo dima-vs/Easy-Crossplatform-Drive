@@ -6,7 +6,8 @@
 namespace Service::Security
 {
 
-SodiumPasswordHasher::SodiumPasswordHasher(const Config::Security::PasswordHashing &config):
+SodiumPasswordHasher::SodiumPasswordHasher(
+    const Config::Security::SecurityConfig::PasswordHashing &config):
     m_config(config)
 {
     if (sodium_init() < 0)

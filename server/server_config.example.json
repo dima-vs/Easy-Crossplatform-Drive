@@ -1,0 +1,65 @@
+{
+    "app": {
+        "host": "127.0.0.1",
+        "port": 8080,
+        "protocol": "http"
+    },
+    "auth": {
+        "security": {
+            "codeEntryAttemptsLimit": 3,
+            "maxActiveSessionsPerUser": 5,
+            "regSessionsDurationSec": 180,
+            "userSessionsDurationSec": 604800
+        },
+        "token": {
+            "idGenerationAttemptsLimit": 8,
+            "tokenIdEntropyBytes": 16,
+            "tokenSecretEntropyBytes": 32
+        },
+        "uuid": {
+            "generationAttemptsLimit": 8
+        }
+    },
+    "email": {
+        "credentials": {
+            "appPassword": "YOUR_APP_PASSWORD_HERE",
+            "email": "your_email@gmail.com"
+        },
+        "sender": {
+            "displayName": "EasyCrossplatformDrive"
+        },
+        "smtp": {
+            "connectionType": "SslConnection",
+            "host": "smtp.gmail.com",
+            "port": 465
+        }
+    },
+    "fileTransfer": {
+        "download": {
+            "maxChunkSize": 5242880,
+            "maxFileSize": 1073741824
+        },
+        "session": {
+            "uploadSessionsDurationSec": 10800
+        },
+        "storage": {
+            "baseStoragePath": "storage",
+            "maxTotalStoragePerUser": 10737418240
+        },
+        "upload": {
+            "maxChunkSize": 5242880,
+            "maxFileSize": 1073741824
+        },
+        "uuid": {
+            "generationAttemptsLimit": 8
+        }
+    },
+    "systemSecurity": {
+        "passwordHashing": {
+            "argon2": {
+                "memLimit": 67108864,
+                "opsLimit": 2
+            }
+        }
+    }
+}

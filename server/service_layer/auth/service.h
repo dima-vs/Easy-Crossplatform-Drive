@@ -12,7 +12,7 @@
 #include "token_repository.h"
 #include "service_result.h"
 #include "auth/models.h"
-#include "auth/auth_config.h"
+#include "config/auth_config.h"
 #include "auth/error_codes.h"
 #include "email/email_sender.h"
 #include "datetime/time_provider_interface.h"

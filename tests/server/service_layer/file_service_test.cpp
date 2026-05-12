@@ -17,7 +17,7 @@
 #include "file_repository.h"
 #include "file_storage.h"
 #include "file/service.h"
-#include "file/file_config.h"
+#include "config/file_config.h"
 #include "mock_time_provider.h"
 #include "domain/file_type.h"
 

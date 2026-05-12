@@ -16,7 +16,7 @@
 #include "file/models.h"
 #include "file/error_codes.h"
 #include "service_result.h"
-#include "file/file_config.h"
+#include "config/file_config.h"
 #include "datetime/time_provider_interface.h"
 #include "domain/file_type.h"
 #include "converter/file_type_converter.h"

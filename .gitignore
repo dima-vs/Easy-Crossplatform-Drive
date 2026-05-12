@@ -29,3 +29,4 @@ build*/
 *.opendb
 
 *.log
+server_config.json
