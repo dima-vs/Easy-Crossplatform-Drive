@@ -37,9 +37,13 @@ add_library(Service_Lib STATIC ${SERVICE_SOURCES}
     config/service.cpp
     config/security_config.h
     config/json_keys.h
+    email/smtp_email_sender.h email/smtp_email_sender.cpp
 )
+
+# add_subdirectory(SmtpClient-for-Qt)
 target_link_libraries(Service_Lib PUBLIC Qt${QT_VERSION_MAJOR}::Core
-    Qt${QT_VERSION_MAJOR}::Network PUBLIC DAL_Lib unofficial-sodium::sodium)
+    Qt${QT_VERSION_MAJOR}::Network PUBLIC DAL_Lib unofficial-sodium::sodium
+    SmtpMime)
 target_include_directories(Service_Lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 add_executable(Service_Standalone main.cpp)
 

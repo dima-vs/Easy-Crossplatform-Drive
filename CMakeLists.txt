@@ -10,6 +10,11 @@ project(EasyCrossplatformDrive)
 
 find_package(unofficial-sodium REQUIRED)
 
+set(BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(BUILD_DEMOS OFF CACHE BOOL "" FORCE)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+add_subdirectory(SmtpClient-for-Qt)
+
 add_subdirectory(common)
 add_subdirectory(server)
 add_subdirectory(client)

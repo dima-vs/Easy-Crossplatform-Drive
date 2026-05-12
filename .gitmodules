@@ -1,3 +1,6 @@
 [submodule "vcpkg"]
 	path = vcpkg
 	url = https://github.com/microsoft/vcpkg
+[submodule "SmtpClient-for-Qt"]
+	path = SmtpClient-for-Qt
+	url = https://github.com/bluetiger9/SmtpClient-for-Qt.git

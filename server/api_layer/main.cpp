@@ -28,6 +28,9 @@
 // config
 #include "config/service.h"
 
+// email
+#include "email/smtp_email_sender.h"
+
 // controllers
 #include "auth/auth_controller.h"
 #include "file/file_controller.h"
@@ -74,7 +77,8 @@ int main(int argc, char *argv[])
     FileStorage fileStorage(cfgService.file().storage.baseStoragePath);
 
     Service::Time::SystemTimeProvider timeProvider;
-    Service::Mock::MockEmailSender mockEmailSender;
+    // Service::Mock::MockEmailSender mockEmailSender;
+    Service::Email::SmtpEmailSender smtpEmailSender(cfgService.email());
 
     Service::Security::SodiumPasswordHasher passwordHasher(
         cfgService.security().passwordHashing
@@ -83,7 +87,8 @@ int main(int argc, char *argv[])
     Service::Auth::AuthService authService(
         userRepository,
         tokenRepository,
-        mockEmailSender,
+        // mockEmailSender,
+        smtpEmailSender,
         timeProvider,
         passwordHasher,
         cfgService.auth()
