@@ -36,9 +36,15 @@ class Model : public QObject
 
 private:
     bool authorize(QHttpHeaders &headersOut);
+    QString getBaseUrl() { return protocol + "://" + hostStr + port; }
+    void setSpecificHeaders(QHttpHeaders &headersOut);
+    void setNgrokSpecificHeaders(QHttpHeaders &headersOut);
+
     QString token;
 
-    QHostAddress host = QHostAddress(QHostAddress::SpecialAddress::LocalHost); // join room goes here
+    QString protocol = "http";
+    QString hostStr = "127.0.0.1";
+    QString port = ":8080";
     QString baseUrl;
 
     QNetworkAccessManager manager = QNetworkAccessManager(this);

@@ -9,16 +9,29 @@ bool Model::authorize(QHttpHeaders &headersOut)
     return true;
 }
 
+void Model::setSpecificHeaders(QHttpHeaders &headersOut)
+{
+    setNgrokSpecificHeaders(headersOut);
+}
+
+void Model::setNgrokSpecificHeaders(QHttpHeaders &headersOut)
+{
+    headersOut.append("ngrok-skip-browser-warning", "1");
+}
+
 void Model::uploadData(QString uploadId, QByteArray chunkData, qint64 startByte, qint64 endByte, qint64 totalBytes)
 {
     qDebug() << "Enter uploadData";
-    baseUrl = "http://" + host.toString() + ":8080";
+    baseUrl = getBaseUrl();
     QUrl url(baseUrl + "/uploads/" + uploadId);
     QNetworkRequest httprequest(url);
     QHttpHeaders headers;
+
     headers.append(QHttpHeaders::WellKnownHeader::ContentType, "application/octet-stream");
     headers.append(QHttpHeaders::WellKnownHeader::ContentRange, QString("bytes %1-%2/%3").arg(startByte).arg(endByte).arg(totalBytes));
     authorize(headers);
+    setSpecificHeaders(headers);
+
     httprequest.setHeaders(headers);
     QNetworkReply *reply = manager.post(httprequest, chunkData);
 
@@ -52,12 +65,15 @@ void Model::uploadInit(QString fileName, std::optional<int> parentId, qint64 fil
     QJsonObject jsonreq = Serialization::File::toJson(request);
     QByteArray data = QJsonDocument(jsonreq).toJson();
 
-    baseUrl = "http://" + host.toString() + ":8080";
+    baseUrl = getBaseUrl();
     QUrl url(baseUrl + "/uploads");
     QNetworkRequest httprequest(url);
     QHttpHeaders headers;
+
     headers.append(QHttpHeaders::WellKnownHeader::ContentType, "application/json");
     authorize(headers);
+    setSpecificHeaders(headers);
+
     httprequest.setHeaders(headers);
     QNetworkReply *reply = manager.post(httprequest, data);
 
@@ -87,12 +103,15 @@ void Model::uploadInit(QString fileName, std::optional<int> parentId, qint64 fil
 
 void Model::downloadData(int fileId, qint64 startByte, qint64 endByte)
 {
-    baseUrl = "http://" + host.toString() + ":8080";
+    baseUrl = getBaseUrl();
     QUrl url(baseUrl + "/files/" + QString::number(fileId));
     QNetworkRequest httprequest(url);
     QHttpHeaders headers;
+
     headers.append(QHttpHeaders::WellKnownHeader::Range, QString("Bytes=%1-%2").arg(startByte).arg(endByte));
     authorize(headers);
+    setSpecificHeaders(headers);
+
     httprequest.setHeaders(headers);
     QNetworkReply *reply = manager.get(httprequest);
 
@@ -120,12 +139,15 @@ void Model::downloadData(int fileId, qint64 startByte, qint64 endByte)
 void Model::completeUpload(QString uploadId)
 {
     qDebug() << "Enter completeUpload";
-    baseUrl = "http://" + host.toString() + ":8080";
+    baseUrl = getBaseUrl();
     QUrl url(baseUrl + "/uploads/" + uploadId + "/complete");
 
     QNetworkRequest httprequest(url);
     QHttpHeaders headers;
+
     authorize(headers);
+    setSpecificHeaders(headers);
+
     httprequest.setHeaders(headers);
     QNetworkReply *reply = manager.sendCustomRequest(httprequest, "POST");
 
@@ -163,12 +185,15 @@ void Model::createFolder(QString fileName, std::optional<int> parentId, bool ove
     QJsonObject jsonreq = Serialization::File::toJson(request);
     QByteArray data = QJsonDocument(jsonreq).toJson();
 
-    baseUrl = "http://" + host.toString() + ":8080";
+    baseUrl = getBaseUrl();
     QUrl url(baseUrl + "/files");
     QNetworkRequest httprequest(url);
     QHttpHeaders headers;
+
     headers.append(QHttpHeaders::WellKnownHeader::ContentType, "application/json");
     authorize(headers);
+    setSpecificHeaders(headers);
+
     httprequest.setHeaders(headers);
 
     QNetworkReply *reply = manager.post(httprequest, data);
@@ -201,12 +226,15 @@ void Model::getSavedToken(QString accessToken)
 
 void Model::requestDeletion(int fileId)
 {
-    baseUrl = "http://" + host.toString() + ":8080";
+    baseUrl = getBaseUrl();
     QUrl url(baseUrl + "/files/" + QString::number(fileId));
     QNetworkRequest httprequest(url);
     QHttpHeaders headers;
+
     headers.append(QHttpHeaders::WellKnownHeader::ContentType, "application/json");
     authorize(headers);
+    setSpecificHeaders(headers);
+
     httprequest.setHeaders(headers);
     QNetworkReply *reply = manager.deleteResource(httprequest);
 
@@ -253,12 +281,15 @@ void Model::renameFile(int fileId, std::optional<int> parentId, std::optional<QS
     QJsonObject jsonreq = Serialization::File::toJson(request);
     QByteArray data = QJsonDocument(jsonreq).toJson();
 
-    baseUrl = "http://" + host.toString() + ":8080";
+    baseUrl = getBaseUrl();
     QUrl url(baseUrl + "/files/" + QString::number(fileId));
     QNetworkRequest httprequest(url);
     QHttpHeaders headers;
+
     headers.append(QHttpHeaders::WellKnownHeader::ContentType, "application/json");
     authorize(headers);
+    setSpecificHeaders(headers);
+
     httprequest.setHeaders(headers);
     QNetworkReply *reply = manager.sendCustomRequest(httprequest, "PATCH", data);
 
@@ -288,27 +319,10 @@ void Model::renameFile(int fileId, std::optional<int> parentId, std::optional<QS
 
 void Model::requestFileTree()
 {
-    // QList<DTO::File::TreeNodeResponse> result;
-    // DTO::File::TreeNodeResponse rootdir;
-    // rootdir.fileId = 1;
-    // rootdir.isDirectory = true;
-    // rootdir.name = "ROOT";
-
-    // DTO::File::TreeNodeResponse child;
-    // child.fileId = 2;
-    // child.isDirectory = false;
-    // child.name = "file.doc";
-    // child.size = 123;
-
-    // rootdir.children = QList<DTO::File::TreeNodeResponse>();
-    // rootdir.children->append(child);
-
-    // result.append(rootdir);
-
     int depth = -1;
     int parentId = -1;
 
-    baseUrl = "http://" + host.toString() + ":8080";
+    baseUrl = getBaseUrl();
     QUrl url(baseUrl + "/files");
     QUrlQuery query;
 
@@ -324,8 +338,11 @@ void Model::requestFileTree()
     url.setQuery(query);
     QNetworkRequest httprequest(url);
     QHttpHeaders headers;
+
     headers.append(QHttpHeaders::WellKnownHeader::ContentType, "application/json");
     authorize(headers);
+    setSpecificHeaders(headers);
+
     httprequest.setHeaders(headers);
     QNetworkReply *reply = manager.get(httprequest);
 
@@ -361,14 +378,18 @@ void Model::login(QString username, QString password)
 
     QJsonObject jsonreq = Serialization::Auth::toJson(request);
 
-    baseUrl = "http://" + host.toString() + ":8080";
+    baseUrl = getBaseUrl();
     QUrl url(baseUrl + "/auth/login");
 
     QByteArray data = QJsonDocument(jsonreq).toJson();
 
     QNetworkRequest httprequest(url);
 
-    httprequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+
+    QHttpHeaders headers;
+    headers.append(QHttpHeaders::WellKnownHeader::ContentType, "application/json");
+    setSpecificHeaders(headers);
+    httprequest.setHeaders(headers);
 
     QNetworkReply *reply = manager.post(httprequest, data);
 
@@ -411,15 +432,17 @@ void Model::signup(QString verificationId, int accessCode, QString username, QSt
 
     QJsonObject jsonreq = Serialization::Auth::toJson(request);
 
-    baseUrl = "http://" + host.toString() + ":8080";
+    baseUrl = getBaseUrl();
     QUrl url(baseUrl + "/auth/register/confirm");
 
     QByteArray data = QJsonDocument(jsonreq).toJson();
 
     QNetworkRequest httprequest(url);
 
-    httprequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-
+    QHttpHeaders headers;
+    headers.append(QHttpHeaders::WellKnownHeader::ContentType, "application/json");
+    setSpecificHeaders(headers);
+    httprequest.setHeaders(headers);
     QNetworkReply *reply = manager.post(httprequest, data);
 
     QObject::connect(reply, &QNetworkReply::finished, [reply, this]()
@@ -458,14 +481,17 @@ void Model::sendEmail(QString email)
 
     QJsonObject jsonreq = Serialization::Auth::toJson(request);
 
-    baseUrl = "http://" + host.toString() + ":8080";
+    baseUrl = getBaseUrl();
     QUrl url(baseUrl + "/auth/register/init");
 
     QByteArray data = QJsonDocument(jsonreq).toJson();
 
     QNetworkRequest httprequest(url);
 
-    httprequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    QHttpHeaders headers;
+    headers.append(QHttpHeaders::WellKnownHeader::ContentType, "application/json");
+    setSpecificHeaders(headers);
+    httprequest.setHeaders(headers);
 
     QNetworkReply *reply = manager.post(httprequest, data);
 
