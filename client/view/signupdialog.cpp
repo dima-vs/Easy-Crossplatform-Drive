@@ -9,11 +9,19 @@ signupdialog::signupdialog(QWidget *parent)
 {
     ui->setupUi(this);
 
+    QString usernamePattern = R"(^[a-zA-Z0-9._-]+$)";
     QString emailPattern = R"(^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$)";
-    QRegularExpression rx(emailPattern);
-    QRegularExpressionValidator *validator = new QRegularExpressionValidator(rx, this);
 
-    ui->loginEdit->setValidator(validator);
+    QRegularExpression emailRegExp(emailPattern);
+    QRegularExpressionValidator *emailValidator =
+        new QRegularExpressionValidator(emailRegExp, this);
+    ui->loginEdit->setValidator(emailValidator);
+
+    QRegularExpression usernameRegExp(usernamePattern);
+    QRegularExpressionValidator *usernameValidator =
+        new QRegularExpressionValidator(usernameRegExp, this);
+    ui->usernameEdit->setValidator(usernameValidator);
+
     QObject::connect(ui->loginEdit, &QLineEdit::textChanged, [this]()
                      {email = ui->loginEdit->text();});
     QObject::connect(ui->passwordEdit, &QLineEdit::textChanged, [this]()

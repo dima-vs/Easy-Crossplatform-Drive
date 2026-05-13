@@ -9,8 +9,8 @@ logindialog::logindialog(QWidget *parent, std::optional<QString> lastLogin)
 {
     ui->setupUi(this);
 
-    QString emailPattern = R"(^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$)";
-    QRegularExpression rx(emailPattern);
+    QString loginPattern = R"(^[a-zA-Z0-9._-]+$)";
+    QRegularExpression rx(loginPattern);
     QRegularExpressionValidator *validator = new QRegularExpressionValidator(rx, this);
 
     ui->loginEdit->setValidator(validator);
